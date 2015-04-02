@@ -1,5 +1,6 @@
 from unittest import TestCase
-from src.Utils.Black76 import Black76, OptionType
+from src.Utils.Black76 import Black76
+from src.Utils.OptionType import OptionType
 from math import log
 
 __author__ = 'frank.ma'
@@ -66,3 +67,4 @@ class TestBlack76(TestCase):
 
         assert abs(call_lhs / call_rhs - 1.) < 1e-6, 'call pde check failed.'
         assert abs(put_lhs / put_rhs - 1.) < 1e-6, 'put pde check failed.'
+        pass

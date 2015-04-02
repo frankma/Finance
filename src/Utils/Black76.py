@@ -1,13 +1,9 @@
-from enum import Enum
 from math import log, sqrt
 from scipy.stats import norm
+from src.Utils.OptionType import OptionType
+
 
 __author__ = 'frank.ma'
-
-
-class OptionType(Enum):
-    call = 1
-    put = -1
 
 
 class Black76(object):
