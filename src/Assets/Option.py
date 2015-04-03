@@ -5,7 +5,8 @@ __author__ = 'frank.ma'
 
 class Option(object):
 
-    def __init__(self, strike: float, expiry: datetime, bid: float, ask: float):
+    def __init__(self, asof: datetime, strike: float, expiry: datetime, bid: float, ask: float):
+        self.asof = asof
         self.strike = strike
         self.expiry = expiry
         self.bid = bid
