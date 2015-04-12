@@ -30,12 +30,15 @@ class VolatilitySurfaceEquity(VolatilitySurface):
 
     def process_data(self):
         # firstly process model independent data
+        for expiry in self.expiries:
+            self.fwd_a[expiry], self.bond_a[expiry] = self.imply_forward_bond(self.raw_data.c_a[expiry],
+                                                                              self.raw_data.p_b[expiry])
 
         # secondly process model dependent data
 
         pass
 
     @staticmethod
-    def imply_forward_bond(self, call: Series, put: Series):
+    def imply_forward_bond(call: Series, put: Series):
         forward, bond = 1, 1
         return forward, bond

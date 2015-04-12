@@ -1,13 +1,12 @@
 import datetime
+from src.Assets.Asset import Asset
 
 __author__ = 'frank.ma'
 
 
-class Option(object):
+class Option(Asset):
 
-    def __init__(self, asof: datetime, strike: float, expiry: datetime, bid: float, ask: float):
-        self.asof = asof
-        self.strike = strike
+    def __init__(self, identifier: str, expiry: datetime, strike: float):
+        super().__init__(identifier)
         self.expiry = expiry
-        self.bid = bid
-        self.ask = ask
+        self.strike = strike
