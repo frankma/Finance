@@ -23,8 +23,8 @@ class Card(object):
 
     def __str__(self):
         # rank string in the str form of A, 2, 3, 4, 5, 6, 7, 8, 9, 10, J, Q, K
-        rank_str = self.rank.value.__str__() if self.rank.value in range(2, 11) else self.rank.name[0].__str__().lower()
-        suit_str = self.suit.name.__str__().lower()
+        rank_str = self.rank.value.__str__() if self.rank.value in range(2, 11) else self.rank.name[0].__str__().upper()
+        suit_str = self.suit.name.__str__().upper()
         return '%s %s' % (rank_str, suit_str)
 
     def get_rank_int(self):
