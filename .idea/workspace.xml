@@ -2,10 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="b76b907e-272d-4a37-8bb5-239891e17b4b" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/test/MiniProjects/BlackJack/test_deck.py" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/MiniProjects/BlackJack/CardStack.py" afterPath="$PROJECT_DIR$/src/MiniProjects/BlackJack/Deck.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/MiniProjects/BlackJack/Card.py" afterPath="$PROJECT_DIR$/src/MiniProjects/BlackJack/Card.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/test/MiniProjects/BlackJack/test_card.py" afterPath="$PROJECT_DIR$/test/MiniProjects/BlackJack/test_card.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/MiniProjects/BlackJack/Deck.py" afterPath="$PROJECT_DIR$/src/MiniProjects/BlackJack/Deck.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/test/MiniProjects/BlackJack/test_deck.py" afterPath="$PROJECT_DIR$/test/MiniProjects/BlackJack/test_deck.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="Finance.iws" />
@@ -22,7 +20,9 @@
   <component name="CoverageDataManager">
     <SUITE FILE_PATH="coverage/Finance$Unittest_TestBlack76_test_price.coverage" NAME="Unittest TestBlack76.test_price Coverage Results" MODIFIED="1427640276972" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/test/Utils" />
     <SUITE FILE_PATH="coverage/Finance$Unittest_TestBlack76_test_imp_vol.coverage" NAME="Unittest TestBlack76.test_imp_vol Coverage Results" MODIFIED="1427641602838" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/test/Utils" />
-    <SUITE FILE_PATH="coverage/Finance$Unittest_TestDeck_test_draw.coverage" NAME="Unittest TestDeck.test_draw Coverage Results" MODIFIED="1429997615393" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/test/MiniProjects/BlackJack" />
+    <SUITE FILE_PATH="coverage/Finance$Unittest_TestDeck_test_reveal.coverage" NAME="Unittest TestDeck.test_reveal Coverage Results" MODIFIED="1430065277784" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/test/MiniProjects/BlackJack" />
+    <SUITE FILE_PATH="coverage/Finance$Unittests_in_TestCard.coverage" NAME="Unittests in TestCard Coverage Results" MODIFIED="1430060877610" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/test/MiniProjects/BlackJack" />
+    <SUITE FILE_PATH="coverage/Finance$Unittest_TestDeck_test_draw.coverage" NAME="Unittest TestDeck.test_draw Coverage Results" MODIFIED="1430061538437" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/test/MiniProjects/BlackJack" />
     <SUITE FILE_PATH="coverage/Finance$Unittest_TestDeck_test___str____2_.coverage" NAME="Unittest TestDeck.test___str__ (2) Coverage Results" MODIFIED="1429993661341" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/test/MiniProjects/BlackJack" />
     <SUITE FILE_PATH="coverage/Finance$Unittest_TestCardStack_test_CardStack.coverage" NAME="Unittest TestCardStack.test_CardStack Coverage Results" MODIFIED="1429990268375" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/test/MiniProjects/BlackJack" />
     <SUITE FILE_PATH="coverage/Finance$Unittest_TestVolatilitySurfaceEquity_test_process_data.coverage" NAME="Unittest TestVolatilitySurfaceEquity.test_process_data Coverage Results" MODIFIED="1428876976772" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/test/VolSurface" />
@@ -34,6 +34,7 @@
     <SUITE FILE_PATH="coverage/Finance$Unittest_TestCard_test_read_str.coverage" NAME="Unittest TestCard.test_read_str Coverage Results" MODIFIED="1429992817252" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/test/MiniProjects/BlackJack" />
     <SUITE FILE_PATH="coverage/Finance$Unittests_in_TestBlack76.coverage" NAME="Unittests in TestBlack76 Coverage Results" MODIFIED="1427975263550" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/test/Utils" />
     <SUITE FILE_PATH="coverage/Finance$Unittest_TestCard_test_string.coverage" NAME="Unittest TestCard.test_string Coverage Results" MODIFIED="1429842861044" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/test/MiniProjects/BlackJack" />
+    <SUITE FILE_PATH="coverage/Finance$Unittests_in_TestDeck.coverage" NAME="Unittests in TestDeck Coverage Results" MODIFIED="1430060882381" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/test/MiniProjects/BlackJack" />
     <SUITE FILE_PATH="coverage/Finance$Card.coverage" NAME="Card Coverage Results" MODIFIED="1429840102478" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src/MiniProjects/BlackJack" />
     <SUITE FILE_PATH="coverage/Finance$Unittest_TestDeck_test___str____1_.coverage" NAME="Unittest TestDeck.test___str__ (1) Coverage Results" MODIFIED="1429993621773" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/test/MiniProjects/BlackJack" />
   </component>
@@ -52,30 +53,30 @@
       <file leaf-file-name="Card.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/MiniProjects/BlackJack/Card.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="365" max-vertical-offset="795">
+            <state vertical-scroll-proportion="0.0" vertical-offset="155" max-vertical-offset="795">
               <caret line="33" column="11" selection-start-line="33" selection-start-column="11" selection-end-line="33" selection-end-column="11" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="Deck.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="Deck.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/MiniProjects/BlackJack/Deck.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.54186046" vertical-offset="232" max-vertical-offset="855">
-              <caret line="31" column="19" selection-start-line="31" selection-start-column="19" selection-end-line="31" selection-end-column="19" />
+            <state vertical-scroll-proportion="0.0" vertical-offset="620" max-vertical-offset="1050">
+              <caret line="38" column="14" selection-start-line="38" selection-start-column="14" selection-end-line="38" selection-end-column="14" />
               <folding>
-                <element signature="e#0#60#0" expanded="true" />
+                <element signature="e#0#18#0" expanded="true" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="test_deck.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="test_deck.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/test/MiniProjects/BlackJack/test_deck.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="420">
-              <caret line="21" column="21" selection-start-line="21" selection-start-column="21" selection-end-line="21" selection-end-column="21" />
+            <state vertical-scroll-proportion="0.61627907" vertical-offset="335" max-vertical-offset="765">
+              <caret line="40" column="21" selection-start-line="40" selection-start-column="21" selection-end-line="40" selection-end-column="21" />
               <folding>
                 <element signature="e#0#29#0" expanded="true" />
               </folding>
@@ -86,8 +87,8 @@
       <file leaf-file-name="test_card.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/test/MiniProjects/BlackJack/test_card.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="35" max-vertical-offset="495">
-              <caret line="27" column="12" selection-start-line="27" selection-start-column="12" selection-end-line="27" selection-end-column="12" />
+            <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="495">
+              <caret line="6" column="11" selection-start-line="6" selection-start-column="11" selection-end-line="6" selection-end-column="11" />
               <folding>
                 <element signature="e#0#29#0" expanded="true" />
               </folding>
@@ -140,8 +141,8 @@
         <option value="$PROJECT_DIR$/src/MiniProjects/BlackJack/Card.py" />
         <option value="$PROJECT_DIR$/test/MiniProjects/BlackJack/test_card.py" />
         <option value="$PROJECT_DIR$/test/MiniProjects/BlackJack/test.py" />
-        <option value="$PROJECT_DIR$/test/MiniProjects/BlackJack/test_deck.py" />
         <option value="$PROJECT_DIR$/src/MiniProjects/BlackJack/Deck.py" />
+        <option value="$PROJECT_DIR$/test/MiniProjects/BlackJack/test_deck.py" />
       </list>
     </option>
   </component>
@@ -359,85 +360,8 @@
       <recent name="$PROJECT_DIR$/src" />
     </key>
   </component>
-  <component name="RunManager" selected="Python tests.Unittest TestDeck.test_draw">
-    <configuration default="false" name="Unittest TestCard.test_read_str" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs />
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/test/MiniProjects/BlackJack" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <module name="Finance" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/test/MiniProjects/BlackJack/test_card.py" />
-      <option name="CLASS_NAME" value="TestCard" />
-      <option name="METHOD_NAME" value="test_read_str" />
-      <option name="FOLDER_NAME" value="" />
-      <option name="TEST_TYPE" value="TEST_METHOD" />
-      <option name="PATTERN" value="" />
-      <option name="USE_PATTERN" value="false" />
-      <option name="PUREUNITTEST" value="true" />
-      <option name="PARAMS" value="" />
-      <option name="USE_PARAM" value="false" />
-      <RunnerSettings RunnerId="PyDebugRunner" />
-      <RunnerSettings RunnerId="PythonRunner" />
-      <ConfigurationWrapper RunnerId="PyDebugRunner" />
-      <ConfigurationWrapper RunnerId="PythonRunner" />
-      <method />
-    </configuration>
+  <component name="RunManager" selected="Python tests.Unittest TestDeck.test_reveal">
     <configuration default="false" name="Unittest TestDeck.test___str__" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs />
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/test/MiniProjects/BlackJack" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <module name="Finance" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/test/MiniProjects/BlackJack/test_deck.py" />
-      <option name="CLASS_NAME" value="TestDeck" />
-      <option name="METHOD_NAME" value="test___str__" />
-      <option name="FOLDER_NAME" value="" />
-      <option name="TEST_TYPE" value="TEST_METHOD" />
-      <option name="PATTERN" value="" />
-      <option name="USE_PATTERN" value="false" />
-      <option name="PUREUNITTEST" value="true" />
-      <option name="PARAMS" value="" />
-      <option name="USE_PARAM" value="false" />
-      <RunnerSettings RunnerId="PythonRunner" />
-      <ConfigurationWrapper RunnerId="PythonRunner" />
-      <method />
-    </configuration>
-    <configuration default="false" name="Unittest TestDeck.test___str__ (1)" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs />
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/test/MiniProjects/BlackJack" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <module name="Finance" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/test/MiniProjects/BlackJack/test_deck.py" />
-      <option name="CLASS_NAME" value="TestDeck" />
-      <option name="METHOD_NAME" value="test___str__" />
-      <option name="FOLDER_NAME" value="" />
-      <option name="TEST_TYPE" value="TEST_METHOD" />
-      <option name="PATTERN" value="" />
-      <option name="USE_PATTERN" value="false" />
-      <option name="PUREUNITTEST" value="true" />
-      <option name="PARAMS" value="" />
-      <option name="USE_PARAM" value="false" />
-      <RunnerSettings RunnerId="PythonRunner" />
-      <ConfigurationWrapper RunnerId="PythonRunner" />
-      <method />
-    </configuration>
-    <configuration default="false" name="Unittest TestDeck.test___str__ (2)" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs />
@@ -476,6 +400,81 @@
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/test/MiniProjects/BlackJack/test_deck.py" />
       <option name="CLASS_NAME" value="TestDeck" />
       <option name="METHOD_NAME" value="test_draw" />
+      <option name="FOLDER_NAME" value="" />
+      <option name="TEST_TYPE" value="TEST_METHOD" />
+      <option name="PATTERN" value="" />
+      <option name="USE_PATTERN" value="false" />
+      <option name="PUREUNITTEST" value="true" />
+      <option name="PARAMS" value="" />
+      <option name="USE_PARAM" value="false" />
+      <RunnerSettings RunnerId="PythonRunner" />
+      <ConfigurationWrapper RunnerId="PythonRunner" />
+      <method />
+    </configuration>
+    <configuration default="false" name="Unittests in TestCard" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/test/MiniProjects/BlackJack" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="Finance" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/test/MiniProjects/BlackJack/test_card.py" />
+      <option name="CLASS_NAME" value="TestCard" />
+      <option name="METHOD_NAME" value="" />
+      <option name="FOLDER_NAME" value="" />
+      <option name="TEST_TYPE" value="TEST_CLASS" />
+      <option name="PATTERN" value="" />
+      <option name="USE_PATTERN" value="false" />
+      <option name="PUREUNITTEST" value="true" />
+      <option name="PARAMS" value="" />
+      <option name="USE_PARAM" value="false" />
+      <RunnerSettings RunnerId="PythonRunner" />
+      <ConfigurationWrapper RunnerId="PythonRunner" />
+      <method />
+    </configuration>
+    <configuration default="false" name="Unittests in TestDeck" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/test/MiniProjects/BlackJack" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="Finance" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/test/MiniProjects/BlackJack/test_deck.py" />
+      <option name="CLASS_NAME" value="TestDeck" />
+      <option name="METHOD_NAME" value="" />
+      <option name="FOLDER_NAME" value="" />
+      <option name="TEST_TYPE" value="TEST_CLASS" />
+      <option name="PATTERN" value="" />
+      <option name="USE_PATTERN" value="false" />
+      <option name="PUREUNITTEST" value="true" />
+      <option name="PARAMS" value="" />
+      <option name="USE_PARAM" value="false" />
+      <RunnerSettings RunnerId="PythonRunner" />
+      <ConfigurationWrapper RunnerId="PythonRunner" />
+      <method />
+    </configuration>
+    <configuration default="false" name="Unittest TestDeck.test_reveal" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/test/MiniProjects/BlackJack" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="Finance" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/test/MiniProjects/BlackJack/test_deck.py" />
+      <option name="CLASS_NAME" value="TestDeck" />
+      <option name="METHOD_NAME" value="test_reveal" />
       <option name="FOLDER_NAME" value="" />
       <option name="TEST_TYPE" value="TEST_METHOD" />
       <option name="PATTERN" value="" />
@@ -676,19 +675,19 @@
       <method />
     </configuration>
     <list size="5">
-      <item index="0" class="java.lang.String" itemvalue="Python tests.Unittest TestCard.test_read_str" />
-      <item index="1" class="java.lang.String" itemvalue="Python tests.Unittest TestDeck.test___str__" />
-      <item index="2" class="java.lang.String" itemvalue="Python tests.Unittest TestDeck.test___str__ (1)" />
-      <item index="3" class="java.lang.String" itemvalue="Python tests.Unittest TestDeck.test___str__ (2)" />
-      <item index="4" class="java.lang.String" itemvalue="Python tests.Unittest TestDeck.test_draw" />
+      <item index="0" class="java.lang.String" itemvalue="Python tests.Unittest TestDeck.test___str__" />
+      <item index="1" class="java.lang.String" itemvalue="Python tests.Unittest TestDeck.test_draw" />
+      <item index="2" class="java.lang.String" itemvalue="Python tests.Unittests in TestCard" />
+      <item index="3" class="java.lang.String" itemvalue="Python tests.Unittests in TestDeck" />
+      <item index="4" class="java.lang.String" itemvalue="Python tests.Unittest TestDeck.test_reveal" />
     </list>
     <recent_temporary>
       <list size="5">
-        <item index="0" class="java.lang.String" itemvalue="Python tests.Unittest TestDeck.test_draw" />
-        <item index="1" class="java.lang.String" itemvalue="Python tests.Unittest TestDeck.test___str__" />
-        <item index="2" class="java.lang.String" itemvalue="Python tests.Unittest TestDeck.test___str__ (2)" />
-        <item index="3" class="java.lang.String" itemvalue="Python tests.Unittest TestDeck.test___str__ (1)" />
-        <item index="4" class="java.lang.String" itemvalue="Python tests.Unittest TestCard.test_read_str" />
+        <item index="0" class="java.lang.String" itemvalue="Python tests.Unittest TestDeck.test_reveal" />
+        <item index="1" class="java.lang.String" itemvalue="Python tests.Unittest TestDeck.test_draw" />
+        <item index="2" class="java.lang.String" itemvalue="Python tests.Unittests in TestDeck" />
+        <item index="3" class="java.lang.String" itemvalue="Python tests.Unittests in TestCard" />
+        <item index="4" class="java.lang.String" itemvalue="Python tests.Unittest TestDeck.test___str__" />
       </list>
     </recent_temporary>
   </component>
@@ -722,7 +721,7 @@
       <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.18669528" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32944608" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.33040935" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.33040935" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
@@ -1112,6 +1111,16 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/test/MiniProjects/BlackJack/test_card.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="495">
+          <caret line="6" column="11" selection-start-line="6" selection-start-column="11" selection-end-line="6" selection-end-column="11" />
+          <folding>
+            <element signature="e#0#29#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/MiniProjects/BlackJack/Card.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="365" max-vertical-offset="795">
@@ -1120,32 +1129,22 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/test/MiniProjects/BlackJack/test_card.py">
+    <entry file="file://$PROJECT_DIR$/src/MiniProjects/BlackJack/Deck.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="35" max-vertical-offset="495">
-          <caret line="27" column="12" selection-start-line="27" selection-start-column="12" selection-end-line="27" selection-end-column="12" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="360" max-vertical-offset="1050">
+          <caret line="38" column="14" selection-start-line="38" selection-start-column="14" selection-end-line="38" selection-end-column="14" />
           <folding>
-            <element signature="e#0#29#0" expanded="true" />
+            <element signature="e#0#18#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/test/MiniProjects/BlackJack/test_deck.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="420">
-          <caret line="21" column="21" selection-start-line="21" selection-start-column="21" selection-end-line="21" selection-end-column="21" />
+        <state vertical-scroll-proportion="0.61627907" vertical-offset="335" max-vertical-offset="765">
+          <caret line="40" column="21" selection-start-line="40" selection-start-column="21" selection-end-line="40" selection-end-column="21" />
           <folding>
             <element signature="e#0#29#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/MiniProjects/BlackJack/Deck.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.54186046" vertical-offset="232" max-vertical-offset="855">
-          <caret line="31" column="19" selection-start-line="31" selection-start-column="19" selection-end-line="31" selection-end-column="19" />
-          <folding>
-            <element signature="e#0#60#0" expanded="true" />
           </folding>
         </state>
       </provider>

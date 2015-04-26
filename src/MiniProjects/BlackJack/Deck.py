@@ -1,3 +1,4 @@
+import numpy as np
 from src.MiniProjects.BlackJack.Card import Card, Rank, Suit
 from random import shuffle
 
@@ -9,9 +10,10 @@ class Deck(object):
     def __init__(self, cards: list):
         for card in cards:
             assert isinstance(card, Card), 'unrecognized card entry, %s' % card.__str__()
-        self.cards = cards
+        self.cards = np.array(cards)
         self.indices = list(range(cards.__len__()))  # anchor the cards but shuffle index of them
         self.public = []  # nothing is public at initiation
+        self.nonpublic = []  # nothing is non-public at initiation
         self.cur_idx = 0  # track realized cards from indices
         self.shuffle()
 
@@ -24,12 +26,23 @@ class Deck(object):
         pass
 
     def draw(self, public=True):
+        assert self.cur_idx < self.cards.__len__(), 'ran out of cards.'
         idx = self.indices[self.cur_idx]
         card = self.cards[idx]
         if public:
             self.public.append(idx)
+        else:
+            self.nonpublic.append(idx)
         self.cur_idx += 1
         return card
+
+    def view_public(self):
+        return self.cards[self.public]
+
+    def reveal(self):
+        # this always assume one non-public to be revealed
+        assert self.nonpublic.__len__() > 0, 'no non-public drawn is available.'
+        self.public.append(self.nonpublic.pop())
 
     @staticmethod
     def new_deck(n_sets=4):
