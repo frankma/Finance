@@ -36,13 +36,13 @@ class Deck(object):
         self.cur_idx += 1
         return card
 
-    def view_public(self):
-        return self.cards[self.public]
-
     def reveal(self):
         # this always assume one non-public to be revealed
         assert self.nonpublic.__len__() > 0, 'no non-public drawn is available.'
         self.public.append(self.nonpublic.pop())
+
+    def view_public(self):
+        return self.cards[self.public]
 
     @staticmethod
     def new_deck(n_sets=4):
