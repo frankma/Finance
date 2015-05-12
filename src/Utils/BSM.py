@@ -27,3 +27,29 @@ class BSM(object):
         eta = opt_type.value
         d1 = BSM.calc_d1(s, k, tau, r, q, sig)
         return eta * norm.cdf(eta * d1)
+
+    @staticmethod
+    def gamma(s: float, k: float, tau: float, r: float, q: float, sig: float):
+        d1 = BSM.calc_d1(s, k, tau, r, q, sig)
+        return exp(-q * tau) * norm.pdf(d1) / s / sig / sqrt(tau)
+
+    @staticmethod
+    def vega(s: float, k: float, tau: float, r: float, q: float, sig: float):
+        d1 = BSM.calc_d1(s, k, tau, r, q, sig)
+        return s * exp(-q * tau) * norm.pdf(d1) * sqrt(tau)
+
+    @staticmethod
+    def theta(s: float, k: float, tau: float, r: float, q: float, sig: float, opt_type: OptionType):
+        eta = opt_type.value
+        d1 = BSM.calc_d1(s, k, tau, r, q, sig)
+        d2 = BSM.calc_d2(s, k, tau, r, q, sig)
+        term1 = -exp(-q * tau) * s * norm.pdf(d1) * sig / 2 / sqrt(tau)
+        term2 = eta * q * s * exp(-q * tau) * norm.cdf(eta * d1)
+        term3 = - eta * r * k * exp(-r * tau) * norm.cdf(eta * d2)
+        return term1 * term2 * term3
+
+    @staticmethod
+    def rho(s: float, k: float, tau: float, r: float, q: float, sig: float, opt_type: OptionType):
+        eta = opt_type.value
+        d2 = BSM.calc_d2(s, k, tau, r, q, sig)
+        return eta * tau * exp(-r * tau) * norm.cdf(eta * d2)
