@@ -9,18 +9,18 @@ __author__ = 'frank.ma'
 class Black76(object):
 
     @staticmethod
-    def cpt_d1(f: float, k: float, tau: float, sig: float):
+    def calc_d1(f: float, k: float, tau: float, sig: float):
         return (log(f / k) + 0.5 * sig**2 * tau) / (sig * sqrt(tau))
 
     @staticmethod
-    def cpt_d2(f: float, k: float, tau: float, sig: float):
+    def calc_d2(f: float, k: float, tau: float, sig: float):
         return (log(f / k) - 0.5 * sig**2 * tau) / (sig * sqrt(tau))
 
     @staticmethod
     def price(f: float, k: float, tau: float, sig: float, b: float, opt_type: OptionType):
         eta = opt_type.value
-        d1 = Black76.cpt_d1(f, k, tau, sig)
-        d2 = Black76.cpt_d2(f, k, tau, sig)
+        d1 = Black76.calc_d1(f, k, tau, sig)
+        d2 = Black76.calc_d2(f, k, tau, sig)
         return b * eta * (f * norm.cdf(eta * d1) - k * norm.cdf(eta * d2))
 
     @staticmethod
@@ -36,7 +36,7 @@ class Black76(object):
             v = Black76.price(f, k, tau, vol, b, opt_type)
             count += 1
 
-        if count > 99:
+        if count > 999:
             print('WARNING: black vol searching max out iterations.')
 
         return vol
@@ -44,23 +44,23 @@ class Black76(object):
     @staticmethod
     def delta(f: float, k: float, tau: float, sig: float, b: float, opt_type: OptionType):
         eta = opt_type.value
-        d1 = Black76.cpt_d1(f, k, tau, sig)
+        d1 = Black76.calc_d1(f, k, tau, sig)
         return b * eta * norm.cdf(eta * d1)
 
     @staticmethod
     def delta_k(f: float, k: float, tau: float, sig: float, b: float, opt_type: OptionType):
         eta = opt_type.value
-        d2 = Black76.cpt_d2(f, k, tau, sig)
+        d2 = Black76.calc_d2(f, k, tau, sig)
         return -b * eta * norm.cdf(eta * d2)
 
     @staticmethod
     def vega(f: float, k: float, tau: float, sig: float, b: float):
-        d1 = Black76.cpt_d1(f, k, tau, sig)
+        d1 = Black76.calc_d1(f, k, tau, sig)
         return b * f * sqrt(tau) * norm.pdf(d1)
 
     @staticmethod
     def theta(f: float, k: float, tau: float, sig: float, b: float, opt_type: OptionType):
-        d1 = Black76.cpt_d1(f, k, tau, sig)
+        d1 = Black76.calc_d1(f, k, tau, sig)
         price = Black76.price(f, k, tau, sig, b, opt_type)
         r = -log(b) / tau
         return -b * f * norm.pdf(d1) * sig / 2. / sqrt(tau) + r * price
@@ -68,8 +68,8 @@ class Black76(object):
     @staticmethod
     def theta_s(f: float, k: float, tau: float, sig: float, b: float, opt_type: OptionType):
         eta = opt_type.value
-        d1 = Black76.cpt_d1(f, k, tau, sig)
-        d2 = Black76.cpt_d2(f, k, tau, sig)
+        d1 = Black76.calc_d1(f, k, tau, sig)
+        d2 = Black76.calc_d2(f, k, tau, sig)
         r = -log(b) / tau
         q = log(k / f) / tau + r
         return -b * f * norm.pdf(d1) * sig / 2. / sqrt(tau) + b * eta * (q * f * norm.cdf(eta * d1)
@@ -84,15 +84,15 @@ class Black76(object):
     @staticmethod
     def rho_s(f: float, k: float, tau: float, sig: float, b: float, opt_type: OptionType):
         eta = opt_type.value
-        d2 = Black76.cpt_d2(f, k, tau, sig)
+        d2 = Black76.calc_d2(f, k, tau, sig)
         return tau * b * eta * k * norm.cdf(eta * d2)
 
     @staticmethod
     def gamma(f: float, k: float, tau: float, sig: float, b: float):
-        d1 = Black76.cpt_d1(f, k, tau, sig)
+        d1 = Black76.calc_d1(f, k, tau, sig)
         return b * norm.pdf(d1) / f / sig / sqrt(tau)
 
     @staticmethod
     def gamma_k(f: float, k: float, tau: float, sig: float, b: float):
-        d2 = Black76.cpt_d2(f, k, tau, sig)
+        d2 = Black76.calc_d2(f, k, tau, sig)
         return b * norm.pdf(d2) / k / sig / sqrt(tau)
