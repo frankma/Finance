@@ -38,7 +38,7 @@ class NormalModel(object):
     @staticmethod
     def vega(f: float, k: float, tau: float, sig: float, b: float):
         d = NormalModel.calc_d(f, k, tau, sig)
-        return -b * sqrt(tau) * norm.pdf(d)
+        return b * sqrt(tau) * norm.pdf(d)
 
     @staticmethod
     def theta(f: float, k: float, tau: float, sig: float, b: float, opt_type: OptionType):
