@@ -18,15 +18,21 @@ class NormalModel(object):
         return b * (eta * (f - k) * norm.cdf(eta * d) + sig * sqrt(tau) * norm.pdf(d))
 
     @staticmethod
-    def normal_vol(f: float, k: float, tau: float, price: float, b: float, opt_type: OptionType):
-        vol = 0.01
+    def imp_vol(f: float, k: float, tau: float, price: float, b: float, opt_type: OptionType):
+        vol = 0.88 * f  # initial guess
         v = NormalModel.price(f, k, tau, vol, b, opt_type)
+
         count = 1
-        while abs(v - price) > 1e-12 and count < 999:
+
+        while abs(v - price) > 1e-12 and count < 99:
             vega = NormalModel.vega(f, k, vol, vol, b)
             vol += (price - v) / vega
             v = NormalModel.price(f, k, tau, vol, b, opt_type)
             count += 1
+
+        if count > 99:
+            print('WARNING: black vol searching max out iterations.')
+
         return vol
 
     @staticmethod

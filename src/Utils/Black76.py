@@ -36,7 +36,7 @@ class Black76(object):
             v = Black76.price(f, k, tau, vol, b, opt_type)
             count += 1
 
-        if count > 999:
+        if count > 99:
             print('WARNING: black vol searching max out iterations.')
 
         return vol

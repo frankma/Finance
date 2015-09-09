@@ -10,13 +10,17 @@ class TestNormalModel(TestCase):
     def test_price(self):
         pass
 
-    def test_normal_vol(self):
+    def test_imp_vol(self):
         f = 150.0
         k = 150.0
         tau = 0.75
-        sig = 0.05
+        sig = 0.25 * f
         b = 0.98
-        opt_type = OptionType.call
-        v = NormalModel.price(f, k, tau, sig, b, opt_type)
-        vol = NormalModel.normal_vol(f, k, tau, v, b, opt_type)
-        print(sig, vol)
+
+        v_call = NormalModel.price(f, k, tau, sig, b, OptionType.call)
+        vol_call = NormalModel.imp_vol(f, k, tau, v_call, b, OptionType.call)
+        v_put = NormalModel.price(f, k, tau, sig, b, OptionType.put)
+        vol_put = NormalModel.imp_vol(f, k, tau, v_put, b, OptionType.put)
+
+        assert abs(vol_call / sig - 1.0) < 1e-4, "call imp vol search failed"
+        assert abs(vol_put / sig - 1.0) < 1e-4, "put imp vol search failed"
