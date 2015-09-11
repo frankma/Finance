@@ -1,6 +1,8 @@
 from math import sqrt, log
 from scipy.stats import norm
 from src.Utils.OptionType import OptionType
+from src.Utils.Solver.IVariateFunction import IUnivariateFunction
+from src.Utils.Solver.NewtonRaphson import NewtonRaphson
 
 __author__ = 'frank.ma'
 
@@ -19,19 +21,22 @@ class NormalModel(object):
 
     @staticmethod
     def imp_vol(f: float, k: float, tau: float, price: float, b: float, opt_type: OptionType):
-        vol = 0.88 * f  # initial guess
-        v = NormalModel.price(f, k, tau, vol, b, opt_type)
 
-        count = 1
+        class PriceFunction(IUnivariateFunction):
 
-        while abs(v - price) > 1e-12 and count < 99:
-            vega = NormalModel.vega(f, k, vol, vol, b)
-            vol += (price - v) / vega
-            v = NormalModel.price(f, k, tau, vol, b, opt_type)
-            count += 1
+            def evaluate(self, x: float):
+                return NormalModel.price(f, k, tau, x, b, opt_type) - price
 
-        if count > 99:
-            print('WARNING: black vol searching max out iterations.')
+        class VegaFunction(IUnivariateFunction):
+
+            def evaluate(self, x):
+                return NormalModel.vega(f, k, tau, x, b)
+
+        pf = PriceFunction()
+        vf = VegaFunction()
+
+        nr = NewtonRaphson(pf, vf, 0.88 * f)
+        vol = nr.solve()
 
         return vol
 
