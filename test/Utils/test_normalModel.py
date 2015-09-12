@@ -17,10 +17,10 @@ class TestNormalModel(TestCase):
         sig = 0.25 * f
         b = 0.98
 
-        v_call = NormalModel.price(f, k, tau, sig, b, OptionType.call)
-        vol_call = NormalModel.imp_vol(f, k, tau, v_call, b, OptionType.call)
-        v_put = NormalModel.price(f, k, tau, sig, b, OptionType.put)
-        vol_put = NormalModel.imp_vol(f, k, tau, v_put, b, OptionType.put)
+        call_price = NormalModel.price(f, k, tau, sig, b, OptionType.call)
+        call_imp_vol = NormalModel.imp_vol(f, k, tau, call_price, b, OptionType.call)
+        put_price = NormalModel.price(f, k, tau, sig, b, OptionType.put)
+        put_imp_vol = NormalModel.imp_vol(f, k, tau, put_price, b, OptionType.put)
 
-        assert abs(vol_call / sig - 1.0) < 1e-4, "call imp vol search failed"
-        assert abs(vol_put / sig - 1.0) < 1e-4, "put imp vol search failed"
+        self.assertAlmostEqual(sig, call_imp_vol, places=6, msg='call implied vol search failed')
+        self.assertAlmostEqual(sig, put_imp_vol, places=6, msg='put implied vol search failed')

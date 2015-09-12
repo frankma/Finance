@@ -21,8 +21,7 @@ class TestBlack76(TestCase):
         lhs = call_price - put_price
         rhs = bond * (forward - strike)
 
-        assert abs(lhs / rhs - 1.) < 1e-10, 'call put parity violated.'
-        pass
+        self.assertAlmostEqual(lhs, rhs, places=12, msg='call put parity check failed')
 
     def test_imp_vol(self):
         forward = 110.
@@ -37,9 +36,8 @@ class TestBlack76(TestCase):
         call_imp_vol = Black76.imp_vol(forward, strike, ttm, call_price, bond, OptionType.call)
         put_imp_vol = Black76.imp_vol(forward, strike, ttm, put_price, bond, OptionType.put)
 
-        assert abs(call_imp_vol / sigma - 1) < 1e-6, 'call implied vol search failed.'
-        assert abs(put_imp_vol / sigma - 1) < 1e-6, 'put implied vol search failed.'
-        pass
+        self.assertAlmostEqual(sigma, call_imp_vol, places=6, msg='call implied vol search failed')
+        self.assertAlmostEqual(sigma, put_imp_vol, places=6, msg='put implied vol search failed')
 
     def test_pde(self):
         forward = 110.
@@ -65,6 +63,5 @@ class TestBlack76(TestCase):
         call_rhs = r * call_price
         put_rhs = r * put_price
 
-        assert abs(call_lhs / call_rhs - 1.) < 1e-6, 'call pde check failed.'
-        assert abs(put_lhs / put_rhs - 1.) < 1e-6, 'put pde check failed.'
-        pass
+        self.assertAlmostEqual(call_lhs, call_rhs, places=6, msg='call PDE check failed')
+        self.assertAlmostEqual(put_lhs, put_rhs, places=6, msg='put PDE check failed')
