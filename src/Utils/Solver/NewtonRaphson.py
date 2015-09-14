@@ -1,5 +1,6 @@
 from src.Utils.Solver.ISolver import ISolver
 from src.Utils.Solver.IVariateFunction import IUnivariateFunction
+from scipy.optimize import newton
 
 __author__ = 'frank.ma'
 
@@ -11,7 +12,7 @@ class NewtonRaphson(ISolver):
         self.d = d
         self.init_guess = init_guess
 
-    def solve(self):
+    def solve2(self):
         x = self.init_guess
         y = self.f.evaluate(x)
         d = self.d.evaluate(x)
@@ -27,3 +28,8 @@ class NewtonRaphson(ISolver):
             print("WARNING: Newton-Raphson method iteration maxed out %i steps, return best guess with error %r"
                   % (self.ITR_TOL, y))
         return x
+
+    def solve(self):
+        x = self.init_guess
+        nr = newton(self.f.evaluate, x, self.d.evaluate, tol=self.ABS_TOL, maxiter=self.ITR_TOL)
+        return nr
