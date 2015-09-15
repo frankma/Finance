@@ -1,6 +1,9 @@
-from unittest import TestCase
 import numpy as np
+import matplotlib.pylab as plt
+
+from unittest import TestCase
 from src.Utils.Solver.RealNumberTransformer import RealNumberTransformer
+
 
 __author__ = 'frank.ma'
 
@@ -8,6 +11,7 @@ __author__ = 'frank.ma'
 class TestRealNumberTransformer(TestCase):
 
     def test_uc_to_c(self):
+
         x = np.array(range(-200, 200)) * 0.1
         lower_bound = 0.0
         upper_bound = 4.0
@@ -50,6 +54,7 @@ class TestRealNumberTransformer(TestCase):
             self.assertAlmostEqual(v, x_ub[idx], places=6, msg='upper bound log method check failed.')
 
     def test_c_to_uc(self):
+
         y = np.array(range(0, 4)) * 0.01
         lower_bound = -1e-4
         upper_bound = 4.0 + 1e-4
@@ -90,3 +95,27 @@ class TestRealNumberTransformer(TestCase):
             # self.assertAlmostEqual(v, y_norm[idx], places=12, msg='norm method check failed.')
             self.assertAlmostEqual(v, y_lb[idx], places=6, msg='norm method check failed.')
             self.assertAlmostEqual(v, y_ub[idx], places=6, msg='norm method check failed.')
+
+    def test_graphical(self):
+
+        x = np.arange(-20.0, 20.0, 0.1)
+        lower_bound = -1.0
+        upper_bound = 4.0
+
+        rnt_abs = RealNumberTransformer(lower_bound, upper_bound, 'abs')
+        rnt_log = RealNumberTransformer(lower_bound, upper_bound, 'tan')
+        rnt_norm = RealNumberTransformer(lower_bound, upper_bound, 'norm')
+
+        y_abs = x.copy()
+        y_log = x.copy()
+        y_norm = x.copy()
+
+        for idx, v in enumerate(x):
+            y_abs[idx] = rnt_abs.uc_to_c(v)
+            y_log[idx] = rnt_log.uc_to_c(v)
+            y_norm[idx] = rnt_norm.uc_to_c(v)
+
+        plt.plot(x, y_abs, 'r', x, y_log, 'b', x, y_norm, 'k')
+        plt.legend(('absolute', 'arc-tangent', 'normal-inverse'))
+        plt.show()
+        pass
