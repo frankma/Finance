@@ -1,6 +1,8 @@
-from scipy.stats import norm
-from src.Utils import OptionType
 from math import log, exp, sqrt
+
+from scipy.stats import norm
+
+from src.Utils import OptionType
 from src.Utils.Solver.Brent import Brent
 from src.Utils.Solver.IVariateFunction import IUnivariateFunction
 from src.Utils.Solver.NewtonRaphson import NewtonRaphson

@@ -1,7 +1,7 @@
 from scipy.optimize import brentq
+
 from src.Utils.Solver.ISolver import ISolver
 from src.Utils.Solver.IVariateFunction import IUnivariateFunction
-
 
 __author__ = 'frank.ma'
 

@@ -1,6 +1,7 @@
+from scipy.optimize import newton
+
 from src.Utils.Solver.ISolver import ISolver
 from src.Utils.Solver.IVariateFunction import IUnivariateFunction
-from scipy.optimize import newton
 
 __author__ = 'frank.ma'
 

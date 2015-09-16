@@ -1,4 +1,5 @@
 from unittest import TestCase
+
 from src.MiniProjects.BlackJack.Deck import Deck
 
 __author__ = 'frank.ma'

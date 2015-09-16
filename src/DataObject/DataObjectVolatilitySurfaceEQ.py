@@ -1,6 +1,8 @@
 import datetime
-from src.DataObject.DataObject import DataObject
+
 from pandas import Series, DataFrame
+
+from src.DataObject.DataObject import DataObject
 
 __author__ = 'frank.ma'
 

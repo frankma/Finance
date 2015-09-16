@@ -1,7 +1,8 @@
 from unittest import TestCase
+from math import log
+
 from src.Utils.Black76 import Black76
 from src.Utils.OptionType import OptionType
-from math import log
 
 __author__ = 'frank.ma'
 

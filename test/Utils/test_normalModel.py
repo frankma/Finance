@@ -1,4 +1,5 @@
 from unittest import TestCase
+
 from src.Utils.NormalModel import NormalModel
 from src.Utils.OptionType import OptionType
 

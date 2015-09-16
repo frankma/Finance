@@ -1,9 +1,9 @@
+from unittest import TestCase
+
 import numpy as np
 import matplotlib.pylab as plt
 
-from unittest import TestCase
 from src.Utils.Solver.RealNumberTransformer import RealNumberTransformer
-
 
 __author__ = 'frank.ma'
 

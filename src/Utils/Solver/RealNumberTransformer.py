@@ -1,6 +1,6 @@
 from math import tan, atan, pi, exp, log
-from scipy.stats import norm
 
+from scipy.stats import norm
 
 __author__ = 'frank.ma'
 

@@ -1,5 +1,7 @@
 from math import log, sqrt
+
 from scipy.stats import norm
+
 from src.Utils.OptionType import OptionType
 from src.Utils.Solver.Brent import Brent
 from src.Utils.Solver.IVariateFunction import IUnivariateFunction

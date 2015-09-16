@@ -1,7 +1,7 @@
+from pandas import Series, DataFrame
+
 from src.DataObject.DataObjectVolatilitySurfaceEQ import DataObjectVolatilitySurfaceEQ
 from src.VolSurface.VolatilitySurface import VolatilitySurface
-from pandas import Series, DataFrame
-from pandas.stats.api import ols
 
 __author__ = 'frank.ma'
 

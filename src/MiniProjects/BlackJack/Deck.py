@@ -1,6 +1,8 @@
-import numpy as np
-from src.MiniProjects.BlackJack.Card import Card, Rank, Suit
 from random import shuffle
+
+import numpy as np
+
+from src.MiniProjects.BlackJack.Card import Card, Rank, Suit
 
 __author__ = 'frank.ma'
 

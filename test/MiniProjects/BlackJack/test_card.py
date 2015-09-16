@@ -1,4 +1,5 @@
 from unittest import TestCase
+
 from src.MiniProjects.BlackJack.Card import Card, Rank, Suit
 
 __author__ = 'frank.ma'

@@ -1,6 +1,5 @@
 from math import log, sqrt
 
-
 __author__ = 'frank.ma'
 
 
