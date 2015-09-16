@@ -12,7 +12,7 @@ class NewtonRaphson(ISolver):
         self.d = d
         self.init_guess = init_guess
 
-    def solve2(self):
+    def solve_loc(self):
         x = self.init_guess
         y = self.f.evaluate(x)
         d = self.d.evaluate(x)
@@ -30,6 +30,5 @@ class NewtonRaphson(ISolver):
         return x
 
     def solve(self):
-        x = self.init_guess
-        nr = newton(self.f.evaluate, x, self.d.evaluate, tol=self.ABS_TOL, maxiter=self.ITR_TOL)
+        nr = newton(self.f.evaluate, self.init_guess, self.d.evaluate, tol=self.ABS_TOL, maxiter=self.ITR_TOL)
         return nr

@@ -1,6 +1,7 @@
 from math import sqrt, log
 from scipy.stats import norm
 from src.Utils.OptionType import OptionType
+from src.Utils.Solver.Brent import Brent
 from src.Utils.Solver.IVariateFunction import IUnivariateFunction
 from src.Utils.Solver.NewtonRaphson import NewtonRaphson
 
@@ -20,7 +21,7 @@ class NormalModel(object):
         return b * (eta * (f - k) * norm.cdf(eta * d) + sig * sqrt(tau) * norm.pdf(d))
 
     @staticmethod
-    def imp_vol(f: float, k: float, tau: float, price: float, b: float, opt_type: OptionType):
+    def imp_vol(f: float, k: float, tau: float, price: float, b: float, opt_type: OptionType, method='Brent'):
 
         class PriceFunction(IUnivariateFunction):
 
@@ -35,8 +36,14 @@ class NormalModel(object):
         pf = PriceFunction()
         vf = VegaFunction()
 
-        nr = NewtonRaphson(pf, vf, 0.88 * f)
-        vol = nr.solve()
+        if method == 'Brent':
+            bt = Brent(pf, 1e-4, 10.0 * f)
+            vol = bt.solve()
+        elif method == 'Newton-Raphson':
+            nr = NewtonRaphson(pf, vf, 0.88 * f)
+            vol = nr.solve()
+        else:
+            raise Exception('Unrecognized optimization method %s.' % method)
 
         return vol
 

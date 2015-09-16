@@ -19,7 +19,7 @@ class RealNumberTransformer(object):
         constraint = unconstraint
 
         if self.lb is None and self.ub is None:
-            print('WARNING: neither lower nor upper bound is provided, no transform is performed.')
+            print('WARNING: neither lower nor upper bound is provided, no transform will be performed.')
         elif self.lb is None:
             constraint = self.ub - exp(unconstraint)
         elif self.ub is None:
@@ -32,7 +32,7 @@ class RealNumberTransformer(object):
             elif self.method == 'norm':
                 constraint = self.lb + self.distance * norm.cdf(unconstraint)
             else:
-                raise Exception('unrecognized transformation method %s' % self.method)
+                raise Exception('Unrecognized transformation method %s' % self.method)
 
         return constraint
 
@@ -41,7 +41,7 @@ class RealNumberTransformer(object):
         unconstraint = constraint
 
         if self.lb is None and self.ub is None:
-            print('WARNING: neither lower nor upper bound is provided, no transform is performed.')
+            print('WARNING: neither lower nor upper bound is provided, no transform will be performed.')
         elif self.lb is None:
             unconstraint = log(self.ub - constraint)
         elif self.ub is None:
@@ -58,6 +58,6 @@ class RealNumberTransformer(object):
             elif self.method == 'norm':
                 unconstraint = norm.ppf(constraint - self.lb) / self.distance
             else:
-                raise Exception("unrecognized transformation method")
+                raise Exception("Unrecognized transformation method %s" % self.method)
 
         return unconstraint
