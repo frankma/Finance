@@ -31,7 +31,7 @@ class BSMSpotVec(object):
 
         eta = opt_type.value
 
-        if tau < 1e-12:
+        if tau < 1e-6:
             if tau < 0.0:
                 print('WARNING: Negative time to expiry is given, zero delta will be returned.')
             return np.zeros(s.__len__())
@@ -69,11 +69,9 @@ class Simulation(object):
         self.model = model
 
         self.s_curr = np.ones(self.n_scn) * self.s_0
-        self.s_prev = np.zeros(self.n_scn)
 
     def marching(self, dt: float):
-        self.s_prev = self.s_curr.copy()
-        self.s_curr = self.evolve(self.s_prev, dt, self.r, self.q, self.sig, self.model)
+        self.s_curr = self.evolve(self.s_curr, dt, self.r, self.q, self.sig, self.model)
         return self.s_curr
 
 
@@ -104,14 +102,13 @@ class DeltaHedging(object):
         d_curr = BSMSpotVec.delta(s_curr, self.k, self.taus[0], self.r_opt, self.q_opt, self.sig_opt, self.opt_type)
         d_prev = d_curr.copy()
         cash_acc = v_curr - d_curr * s_curr
-        print(cash_acc)
 
         for idx, tau in enumerate(self.taus[1:]):
             dt = self.taus[idx] - tau
             inc_bond = exp(self.r_sim * dt)
             cash_acc *= inc_bond
             s_curr = s_sim.marching(dt)
-            d_curr = BSMSpotVec.delta(s_curr, self.k, self.taus[0], self.r_opt, self.q_opt, self.sig_opt, self.opt_type)
+            d_curr = BSMSpotVec.delta(s_curr, self.k, tau, self.r_opt, self.q_opt, self.sig_opt, self.opt_type)
             cash_acc += (d_prev - d_curr) * s_curr
             d_prev = d_curr.copy()
 
@@ -123,14 +120,14 @@ class DeltaHedging(object):
 
 if __name__ == '__main__':
 
-    N_SCN = 2
-    N_STP = 10
+    N_SCN = 10**4
+    N_STP = 1000
     S_0 = 100
     K = 100
     TAU = 1.0
     R_SIM = 0.0
     Q_SIM = 0.0
-    SIG_SIM = 0.0000000002
+    SIG_SIM = 0.2
     R_OPT = R_SIM
     Q_OPT = Q_SIM
     SIG_OPT = SIG_SIM
@@ -138,5 +135,5 @@ if __name__ == '__main__':
 
     dh = DeltaHedging(N_SCN, N_STP, S_0, K, TAU, R_SIM, Q_SIM, SIG_SIM, R_OPT, Q_OPT, SIG_OPT, OPT_TYPE, 'lognormal')
     p_n_l, c_a, pff = dh.sim_to_terminal()
-    print(p_n_l, c_a, pff)
+    # print(p_n_l, c_a, pff)
     print(np.average(p_n_l), np.std(p_n_l))
