@@ -12,6 +12,9 @@ __author__ = 'frank.ma'
 
 class SingleVarDeltaHedging(object):
 
+    FIX_COMMISSION = 1.0
+    VAR_COMMISSION = 0.25
+
     def __init__(self, n_scn: int, n_stp: float, s_0: float, k: float, tau: float, r_sim: float, q_sim: float,
                  sig_sim: float, r_opt: float, q_opt: float, sig_opt: float, opt_type: OptionType, model='lognormal'):
         self.n_scn = n_scn
@@ -27,7 +30,16 @@ class SingleVarDeltaHedging(object):
         self.opt_type = opt_type
         self.model = model
 
-    def sim_to_terminal(self):
+    def set_fix_commission(self, fixed_commission: float):
+        self.FIX_COMMISSION = fixed_commission
+
+    def set_var_commision(self, variable_commission: float):
+        self.VAR_COMMISSION = variable_commission
+
+    def tran_cost(self, n_shares):
+        return self.FIX_COMMISSION + n_shares * self.VAR_COMMISSION
+
+    def sim_to_term(self):
 
         s_sim = SingleVarSimulation(self.n_scn, self.s_0, self.taus, self.r_sim, self.q_sim, self.sig_sim, self.model)
 
@@ -38,6 +50,7 @@ class SingleVarDeltaHedging(object):
         d_prev = d_curr.copy()
         cash_acc = v_curr - d_curr * s_curr
 
+        # from second till last
         for idx, tau in enumerate(self.taus[1:]):
             dt = self.taus[idx] - tau
             inc_bond = exp(self.r_sim * dt)
@@ -47,7 +60,11 @@ class SingleVarDeltaHedging(object):
             cash_acc += (d_prev - d_curr) * s_curr
             d_prev = d_curr.copy()
 
+        # only display the last one
         payoff = BSMVecS.payoff(s_curr, self.k, self.opt_type)
         pnl = cash_acc - payoff
 
         return pnl, cash_acc, payoff
+
+    def term_analysis(self):
+        pass
