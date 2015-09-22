@@ -8,6 +8,26 @@ __author__ = 'frank.ma'
 
 class SingleVarSimulation(object):
 
+    def __init__(self, n_scn: int, s_0: float, taus: list, r: float, q: float, sig: float, model='lognormal'):
+        self.n_scn = n_scn
+        self.taus = taus
+        self.s_0 = s_0
+        self.r = r
+        self.q = q
+        self.sig = sig
+        self.model = model
+
+        self.s_curr = np.ones(self.n_scn) * self.s_0
+        self.s_prev = self.s_curr.copy()
+
+    def marching(self, dt: float):
+        self.s_prev = self.s_curr.copy()
+        self.s_curr = self.evolve(self.s_prev, dt, self.r, self.q, self.sig, self.model)
+        return self.s_curr
+
+    def get_s_curr(self):
+        return self.s_curr
+
     @staticmethod
     def evolve(s_prev: np.array, dt: float, r: float, q: float, sig: float, model='lognormal'):
 
@@ -20,17 +40,3 @@ class SingleVarSimulation(object):
         else:
             raise ValueError('Unrecognized model input: %s' % model)
 
-    def __init__(self, n_scn: int, s_0: float, taus: list, r: float, q: float, sig: float, model='lognormal'):
-        self.n_scn = n_scn
-        self.taus = taus
-        self.s_0 = s_0
-        self.r = r
-        self.q = q
-        self.sig = sig
-        self.model = model
-
-        self.s_curr = np.ones(self.n_scn) * self.s_0
-
-    def marching(self, dt: float):
-        self.s_curr = self.evolve(self.s_curr.copy(), dt, self.r, self.q, self.sig, self.model)
-        return self.s_curr

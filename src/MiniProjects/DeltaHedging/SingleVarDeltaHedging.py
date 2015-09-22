@@ -29,22 +29,23 @@ class SingleVarDeltaHedging(object):
         self.sig_opt = sig_opt
         self.opt_type = opt_type
         self.model = model
+        self.s_sim = SingleVarSimulation(n_scn, s_0, self.taus, r_sim, q_sim, sig_sim, model)
 
     def set_fix_commission(self, fixed_commission: float):
         self.FIX_COMMISSION = fixed_commission
 
-    def set_var_commision(self, variable_commission: float):
+    def set_var_commission(self, variable_commission: float):
         self.VAR_COMMISSION = variable_commission
 
     def tran_cost(self, n_shares):
         return self.FIX_COMMISSION + n_shares * self.VAR_COMMISSION
 
+    def rebalance(self):
+        pass
+
     def sim_to_term(self):
-
-        s_sim = SingleVarSimulation(self.n_scn, self.s_0, self.taus, self.r_sim, self.q_sim, self.sig_sim, self.model)
-
         # initial step
-        s_curr = s_sim.s_curr
+        s_curr = self.s_sim.s_curr
         v_curr = BSMVecS.price(s_curr, self.k, self.taus[0], self.r_opt, self.q_opt, self.sig_opt, self.opt_type)
         d_curr = BSMVecS.delta(s_curr, self.k, self.taus[0], self.r_opt, self.q_opt, self.sig_opt, self.opt_type)
         d_prev = d_curr.copy()
@@ -55,14 +56,15 @@ class SingleVarDeltaHedging(object):
             dt = self.taus[idx] - tau
             inc_bond = exp(self.r_sim * dt)
             cash_acc *= inc_bond
-            s_curr = s_sim.marching(dt)
+            s_curr = self.s_sim.marching(dt)
             d_curr = BSMVecS.delta(s_curr, self.k, tau, self.r_opt, self.q_opt, self.sig_opt, self.opt_type)
+            self.rebalance()  # TODO: make this the major function to do the rebalancing work
             cash_acc += (d_prev - d_curr) * s_curr
             d_prev = d_curr.copy()
 
         # only display the last one
         payoff = BSMVecS.payoff(s_curr, self.k, self.opt_type)
-        pnl = cash_acc - payoff
+        pnl = payoff - cash_acc
 
         return pnl, cash_acc, payoff
 
