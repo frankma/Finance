@@ -25,9 +25,6 @@ class SingleVarSimulation(object):
         self.s_curr = self.evolve(self.s_prev, dt, self.r, self.q, self.sig, self.model)
         return self.s_curr
 
-    def get_s_curr(self):
-        return self.s_curr
-
     @staticmethod
     def evolve(s_prev: np.array, dt: float, r: float, q: float, sig: float, model='lognormal'):
 

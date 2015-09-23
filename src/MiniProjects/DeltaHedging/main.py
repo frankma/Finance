@@ -29,16 +29,17 @@ bins_mid = 0.5 * (bins[1:] + bins[:-1])
 df_pnl = pd.DataFrame()
 df_hist = pd.DataFrame()
 
-print('trail_id\tmean\tstd_dev\tskew\tcalc_time')
+print('trail_id\tmean\tstd_dev\tskew\treb_count_avg\tcalc_time')
 for SIG_SIM in SIG_SIMS:
     for N_STP in N_STPS:
         trail_id = SIG_SIM.__str__() + '_' + N_STP.__str__()
         SIG_OPT = SIG_SIM
         tic = tm.time()
         dh = SingleVarDeltaHedging(N_SCN, N_STP, S_0, K, TAU, R_SIM, Q_SIM, SIG_SIM, R_OPT, Q_OPT, SIG_OPT, OPT_TYPE)
-        p_n_l, c_a, pff = dh.sim_to_term()
-        print('%s\t%.6f\t%.6f\t%.6f\t%.6f\t%.4f'
-              % (trail_id, np.average(p_n_l), np.std(p_n_l), skew(p_n_l), kurtosis(p_n_l), (tm.time() - tic)))
+        p_n_l, reb_count = dh.sim_to_term()
+        print('%s\t%.6f\t%.6f\t%.6f\t%.6f\t%.4f\t%.4f'
+              % (trail_id, np.average(p_n_l), np.std(p_n_l), skew(p_n_l), kurtosis(p_n_l), np.average(reb_count),
+                 (tm.time() - tic)))
         df_pnl = pd.concat([df_pnl, pd.DataFrame(data=p_n_l, columns=[trail_id])], axis=1, join='inner')
         # histogram analysis
         freq, bins_ret = np.histogram(p_n_l, bins)

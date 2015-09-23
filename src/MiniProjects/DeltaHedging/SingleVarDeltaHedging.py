@@ -14,6 +14,7 @@ class SingleVarDeltaHedging(object):
 
     FIX_COMMISSION = 1.0
     VAR_COMMISSION = 0.25
+    REB_LEVEL = 0.01
 
     def __init__(self, n_scn: int, n_stp: float, s_0: float, k: float, tau: float, r_sim: float, q_sim: float,
                  sig_sim: float, r_opt: float, q_opt: float, sig_opt: float, opt_type: OptionType, model='lognormal'):
@@ -37,11 +38,11 @@ class SingleVarDeltaHedging(object):
     def set_var_commission(self, variable_commission: float):
         self.VAR_COMMISSION = variable_commission
 
+    def set_reb_level(self, rebalance_level: float):
+        self.REB_LEVEL = rebalance_level
+
     def tran_cost(self, n_shares):
         return self.FIX_COMMISSION + n_shares * self.VAR_COMMISSION
-
-    def rebalance(self):
-        pass
 
     def sim_to_term(self):
         # initial step
@@ -50,23 +51,25 @@ class SingleVarDeltaHedging(object):
         d_curr = BSMVecS.delta(s_curr, self.k, self.taus[0], self.r_opt, self.q_opt, self.sig_opt, self.opt_type)
         d_prev = d_curr.copy()
         cash_acc = v_curr - d_curr * s_curr
+        reb_count = np.ones(self.s_sim.n_scn)
 
         # from second till last
         for idx, tau in enumerate(self.taus[1:]):
             dt = self.taus[idx] - tau
             inc_bond = exp(self.r_sim * dt)
             cash_acc *= inc_bond
-            s_curr = self.s_sim.marching(dt)
-            d_curr = BSMVecS.delta(s_curr, self.k, tau, self.r_opt, self.q_opt, self.sig_opt, self.opt_type)
-            self.rebalance()  # TODO: make this the major function to do the rebalancing work
+            self.s_sim.marching(dt)
+            s_curr = self.s_sim.s_curr.copy()
+            s_prev = self.s_sim.s_prev.copy()
+            # rebalancing indicator
+            reb = np.abs(s_curr / s_prev - np.ones(self.s_sim.n_scn)) > self.REB_LEVEL
+            d_curr[reb] = BSMVecS.delta(s_curr, self.k, tau, self.r_opt, self.q_opt, self.sig_opt, self.opt_type)[reb]
             cash_acc += (d_prev - d_curr) * s_curr
             d_prev = d_curr.copy()
+            reb_count[reb] += np.ones(self.s_sim.n_scn)[reb]
 
         # only display the last one
         payoff = BSMVecS.payoff(s_curr, self.k, self.opt_type)
         pnl = payoff - cash_acc
 
-        return pnl, cash_acc, payoff
-
-    def term_analysis(self):
-        pass
+        return pnl, reb_count

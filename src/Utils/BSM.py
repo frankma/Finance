@@ -89,7 +89,7 @@ class BSM(object):
         return eta * tau * exp(-r * tau) * norm.cdf(eta * d2)
 
 
-class BSMVecS(object):
+class BSMVecS(BSM):
 
     @staticmethod
     def calc_d1(s: np.array, k: float, tau: float, r: float, q: float, sig: float):
