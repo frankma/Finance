@@ -33,3 +33,5 @@ class SingleVariableSimulator(object):
             self.curr *= np.exp((self.drift - 0.5 * self.vol**2) * dt + self.vol * rand * np.sqrt(dt))
         else:
             self.curr += self.drift * dt + self.vol * rand * np.sqrt(dt)
+
+        return self.curr.copy()
