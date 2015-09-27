@@ -6,6 +6,9 @@ import pandas as pd
 from scipy.stats import skew, kurtosis
 
 from src.MiniProjects.DeltaHedging.SingleVarDeltaHedging import SingleVarDeltaHedging
+from src.MiniProjects.DeltaHedging.SingleVariableDeltaHedging import SingleVariableDeltaHedging
+from src.MiniProjects.DeltaHedging.SingleVariableDeltaHedgingValuator import SingleVariableDeltaHedgingValuator
+from src.Simulator.SingleVariableSimulator import SingleVariableSimulator
 from src.Utils.OptionType import OptionType
 
 __author__ = 'frank.ma'
@@ -47,3 +50,8 @@ for SIG_SIM in SIG_SIMS:
 
 # print(df_pnl.info())
 print(df_hist)
+
+# simulator = SingleVariableSimulator(N_SCN, S_0, R_SIM - Q_SIM, SIG_SIMS[0], 'lognormal')
+# valuator = SingleVariableDeltaHedgingValuator(K, R_OPT, Q_OPT, SIG_SIMS[0], 'call')
+# delta_hedging = SingleVariableDeltaHedging(simulator, valuator, N_STPS[0], TAU, R_SIM, 0.0)
+# delta_hedging.cash_acc
