@@ -35,9 +35,9 @@ class TestSABRModel(TestCase):
         tic = tm.time()
         for _ in range(10**4):
             for strike in strikes:
-                model.calc_normal_vol(forward, strike)
+                model.calc_lognormal_vol(forward, strike)
         toc_sca = tm.time() - tic
-        print('Calculation time. vectorized %6f, plain %6f, diff %6f' % (toc_vec, toc_sca, (toc_vec - toc_sca)))
+        print('Calculation time. vectorized strike %6f, plain %6f, diff %6f' % (toc_vec, toc_sca, (toc_vec - toc_sca)))
         pass
 
     def test_calc_lognormal_vol_vec_f(self):
@@ -66,7 +66,7 @@ class TestSABRModel(TestCase):
         tic = tm.time()
         for _ in range(10**4):
             for forward in forwards:
-                model.calc_normal_vol(forward, strike)
+                model.calc_lognormal_vol(forward, strike)
         toc_sca = tm.time() - tic
-        print('Calculation time. vectorized %6f, plain %6f, diff %6f' % (toc_vec, toc_sca, (toc_vec - toc_sca)))
+        print('Calculation time. vectorized forward %6f, plain %6f, diff %6f' % (toc_vec, toc_sca, (toc_vec - toc_sca)))
         pass
