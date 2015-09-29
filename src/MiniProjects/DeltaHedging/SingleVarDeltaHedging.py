@@ -3,7 +3,6 @@ from math import exp
 import numpy as np
 
 from src.MiniProjects.DeltaHedging.SingleVarSimulation import SingleVarSimulation
-
 from src.Utils.BSM import BSMVecS
 from src.Utils.OptionType import OptionType
 

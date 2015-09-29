@@ -14,12 +14,12 @@ class LinearInterpolator1D(IInterpolator1D):
     def sanity_check(self):
         super().sanity_check()
         if self.ex not in ['flat', 'linear']:
-            raise AttributeError('Unrecognised extrapolation type %s' % self.ex)
+            raise ValueError('Unrecognised extrapolation type %s' % self.ex)
 
     def calc_loc(self, v: float):
 
         if self.x.__len__() == 0:
-            raise Exception('Empty interpolation space, no value to return.')
+            raise AttributeError('Empty interpolation space, no value to return.')
         elif self.x.__len__() == 1:
             return self.y[0]
         else:

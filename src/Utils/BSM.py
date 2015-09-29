@@ -1,7 +1,6 @@
 from math import log, exp, sqrt
 
 import numpy as np
-
 from scipy.stats import norm
 
 from src.Utils import OptionType
@@ -52,7 +51,7 @@ class BSM(object):
             nr = NewtonRaphson(pf, vf, 0.88)
             vol = nr.solve()
         else:
-            raise Exception('Unrecognized optimization method %s.' % method)
+            raise ValueError('Unrecognized optimization method %s.' % method)
 
         return vol
 

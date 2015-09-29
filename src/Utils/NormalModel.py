@@ -45,7 +45,7 @@ class NormalModel(object):
             nr = NewtonRaphson(pf, vf, 0.88 * f)
             vol = nr.solve()
         else:
-            raise Exception('Unrecognized optimization method %s.' % method)
+            raise ValueError('Unrecognized optimization method %s.' % method)
 
         return vol
 

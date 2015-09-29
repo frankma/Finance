@@ -67,11 +67,11 @@ class SABRModel(object):
         x = np.log((np.sqrt(1.0 - 2.0 * self.rho * z + z**2) + z - self.rho) / (1.0 - self.rho))
 
         term1 = self.alpha / (f_mul_k**(one_m_beta / 2.0) * (1.0 + one_m_beta**2 / 24.0 * (np.log(f_per_k))**2 +
-                                                                one_m_beta**4 / 1920.0 * (np.log(f_per_k))**4))
+                                                             one_m_beta**4 / 1920.0 * (np.log(f_per_k))**4))
         term2[is_not_atm] = z[is_not_atm] / x[is_not_atm]
         term3 = (1.0 + (one_m_beta**2 / 24.0 * self.alpha**2 / (f_mul_k**one_m_beta) +
-                           0.25 * self.rho * self.beta * self.nu * self.alpha / f_mul_k**(one_m_beta / 2.0) +
-                           (2.0 - 3.0 * self.rho**2) / 24.0 * self.nu**2) * self.t)
+                        0.25 * self.rho * self.beta * self.nu * self.alpha / f_mul_k**(one_m_beta / 2.0) +
+                        (2.0 - 3.0 * self.rho**2) / 24.0 * self.nu**2) * self.t)
 
         return term1 * term2 * term3
 

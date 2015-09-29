@@ -1,4 +1,5 @@
 import datetime
+
 from src.Assets.Asset import Asset
 
 __author__ = 'frank.ma'

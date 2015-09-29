@@ -17,14 +17,14 @@ class SingleVariableSimulator(object):
         elif model.lower() == 'normal':
             self.model = 'normal'
         else:
-            raise AttributeError('Unrecognized model %s, expect either Normal or LogNormal.')
+            raise ValueError('Unrecognized model %s, expect either Normal or LogNormal.')
         self.curr = np.full(n_scenarios, init)
         self.t = 0.0
 
     def evolve(self, dt: float):
 
         if dt < 0.0:
-            raise AttributeError('Time incremental %r should be strictly positive.' % dt)
+            raise ValueError('Time incremental %r should be strictly positive.' % dt)
 
         self.t += dt
 
