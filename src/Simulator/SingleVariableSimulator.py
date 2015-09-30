@@ -28,7 +28,7 @@ class SingleVariableSimulator(object):
 
         self.t += dt
 
-        rand = norm.pdf(np.random.random(self.n_scenarios))
+        rand = norm.ppf(np.random.random(self.n_scenarios))
         if self.model == 'lognormal':
             self.curr *= np.exp((self.drift - 0.5 * self.vol**2) * dt + self.vol * rand * np.sqrt(dt))
         else:
