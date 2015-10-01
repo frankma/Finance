@@ -25,5 +25,31 @@ class SingleVariableDeltaHedgingValuator(object):
     def delta(self, s: np.array, tau: float):
         return BSMVecS.delta(s, self.k, tau, self.r, self.q, self.sig, self.opt_type)
 
-    def gamma(self, s: np.array, tau):
+    def gamma(self, s: np.array, tau: float):
         return BSMVecS.gamma(s, self.k, tau, self.r, self.q, self.sig)
+
+
+class SingleVariableDeltaHedgingValuatorBasket(object):
+
+    def __init__(self, valuators: list):
+        for valuator in valuators:
+            isinstance(valuators, SingleVariableDeltaHedgingValuator)
+        self.valuators = valuators
+
+    def price(self, s: np.array, tau: float):
+        v = np.zeros(s.__len__())
+        for valuator in self.valuators:
+            v += valuator.price(s, tau)
+        return v
+
+    def delta(self, s: np.array, tau: float):
+        d = np.zeros(s.__len__())
+        for valuator in self.valuators:
+            d += valuator.delta(s, tau)
+        return d
+
+    def gamma(self, s: np.array, tau: float):
+        g = np.zeros(s.__len__())
+        for valuator in self.valuators:
+            g += valuator.gamma(s, tau)
+        return g
