@@ -8,12 +8,13 @@ __author__ = 'frank.ma'
 
 class SingleVariableDeltaHedgingValuator(object):
 
-    def __init__(self, k: float, r: float, q: float, sig: float, opt_type: OptionType):
+    def __init__(self, k: float, r: float, q: float, sig: float, opt_type: OptionType, model='lognormal'):
         self.k = k
         self.r = r
         self.q = q
         self.sig = sig
         self.opt_type = opt_type
+        self.model = model
 
     def price(self, s: np.array, tau: float):
         return BSMVecS.price(s, self.k, tau, self.r, self.q, self.sig, self.opt_type)
