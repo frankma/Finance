@@ -25,10 +25,9 @@ class SABRSimulator(object):
         return self.calc_analytic_pdf_given_vols(strikes, vols)
 
     def calc_analytic_pdf_given_vols(self, strikes: np.array, vols: np.array) -> np.array:
-        means = np.log(self.forward_0)  # we know sabr is driftless as it models forward
-        sigmas = vols * np.sqrt(self.tau)  # give volatility time scale
-        density = 1.0 / sigmas / np.sqrt(2.0 * np.pi) * np.exp(-0.5 * ((np.log(strikes) - means) / sigmas)**2)
-        density /= self.forward_0  # need to be rescaled by forward
+        means = np.log(self.forward_0) - 0.5 * vols**2 * self.tau  # make sure mean is at initial forward level
+        sigmas = vols * np.sqrt(self.tau)  # volatility time scale
+        density = 1.0 / sigmas / strikes / np.sqrt(2.0 * np.pi) * np.exp(-0.5 * ((np.log(strikes) - means) / sigmas)**2)
         return density
 
     def calc_mc_pdf(self, strikes: np.array, n_steps: int = 100, n_scenarios: int = 10**5):
