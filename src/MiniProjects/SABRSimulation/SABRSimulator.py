@@ -22,9 +22,9 @@ class SABRSimulator(object):
 
     def calc_analytic_pdf(self, strikes: np.array) -> np.array:
         vols = self.calc_sigmas(strikes)
-        return self.calc_analytic_pdf_given_vols(strikes, vols)
+        return self.calc_pdf_given_vols(strikes, vols)
 
-    def calc_analytic_pdf_given_vols(self, strikes: np.array, vols: np.array) -> np.array:
+    def calc_pdf_given_vols(self, strikes: np.array, vols: np.array) -> np.array:
         means = np.log(self.forward_0) - 0.5 * vols**2 * self.tau  # make sure mean is at initial forward level
         sigmas = vols * np.sqrt(self.tau)  # volatility time scale
         density = 1.0 / sigmas / strikes / np.sqrt(2.0 * np.pi) * np.exp(-0.5 * ((np.log(strikes) - means) / sigmas)**2)
