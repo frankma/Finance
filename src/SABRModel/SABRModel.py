@@ -75,5 +75,25 @@ class SABRModel(object):
 
         return term1 * term2 * term3
 
+    def sim_forward_den(self, forward: float, n_steps: int = 100, n_scenarios: int = 100000, n_bins: int = 201,
+                        rel_bounds: tuple = (0.01, 20.0)):
+        taus = np.linspace(self.t, 0.0, num=n_steps)
+        strikes = np.linspace(rel_bounds[0] * forward, rel_bounds[1] * forward, num=n_bins)
+        # 1st, simulate forwards
+        forwards = np.full(n_scenarios, forward)
+        sigmas = np.full(n_scenarios, self.alpha)
+        mean = [0.0, 0.0]
+        correlation = [[1.0, self.rho], [self.rho, 1.0]]
+        for idx, tau in enumerate(taus[1:]):
+            dt = taus[idx] - tau
+            sqrt_dt = np.sqrt(dt)
+            rands = np.random.multivariate_normal(mean, correlation, size=n_scenarios)
+            forwards *= np.exp(-0.5 * sigmas**2 * dt + sigmas * rands[:, 0] * sqrt_dt)
+            sigmas *= np.exp(-0.5 * self.nu**2 * dt + self.nu * rands[:, 1] * sqrt_dt)
+        # 2nd, analyse the density
+        freq, strikes = np.histogram(forwards, bins=strikes, normed=True)
+        strikes_mid = 0.5 * (strikes[:-1] + strikes[1:])
+        return freq, strikes_mid
+
     def calc_normal_vol(self, f: float, k: float):
         pass
