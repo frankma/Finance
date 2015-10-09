@@ -1,5 +1,6 @@
 from math import log, sqrt
 
+import numpy as np
 from scipy.stats import norm
 
 from src.Utils.OptionType import OptionType
@@ -85,8 +86,8 @@ class Black76(object):
         d2 = Black76.calc_d2(f, k, tau, sig)
         r = -log(b) / tau
         q = log(k / f) / tau + r
-        return -b * f * norm.pdf(d1) * sig / 2. / sqrt(tau) + b * eta * (q * f * norm.cdf(eta * d1)
-                                                                         - r * k * norm.cdf(eta * d2))
+        return -b * f * norm.pdf(d1) * sig / 2. / sqrt(tau) + b * eta * \
+                                                              (q * f * norm.cdf(eta * d1) - r * k * norm.cdf(eta * d2))
 
     @staticmethod
     def rho(f: float, k: float, tau: float, sig: float, b: float, opt_type: OptionType):
@@ -108,4 +109,27 @@ class Black76(object):
     @staticmethod
     def gamma_k(f: float, k: float, tau: float, sig: float, b: float):
         d2 = Black76.calc_d2(f, k, tau, sig)
+        return b * norm.pdf(d2) / k / sig / sqrt(tau)
+
+
+class Black76VecK(Black76):
+
+    @staticmethod
+    def calc_d1(f: float, k: np.array, tau: float, sig: np.array) -> np.array:
+        return np.log(f / k) / sig / sqrt(tau) + 0.5 * sig * sqrt(tau)
+
+    @staticmethod
+    def calc_d2(f: float, k: np.array, tau: float, sig: np.array) -> np.array:
+        return np.log(f / k) / sig / sqrt(tau) - 0.5 * sig * sqrt(tau)
+
+    @staticmethod
+    def price(f: float, k: np.array, tau: float, sig: np.array, b: float, opt_type: OptionType):
+        eta = opt_type.value
+        d1 = Black76VecK.calc_d1(f, k, tau, sig)
+        d2 = Black76VecK.calc_d2(f, k, tau, sig)
+        return b * eta * (f * norm.cdf(eta * d1) - k * norm.cdf(eta * d2))
+
+    @staticmethod
+    def gamma_k(f: float, k: np.array, tau: float, sig: np.array, b: float) -> np.array:
+        d2 = Black76VecK.calc_d2(f, k, tau, sig)
         return b * norm.pdf(d2) / k / sig / sqrt(tau)

@@ -1,6 +1,8 @@
 from math import log, sqrt
 
 import numpy as np
+from src.Utils.Black76 import Black76VecK
+from src.Utils.OptionType import OptionType
 
 __author__ = 'frank.ma'
 
@@ -35,7 +37,7 @@ class SABRModel(object):
 
         return term1 * term2 * term3
 
-    def calc_lognormal_vol_vec_k(self, forward: float, strikes: np.array):
+    def calc_lognormal_vol_vec_k(self, forward: float, strikes: np.array) -> np.array:
         is_not_atm = np.abs(strikes - forward) > 1e-6
         one_m_beta = 1.0 - self.beta
         f_mul_k = forward * strikes
@@ -55,7 +57,7 @@ class SABRModel(object):
 
         return term1 * term2 * term3
 
-    def calc_lognormal_vol_vec_f(self, forwards: np.array, strike: float):
+    def calc_lognormal_vol_vec_f(self, forwards: np.array, strike: float) -> np.array:
         is_not_atm = np.abs(strike - forwards) > 1e-6
         one_m_beta = 1.0 - self.beta
         f_mul_k = forwards * strike
@@ -75,8 +77,8 @@ class SABRModel(object):
 
         return term1 * term2 * term3
 
-    def sim_forward_den(self, forward: float, n_steps: int = 100, n_scenarios: int = 100000, n_bins: int = 201,
-                        rel_bounds: tuple = (0.01, 20.0)):
+    def sim_forward_den(self, forward: float, rel_bounds: tuple = (0.01, 20.0), n_bins: int = 500, n_steps: int = 100,
+                        n_scenarios: int = 10**6):
         taus = np.linspace(self.t, 0.0, num=n_steps)
         strikes = np.linspace(rel_bounds[0] * forward, rel_bounds[1] * forward, num=n_bins)
         # 1st, simulate forwards
@@ -94,6 +96,14 @@ class SABRModel(object):
         freq, strikes = np.histogram(forwards, bins=strikes, normed=True)
         strikes_mid = 0.5 * (strikes[:-1] + strikes[1:])
         return freq, strikes_mid
+
+    def calc_forward_den(self, forward: float, rel_bounds: tuple = (0.01, 20.0), n_bins: int = 500):
+        strikes = np.linspace(rel_bounds[0] * forward, rel_bounds[1] * forward, num=n_bins)
+        vols = self.calc_lognormal_vol_vec_k(forward, strikes)
+        # density = Black76VecK.gamma_k(forward, strikes, self.t, vols, 1.0)  # bond is zero as it is under fwd measure
+        prices = Black76VecK.price(forward, strikes, self.t, vols, 1.0, OptionType.call)
+        density = (prices[:-2] + prices[2:] - 2 * prices[1:-1]) / ((strikes[2:] - strikes[1:-1])**2)
+        return density, strikes[1:-1]
 
     def calc_normal_vol(self, f: float, k: float):
         pass
