@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pylab as plt
-
 from scipy.stats import norm
+
 from src.MiniProjects.DeltaHedging.SingleVariableDeltaHedgingValuator import SingleVariableDeltaHedgingValuator
 from src.Simulator.SingleVariableSimulator import SingleVariableSimulator
 
@@ -9,7 +9,6 @@ __author__ = 'frank.ma'
 
 
 class SingleVariableDeltaHedging(object):
-
     def __init__(self, simulator: SingleVariableSimulator, valuator: SingleVariableDeltaHedgingValuator,
                  n_steps: int, tau: float, rf: float, threshold: float):
         self.simulator = simulator

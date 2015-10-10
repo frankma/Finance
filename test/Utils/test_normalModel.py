@@ -7,7 +7,6 @@ __author__ = 'frank.ma'
 
 
 class TestNormalModel(TestCase):
-
     def test_price(self):
         pass
 

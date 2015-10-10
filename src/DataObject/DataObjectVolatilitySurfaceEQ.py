@@ -8,7 +8,6 @@ __author__ = 'frank.ma'
 
 
 class DataObjectVolatilitySurfaceEQ(DataObject):
-
     def __init__(self, asof: datetime, expiries: Series, strikes: Series,
                  call_bid: DataFrame, call_ask: DataFrame, call_volume: DataFrame,
                  put_bid: DataFrame, put_ask: DataFrame, put_volume: DataFrame):

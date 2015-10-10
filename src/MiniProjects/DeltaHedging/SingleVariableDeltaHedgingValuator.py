@@ -7,7 +7,6 @@ __author__ = 'frank.ma'
 
 
 class SingleVariableDeltaHedgingValuator(object):
-
     def __init__(self, k: float, r: float, q: float, sig: float, opt_type: OptionType, model='lognormal'):
         self.k = k
         self.r = r
@@ -30,7 +29,6 @@ class SingleVariableDeltaHedgingValuator(object):
 
 
 class SingleVariableDeltaHedgingValuatorBasket(object):
-
     def __init__(self, valuators: list):
         for valuator in valuators:
             isinstance(valuators, SingleVariableDeltaHedgingValuator)

@@ -5,7 +5,6 @@ __author__ = 'frank.ma'
 
 
 class SingleVariableSimulator(object):
-
     def __init__(self, n_scenarios: int, init: float, drift: float, vol: float, model: str):
 
         self.n_scenarios = n_scenarios
@@ -30,7 +29,7 @@ class SingleVariableSimulator(object):
 
         rand = norm.ppf(np.random.random(self.n_scenarios))
         if self.model == 'lognormal':
-            self.curr *= np.exp((self.drift - 0.5 * self.vol**2) * dt + self.vol * rand * np.sqrt(dt))
+            self.curr *= np.exp((self.drift - 0.5 * self.vol ** 2) * dt + self.vol * rand * np.sqrt(dt))
         else:
             self.curr += self.drift * dt + self.vol * rand * np.sqrt(dt)
 

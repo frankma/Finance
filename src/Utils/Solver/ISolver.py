@@ -2,7 +2,6 @@ __author__ = 'frank.ma'
 
 
 class ISolver(object):
-
     ABS_TOL = 1e-12
     REL_TOL = 1e-6
     ITR_TOL = 999

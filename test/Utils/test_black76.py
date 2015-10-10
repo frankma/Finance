@@ -8,7 +8,6 @@ __author__ = 'frank.ma'
 
 
 class TestBlack76(TestCase):
-
     def test_price(self):
         forward = 110.
         strike = 123.
@@ -58,8 +57,8 @@ class TestBlack76(TestCase):
         call_theta = Black76.theta(forward, strike, ttm, sigma, bond, OptionType.call)
         put_theta = Black76.theta(forward, strike, ttm, sigma, bond, OptionType.put)
 
-        call_lhs = call_theta + 0.5 * call_gamma * sigma**2 * forward**2
-        put_lhs = put_theta + 0.5 * put_gamma * sigma**2 * forward**2
+        call_lhs = call_theta + 0.5 * call_gamma * sigma ** 2 * forward ** 2
+        put_lhs = put_theta + 0.5 * put_gamma * sigma ** 2 * forward ** 2
 
         call_rhs = r * call_price
         put_rhs = r * put_price

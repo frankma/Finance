@@ -8,7 +8,6 @@ __author__ = 'frank.ma'
 
 
 class Deck(object):
-
     def __init__(self, cards: list):
         for card in cards:
             assert isinstance(card, Card), 'unrecognized card entry, %s' % card.__str__()

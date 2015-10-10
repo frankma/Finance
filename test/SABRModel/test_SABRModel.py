@@ -9,7 +9,6 @@ __author__ = 'frank.ma'
 
 
 class TestSABRModel(TestCase):
-
     def test_calc_lognormal_vol_vec_k(self):
         tau = 0.25
         alpha = 0.04
@@ -29,11 +28,11 @@ class TestSABRModel(TestCase):
                                                      ' strike %.2f with diff %.14f.' % (strike, (vol - imp_vols[idx]))
         # speed test
         tic = tm.time()
-        for _ in range(10**4):
+        for _ in range(10 ** 4):
             model.calc_lognormal_vol_vec_k(forward, strikes)
         toc_vec = tm.time() - tic
         tic = tm.time()
-        for _ in range(10**4):
+        for _ in range(10 ** 4):
             for strike in strikes:
                 model.calc_lognormal_vol(forward, strike)
         toc_sca = tm.time() - tic
@@ -60,11 +59,11 @@ class TestSABRModel(TestCase):
                                                      ' strike %.2f with diff %.14f.' % (strike, (vol - imp_vols[idx]))
         # speed test
         tic = tm.time()
-        for _ in range(10**4):
+        for _ in range(10 ** 4):
             model.calc_lognormal_vol_vec_f(forwards, strike)
         toc_vec = tm.time() - tic
         tic = tm.time()
-        for _ in range(10**4):
+        for _ in range(10 ** 4):
             for forward in forwards:
                 model.calc_lognormal_vol(forward, strike)
         toc_sca = tm.time() - tic

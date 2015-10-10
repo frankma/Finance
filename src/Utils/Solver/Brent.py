@@ -7,7 +7,6 @@ __author__ = 'frank.ma'
 
 
 class Brent(ISolver):
-
     def __init__(self, f: IUnivariateFunction, lower_bound: float, upper_bound: float):
         self.f = f
         self.lb = lower_bound

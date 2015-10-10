@@ -10,7 +10,6 @@ __author__ = 'frank.ma'
 
 
 class TestVolatilitySurfaceEquity(TestCase):
-
     def test_process_data(self):
         # TODO: find a real set of data to feed in
 

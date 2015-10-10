@@ -2,7 +2,6 @@ __author__ = 'frank.ma'
 
 
 class IInterpolator1D(object):
-
     def __init__(self, x: list, y: list):
         self.x = x
         self.y = y

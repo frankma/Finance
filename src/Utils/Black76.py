@@ -12,14 +12,13 @@ __author__ = 'frank.ma'
 
 
 class Black76(object):
-
     @staticmethod
     def calc_d1(f: float, k: float, tau: float, sig: float):
-        return (log(f / k) + 0.5 * sig**2 * tau) / (sig * sqrt(tau))
+        return (log(f / k) + 0.5 * sig ** 2 * tau) / (sig * sqrt(tau))
 
     @staticmethod
     def calc_d2(f: float, k: float, tau: float, sig: float):
-        return (log(f / k) - 0.5 * sig**2 * tau) / (sig * sqrt(tau))
+        return (log(f / k) - 0.5 * sig ** 2 * tau) / (sig * sqrt(tau))
 
     @staticmethod
     def price(f: float, k: float, tau: float, sig: float, b: float, opt_type: OptionType):
@@ -113,14 +112,13 @@ class Black76(object):
 
 
 class Black76VecK(Black76):
-
     @staticmethod
     def calc_d1(f: float, k: np.array, tau: float, sig: np.array) -> np.array:
-        return np.log(f / k) / sig / sqrt(tau) + 0.5 * sig * sqrt(tau)
+        return np.log(f / k) / sig / sqrt(tau) + 0.5 * sig * np.sqrt(tau)
 
     @staticmethod
     def calc_d2(f: float, k: np.array, tau: float, sig: np.array) -> np.array:
-        return np.log(f / k) / sig / sqrt(tau) - 0.5 * sig * sqrt(tau)
+        return np.log(f / k) / sig / sqrt(tau) - 0.5 * sig * np.sqrt(tau)
 
     @staticmethod
     def price(f: float, k: np.array, tau: float, sig: np.array, b: float, opt_type: OptionType):

@@ -1,5 +1,4 @@
 import numpy as np
-
 from scipy.stats import skew, kurtosis
 
 from src.MiniProjects.DeltaHedging.SingleVariableDeltaHedging import SingleVariableDeltaHedging
@@ -9,7 +8,6 @@ from src.Utils.OptionType import OptionType
 
 __author__ = 'frank.ma'
 
-
 s_0 = 100.0
 k = 100.0
 tau = 0.25
@@ -17,7 +15,7 @@ opt_type = OptionType.call
 r = 0.05
 q = 0.0
 sig = 0.2
-n_scn = 5 * 10**5
+n_scn = 5 * 10 ** 5
 n_step = 20
 threshold = 0.01
 

@@ -7,7 +7,6 @@ __author__ = 'frank.ma'
 
 
 class NewtonRaphson(ISolver):
-
     def __init__(self, f: IUnivariateFunction, d: IUnivariateFunction, init_guess: float):
         self.f = f
         self.d = d

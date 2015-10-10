@@ -12,7 +12,6 @@ class Suit(Enum):
 
 
 class Card(object):
-
     rank_dict = dict({'a': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '10': 10, 'j': 11,
                       'q': 12, 'k': 13})
     suit_dict = dict({'spade': 1, 'heart': 2, 'club': 3, 'diamond': 4})

@@ -11,7 +11,6 @@ __author__ = 'frank.ma'
 
 
 class NormalModel(object):
-
     @staticmethod
     def calc_d(f: float, k: float, tau: float, sig: float):
         return (f - k) / (sig * sqrt(tau))

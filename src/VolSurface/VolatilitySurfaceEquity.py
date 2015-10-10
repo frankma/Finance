@@ -7,7 +7,6 @@ __author__ = 'frank.ma'
 
 
 class VolatilitySurfaceEquity(VolatilitySurface):
-
     def __init__(self, raw_data: DataObjectVolatilitySurfaceEQ):
         super().__init__(raw_data.get_asof())
         self.raw_data = raw_data

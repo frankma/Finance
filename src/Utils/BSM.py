@@ -12,14 +12,13 @@ __author__ = 'frank.ma'
 
 
 class BSM(object):
-
     @staticmethod
     def calc_d1(s: float, k: float, tau: float, r: float, q: float, sig: float):
-        return (log(s / k) + (r - q + 0.5 * sig**2) * tau) / (sig * sqrt(tau))
+        return (log(s / k) + (r - q + 0.5 * sig ** 2) * tau) / (sig * sqrt(tau))
 
     @staticmethod
     def calc_d2(s: float, k: float, tau: float, r: float, q: float, sig: float):
-        return (log(s / k) + (r - q - 0.5 * sig**2) * tau) / (sig * sqrt(tau))
+        return (log(s / k) + (r - q - 0.5 * sig ** 2) * tau) / (sig * sqrt(tau))
 
     @staticmethod
     def price(s: float, k: float, tau: float, r: float, q: float, sig: float, opt_type: OptionType):
@@ -89,14 +88,13 @@ class BSM(object):
 
 
 class BSMVecS(BSM):
-
     @staticmethod
     def calc_d1(s: np.array, k: float, tau: float, r: float, q: float, sig: float):
-        return (np.log(s / k) + (r - q + 0.5 * sig**2) * tau) / (sig * sqrt(tau))
+        return (np.log(s / k) + (r - q + 0.5 * sig ** 2) * tau) / (sig * sqrt(tau))
 
     @staticmethod
     def calc_d2(s: np.array, k: float, tau: float, r: float, q: float, sig: float):
-        return (np.log(s / k) + (r - q - 0.5 * sig**2) * tau) / (sig * sqrt(tau))
+        return (np.log(s / k) + (r - q - 0.5 * sig ** 2) * tau) / (sig * sqrt(tau))
 
     @staticmethod
     def price(s: np.array, k: float, tau: float, r: float, q: float, sig: float, opt_type: OptionType):

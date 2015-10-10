@@ -6,7 +6,6 @@ __author__ = 'frank.ma'
 
 
 class RealNumberTransformer(object):
-
     def __init__(self, lower_bound: float or None, upper_bound: float or None, method='abs'):
         self.lb = lower_bound
         self.ub = upper_bound

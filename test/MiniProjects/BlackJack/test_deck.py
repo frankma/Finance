@@ -6,7 +6,6 @@ __author__ = 'frank.ma'
 
 
 class TestDeck(TestCase):
-
     def test_new_deck(self):
         deck = Deck.new_deck(1)
         pass

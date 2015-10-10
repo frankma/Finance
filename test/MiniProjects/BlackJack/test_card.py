@@ -6,7 +6,6 @@ __author__ = 'frank.ma'
 
 
 class TestCard(TestCase):
-
     def test_string(self):
         print(Card(Rank.ace, Suit.spade))
 
