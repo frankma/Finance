@@ -107,4 +107,23 @@ class SABRModel(object):
         return density, strikes
 
     def calc_normal_vol(self, f: float, k: float):
-        pass
+        one_m_beta = 1.0 - self.beta
+        f_mul_k = forward * strike
+        f_per_k = forward / strike
+
+        term1, term2, term3 = self.alpha * (f_mul_k ** (self.beta / 2.0)), 1.0, 1.0
+        if abs(forward - strike) > 1e-10:
+            ln_f_per_k = np.log(f_per_k)
+            if abs(self.beta) < 1e-10:
+                z = self.nu / self.alpha * (forward - strike)
+            else:
+                z = self.nu / self.alpha * f_mul_k ** (one_m_beta / 2.0) * np.log(f_per_k)
+            x = np.log((sqrt(1.0 - 2.0 * self.rho * z + z ** 2) + z - self.rho) / (1.0 - self.rho))
+            term1 *= (1.0 + (ln_f_per_k ** 2) / 24.0 + (ln_f_per_k **4) / 1920.0) /\
+                     (1.0 + (one_m_beta ** 2) / 24.0 * (ln_f_per_k ** 2) + (one_m_beta ** 4) / 1920.0 * (ln_f_per_k ** 4))
+            term2 = z / x
+        term3 = 1.0 + (-self.beta * (2.0 - self.beta) * self.alpha ** 2 / 24.0 / (f_mul_k ** one_m_beta) +
+                       self.rho * self.alpha * self.nu * self.beta / 4.0 / (f_mul_k ** (one_m_beta / 2.0)) +
+                       (2.0 - 3.0 * self.rho ** 2) / 24.0 * self.nu ** 2) * self.t
+        
+        return term1 * term2 * term3
