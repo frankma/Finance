@@ -20,8 +20,11 @@ sum_ana = sum(base_ana[:-1] * freq_ana[:-1] * (base_ana[1:] - base_ana[:-1]))
 one_sim = sum(freq_sim[:-1] * (base_sim[1:] - base_sim[:-1]))
 one_ana = sum(freq_ana[:-1] * (base_ana[1:] - base_ana[:-1]))
 
-print(sum_sim, sum_ana)
-print(one_sim, one_ana)
+print('\t simulated\t analytical\n'
+      'mean\t%.12f\t%.12f\n'
+      'cumulative\t%.6f\t%.6f'
+      % (sum_sim, sum_ana,
+         one_sim, one_ana))
 
 plt.plot(base_sim, freq_sim, 'bx-')
 plt.plot(base_ana, freq_ana, 'r+-')
