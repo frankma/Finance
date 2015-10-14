@@ -1,5 +1,6 @@
 from math import sqrt, log
 
+import numpy as np
 from scipy.stats import norm
 
 from src.Utils.OptionType import OptionType
@@ -70,3 +71,15 @@ class NormalModel(object):
     def gamma(f: float, k: float, tau: float, sig: float, b: float):
         d = NormalModel.calc_d(f, k, tau, sig)
         return b * norm.pdf(d) / sig / sqrt(tau)
+
+
+class NormalModelVecK(NormalModel):
+    @staticmethod
+    def calc_d(f: float, k: np.array, tau: float, sig: np.array) -> np.array:
+        return (f - k) / sig / np.sqrt(tau)
+
+    @staticmethod
+    def price(f: float, k: np.array, tau: float, sig: np.array, b: float, opt_type: OptionType) -> np.array:
+        eta = opt_type.value
+        d = NormalModelVecK.calc_d(f, k, tau, sig)
+        return b * (eta * (f - k) * norm.cdf(eta * d) + sig * np.sqrt(tau) * norm.pdf(d))
