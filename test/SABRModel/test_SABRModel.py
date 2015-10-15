@@ -36,7 +36,8 @@ class TestSABRModel(TestCase):
             for strike in strikes:
                 model.calc_lognormal_vol(forward, strike)
         toc_sca = tm.time() - tic
-        print('Calculation time. vectorized strike %6f, plain %6f, diff %6f' % (toc_vec, toc_sca, (toc_vec - toc_sca)))
+        print('Calculation time. vectorized strike %.6f, scalar %.6f, diff %.6f'
+              % (toc_vec, toc_sca, (toc_vec - toc_sca)))
         pass
 
     def test_calc_lognormal_vol_vec_f(self):
@@ -67,7 +68,8 @@ class TestSABRModel(TestCase):
             for forward in forwards:
                 model.calc_lognormal_vol(forward, strike)
         toc_sca = tm.time() - tic
-        print('Calculation time. vectorized forward %6f, plain %6f, diff %6f' % (toc_vec, toc_sca, (toc_vec - toc_sca)))
+        print('Calculation time. vectorized forward %.6f, scalar %.6f, diff %.6f'
+              % (toc_vec, toc_sca, (toc_vec - toc_sca)))
         pass
 
     def test_calc_normal_vol_vec_k(self):
@@ -75,7 +77,7 @@ class TestSABRModel(TestCase):
         alpha = 0.2
         beta = 0.0
         nu = 0.4
-        rho = -.25
+        rho = -0.25
 
         model = SABRModel(tau, alpha, beta, nu, rho)
 
@@ -100,5 +102,40 @@ class TestSABRModel(TestCase):
             for strike in strikes:
                 model.calc_normal_vol(forward, strike)
         toc_sca = tm.time() - tic
-        print('Calculation time. vectorized strike %6f, plain %6f, diff %6f' % (toc_vec, toc_sca, (toc_vec - toc_sca)))
+        print('Calculation time, vectorized strike %.6f, scalar %.6f, diff %.6f'
+              % (toc_vec, toc_sca, (toc_vec - toc_sca)))
+        pass
+
+    def test_calc_normal_vol_vec_f(self):
+        tau = 0.25
+        alpha = 0.2
+        beta = 0.0
+        nu = 0.4
+        rho = -0.25
+
+        model = SABRModel(tau, alpha, beta, nu, rho)
+
+        forwards = np.linspace(-0.1, 0.2, num=21)
+        strike = 0.05
+
+        norm_vols = model.calc_normal_vol_vec_f(forwards, strike)
+
+        for idx, forward in enumerate(forwards):
+            vol = model.calc_normal_vol(forward, strike)
+            diff = vol - norm_vols[idx]
+            assert abs(diff) < 1e-12, 'forward vectorization result differs from scalar calculation on' \
+                                      ' forward %.2f with diff %.14f' % (forward, diff)
+
+        # speed test
+        tic = tm.time()
+        for _ in range(10 ** 4):
+            model.calc_normal_vol_vec_f(forwards, strike)
+        toc_vec = tm.time() - tic
+        tic = tm.time()
+        for _ in range(10 ** 4):
+            for forward in forwards:
+                model.calc_normal_vol(forward, strike)
+        toc_sca = tm.time() - tic
+        print('Calculation time, vectorized forward %.6f, scalar %.6f, diff %.6f'
+              % (toc_vec, toc_sca, (toc_vec - toc_sca)))
         pass
