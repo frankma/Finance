@@ -7,13 +7,25 @@ __author__ = 'frank.ma'
 
 
 class SABRModelCalibrator(object):
-    ALPHA_BOUND = (0.0001, None)
-    NU_BOUND = (0.0001, None)
-    RHO_BOUND = (-0.9999, 0.9999)
-    TOL_LEVEL = 1e-14
+    def __init__(self, alpha_bound: tuple = (0.0001, None), nu_bound: tuple = (0.0001, None),
+                 rho_bound: tuple = (-0.9999, 0.999), tol_lvl_abs: float = 1e-14):
+        self.alpha_bound = alpha_bound
+        self.nu_bound = nu_bound
+        self.rho_bound = rho_bound
+        self.tol_lvl_abs = tol_lvl_abs
+
+    def calibrate(self) -> SABRModel:
+        pass
+
+    def error_function(self, x: tuple) -> float:
+        pass
+
+
+class SABRModelCalibratorAlphaNuRho(SABRModelCalibrator):
 
     def __init__(self, t: float, forward: float, strikes: np.array, vols: np.array, weights: np.array,
                  vol_type: str = 'black', beta: float = 1.0, init_guess: tuple = (0.2, 0.4, -0.25)):
+        super().__init__()
         self.t = t
         self.forward = forward
         if strikes.__len__() != vols.__len__() != weights:
@@ -33,12 +45,12 @@ class SABRModelCalibrator(object):
         self.init_guess = init_guess
 
     def calibrate(self) -> SABRModel:
-        res = opt.minimize(self.target_function_alpha_nu_rho, self.init_guess, method='L-BFGS-B', jac=False,
-                           bounds=(self.ALPHA_BOUND, self.NU_BOUND, self.RHO_BOUND), tol=self.TOL_LEVEL)
+        res = opt.minimize(self.error_function, self.init_guess, method='L-BFGS-B', jac=False,
+                           bounds=(self.alpha_bound, self.nu_bound, self.rho_bound), tol=self.tol_lvl_abs)
         alpha, nu, rho = res.x
         return SABRModel(self.t, alpha, self.beta, nu, rho)
 
-    def target_function_alpha_nu_rho(self, x: tuple) -> float:
+    def error_function(self, x: tuple) -> float:
         alpha, nu, rho = x
         model = SABRModel(self.t, alpha, self.beta, nu, rho)
         if self.vol_type == 'black':
