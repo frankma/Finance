@@ -2,6 +2,7 @@ from math import log, sqrt
 
 import numpy as np
 
+from numpy.polynomial.polynomial import polyroots
 from src.Utils.Black76 import Black76VecK
 from src.Utils.NormalModel import NormalModelVecK
 from src.Utils.OptionType import OptionType
@@ -198,3 +199,23 @@ class SABRModel(object):
         density = (prices[:-2] + prices[2:] - 2 * prices[1:-1]) / ((strikes[2:] - strikes[1:-1]) ** 2)
         strikes = strikes[1:-1]  # truncate strikes for numerical solution
         return density, strikes
+
+    def solve_alpha_from_atm_vol_given_nu_and_rho(self, forward: float, vol_atm: float, nu: float, rho: float) -> float:
+        f_pwr_one_m_beta = forward ** (1.0 - self.beta)
+        coe_cubic = ((1.0 - self.beta) ** 2) * self.t / 24.0 / (f_pwr_one_m_beta ** 3)
+        coe_quadratic = self.beta * self.nu * self.rho * self.t / 4.0 / (f_pwr_one_m_beta ** 2)
+        coe_linear = (1.0 + (self.nu ** 2) * (2.0 - 3.0 * (self.rho ** 2)) * self.t / 24.0) / f_pwr_one_m_beta
+        coe_constant = -vol_atm
+        coefficients = np.array([coe_constant, coe_linear, coe_quadratic, coe_cubic])
+        solutions = polyroots(coefficients)
+        solutions = solutions[np.isreal(solutions)].real  # only real solution is usable
+        n_solutions = solutions.__len__()
+        if n_solutions < 1 or all(solutions < 0.0):
+            raise ValueError('cannot find alpha within real domain')
+        elif n_solutions == 1:
+            return solutions[0]
+        else:
+            vol_atm = self.calc_lognormal_vol(forward, forward)
+            alpha_approximate = vol_atm / f_pwr_one_m_beta
+            closest = min(solutions, key=lambda x:abs(x - alpha_approximate))
+            return closest

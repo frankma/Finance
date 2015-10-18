@@ -139,3 +139,30 @@ class TestSABRModel(TestCase):
         print('Calculation time, vectorized forward %.6f, scalar %.6f, diff %.6f'
               % (toc_vec, toc_sca, (toc_vec - toc_sca)))
         pass
+
+    def test_solve_alpha_from_atm_vol_given_nu_and_rho(self):
+        tau = 0.25
+        alpha = 0.2
+        beta = 1.0
+        nu = 0.4
+        rho = -0.25
+
+        model = SABRModel(tau, alpha, beta, nu, rho)
+
+        forward = 150.0
+
+        black_vol = model.calc_lognormal_vol(forward, forward)
+        alpha_solved = model.solve_alpha_from_atm_vol_given_nu_and_rho(forward, black_vol, nu, rho)
+        rel_diff = alpha_solved / alpha - 1.0
+        print('lognormal model\n input\t solved \t rel diff\n %.6f\t%.6f\t%.4e' % (alpha, alpha_solved, rel_diff))
+        assert abs(rel_diff) < 1e-2, 'solved alpha differs from input larger than one percent.'
+
+        beta = 0.0
+        forward = 0.05
+        model_norm = SABRModel(tau, alpha, beta, nu, rho)
+        black_vol = model_norm.calc_lognormal_vol(forward, forward)
+        alpha_solved = model_norm.solve_alpha_from_atm_vol_given_nu_and_rho(forward, black_vol, nu, rho)
+        rel_diff = alpha_solved / alpha - 1.0
+        print('normal model\n input\t solved \t rel diff\n %.6f\t%.6f\t%.4e' % (alpha, alpha_solved, rel_diff))
+        assert abs(rel_diff) < 1e-12, 'solved alpha differs from input larger than one percent.'
+        pass
