@@ -132,7 +132,12 @@ class SABRModel(object):
             x = log((sqrt(1.0 - 2.0 * self.rho * z + z ** 2) + z - self.rho) / (1.0 - self.rho))
             term2 = z / x
         else:
-            term3 = 1.0 + ((2.0 - 3.0 * self.rho ** 2) / 24.0 * self.nu ** 2) * self.t
+            if abs(self.beta) < 1e-10:
+                term3 = 1.0 + ((2.0 - 3.0 * self.rho ** 2) / 24.0 * self.nu ** 2) * self.t
+            else:
+                term3 = 1.0 + (-self.beta * (2.0 - self.beta) * self.alpha ** 2 / 24.0 / (f_mul_k ** one_m_beta) +
+                               self.rho * self.alpha * self.nu * self.beta / 4.0 / (f_mul_k ** (one_m_beta / 2.0)) +
+                               (2.0 - 3.0 * self.rho ** 2) / 24.0 * self.nu ** 2) * self.t
 
         return term1 * term2 * term3
 
