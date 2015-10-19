@@ -7,9 +7,10 @@ __author__ = 'frank.ma'
 
 
 class SABRModelCalibrator(object):
-    def __init__(self, alpha_bound: tuple = (0.0001, None), nu_bound: tuple = (0.0001, None),
-                 rho_bound: tuple = (-0.9999, 0.999), tol_lvl_abs: float = 1e-14):
+    def __init__(self, alpha_bound: tuple = (0.0001, None), beta_bound: tuple = (-0.001, 1.0001),
+                 nu_bound: tuple = (0.0001, None), rho_bound: tuple = (-0.9999, 0.999), tol_lvl_abs: float = 1e-14):
         self.alpha_bound = alpha_bound
+        self.beta_bound = beta_bound
         self.nu_bound = nu_bound
         self.rho_bound = rho_bound
         self.tol_lvl_abs = tol_lvl_abs
@@ -22,7 +23,6 @@ class SABRModelCalibrator(object):
 
 
 class SABRModelCalibratorAlphaNuRho(SABRModelCalibrator):
-
     def __init__(self, t: float, forward: float, strikes: np.array, vols: np.array, weights: np.array,
                  vol_type: str = 'black', beta: float = 1.0, init_guess: tuple = (0.2, 0.4, -0.25)):
         super().__init__()

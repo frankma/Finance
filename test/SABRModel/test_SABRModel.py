@@ -140,9 +140,9 @@ class TestSABRModel(TestCase):
               % (toc_vec, toc_sca, (toc_vec - toc_sca)))
         pass
 
-    def test_solve_alpha_from_atm_vol_given_nu_and_rho(self):
+    def test_solve_alpha_from_atm_vol(self):
         tau = 0.25
-        alpha = 0.2
+        alpha = 0.2234
         beta = 1.0
         nu = 0.4
         rho = -0.25
@@ -152,17 +152,34 @@ class TestSABRModel(TestCase):
         forward = 150.0
 
         black_vol = model.calc_lognormal_vol(forward, forward)
-        alpha_solved = model.solve_alpha_from_atm_vol_given_nu_and_rho(forward, black_vol, nu, rho)
+        alpha_solved = SABRModel.solve_alpha_from_atm_vol(forward, black_vol, tau, beta, nu, rho, vol_type='black')
         rel_diff = alpha_solved / alpha - 1.0
-        print('lognormal model\n input\t solved \t rel diff\n %.6f\t%.6f\t%.4e' % (alpha, alpha_solved, rel_diff))
+        print('lognormal model black vol\n input\t solved \t rel diff\n %.6f\t%.6f\t%.4e'
+              % (alpha, alpha_solved, rel_diff))
+        assert abs(rel_diff) < 1e-12, 'solved alpha differs from input larger than one percent.'
+
+        norm_vol = model.calc_normal_vol(forward, forward)
+        alpha_solved = SABRModel.solve_alpha_from_atm_vol(forward, norm_vol, tau, beta, nu, rho, vol_type='normal')
+        rel_diff = alpha_solved / alpha - 1.0
+        print('lognormal model normal vol\n input\t solved \t rel diff\n %.6f\t%.6f\t%.4e'
+              % (alpha, alpha_solved, rel_diff))
         assert abs(rel_diff) < 1e-2, 'solved alpha differs from input larger than one percent.'
 
         beta = 0.0
         forward = 0.05
         model_norm = SABRModel(tau, alpha, beta, nu, rho)
         black_vol = model_norm.calc_lognormal_vol(forward, forward)
-        alpha_solved = model_norm.solve_alpha_from_atm_vol_given_nu_and_rho(forward, black_vol, nu, rho)
+        alpha_solved = SABRModel.solve_alpha_from_atm_vol(forward, black_vol, tau, beta, nu, rho, vol_type='black')
         rel_diff = alpha_solved / alpha - 1.0
-        print('normal model\n input\t solved \t rel diff\n %.6f\t%.6f\t%.4e' % (alpha, alpha_solved, rel_diff))
+        print('normal model black vol\n input\t solved \t rel diff\n %.6f\t%.6f\t%.4e'
+              % (alpha, alpha_solved, rel_diff))
         assert abs(rel_diff) < 1e-12, 'solved alpha differs from input larger than one percent.'
+
+        norm_vol = model_norm.calc_normal_vol(forward, forward)
+        alpha_solved = SABRModel.solve_alpha_from_atm_vol(forward, norm_vol, tau, beta, nu, rho, vol_type='normal')
+        rel_diff = alpha_solved / alpha - 1.0
+        print('normal model normal vol\n input\t solved \t rel diff\n %.6f\t%.6f\t%.4e'
+              % (alpha, alpha_solved, rel_diff))
+        assert abs(rel_diff) < 1e-12, 'solved alpha differs from input larger than one percent.'
+
         pass

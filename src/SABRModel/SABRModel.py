@@ -200,13 +200,29 @@ class SABRModel(object):
         strikes = strikes[1:-1]  # truncate strikes for numerical solution
         return density, strikes
 
-    def solve_alpha_from_atm_vol_given_nu_and_rho(self, forward: float, vol_atm: float, nu: float, rho: float) -> float:
-        f_pwr_one_m_beta = forward ** (1.0 - self.beta)
-        coe_cubic = ((1.0 - self.beta) ** 2) * self.t / 24.0 / (f_pwr_one_m_beta ** 3)
-        coe_quadratic = self.beta * self.nu * self.rho * self.t / 4.0 / (f_pwr_one_m_beta ** 2)
-        coe_linear = (1.0 + (self.nu ** 2) * (2.0 - 3.0 * (self.rho ** 2)) * self.t / 24.0) / f_pwr_one_m_beta
-        coe_constant = -vol_atm
-        coefficients = np.array([coe_constant, coe_linear, coe_quadratic, coe_cubic])
+    @staticmethod
+    def solve_alpha_from_atm_vol(forward: float, vol_atm: float, t: float, beta: float, nu: float, rho: float,
+                                 vol_type: str = 'black') -> float:
+        f_pwr_one_m_beta = forward ** (1.0 - beta)
+
+        if vol_type.lower() == 'black':
+            cubic = ((1.0 - beta) ** 2) * t / 24.0 / (f_pwr_one_m_beta ** 3)
+            quadratic = beta * nu * rho * t / 4.0 / (f_pwr_one_m_beta ** 2)
+            linear = (1.0 + (nu ** 2) * (2.0 - 3.0 * (rho ** 2)) * t / 24.0) / f_pwr_one_m_beta
+            constant = -vol_atm
+
+            alpha_approximate = vol_atm / f_pwr_one_m_beta  # in case of multiple real solutions
+        elif vol_type.lower() == 'normal':
+            cubic = -beta * (2.0 - beta) * t / 24.0 / (forward ** (2.0 - 3.0 * beta))
+            quadratic = beta * nu * rho * t / 4.0 / (forward ** (1.0 - 2.0 * beta))
+            linear = (1.0 + (nu ** 2) * (2.0 - 3.0 * (rho ** 2)) * t / 24.0) * (forward ** beta)
+            constant = -vol_atm
+
+            alpha_approximate = vol_atm / forward / f_pwr_one_m_beta  # in case of multiple real solutions
+        else:
+            raise ValueError('unrecognized method %s' % vol_type)
+
+        coefficients = np.array([constant, linear, quadratic, cubic])
         solutions = polyroots(coefficients)
         solutions = solutions[np.isreal(solutions)].real  # only real solution is usable
         n_solutions = solutions.__len__()
@@ -215,7 +231,5 @@ class SABRModel(object):
         elif n_solutions == 1:
             return solutions[0]
         else:
-            vol_atm = self.calc_lognormal_vol(forward, forward)
-            alpha_approximate = vol_atm / f_pwr_one_m_beta
-            closest = min(solutions, key=lambda x:abs(x - alpha_approximate))
+            closest = min(solutions, key=lambda x: abs(x - alpha_approximate))
             return closest
