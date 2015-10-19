@@ -163,7 +163,7 @@ class TestSABRModel(TestCase):
         rel_diff = alpha_solved / alpha - 1.0
         print('lognormal model normal vol\n input\t solved \t rel diff\n %.6f\t%.6f\t%.4e'
               % (alpha, alpha_solved, rel_diff))
-        assert abs(rel_diff) < 1e-2, 'solved alpha differs from input larger than one percent.'
+        assert abs(rel_diff) < 1e-12, 'solved alpha differs from input larger than one percent.'
 
         beta = 0.0
         forward = 0.05
