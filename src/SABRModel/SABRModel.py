@@ -33,7 +33,8 @@ class SABRModel(object):
             sqrt_dt = np.sqrt(dt)
             rands = np.random.multivariate_normal(mean, correlation, size=n_scenarios)
             forwards += sigmas * (forwards ** self.beta) * rands[:, 0] * sqrt_dt
-            sigmas += self.nu * sigmas * rands[:, 1] * sqrt_dt
+            # use lognormal transform to avoid negative volatility
+            sigmas *= np.exp(-0.5 * (self.nu ** 2) * dt + self.nu * rands[:, 1] * sqrt_dt)
         # 2nd, analyse the density
         freq, strikes = np.histogram(forwards, bins=strikes, normed=True)
         strikes_mid = 0.5 * (strikes[:-1] + strikes[1:])
@@ -69,7 +70,7 @@ class SABRModel(object):
             linear = (1.0 + (nu ** 2) * (2.0 - 3.0 * (rho ** 2)) * t / 24.0) * (forward ** beta)
             constant = -vol_atm
 
-            alpha_approximate = vol_atm / forward / f_pwr_one_m_beta  # in case of multiple real solutions
+            alpha_approximate = vol_atm / (forward ** beta)  # in case of multiple real solutions
         else:
             raise ValueError('unrecognized volatility type %s' % vol_type.__str__())
 
