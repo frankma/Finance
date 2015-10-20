@@ -3,8 +3,9 @@ from unittest import TestCase
 import numpy as np
 import matplotlib.pyplot as plt
 
-from src.SABRModel.SABRModel import SABRModel
+from src.SABRModel.SABRModel import SABRModelLognormalApprox
 from src.SABRModel.SABRModelCalibrator import SABRModelCalibratorAlphaNuRho
+from src.Utils.VolType import VolType
 
 __author__ = 'frank.ma'
 
@@ -20,13 +21,13 @@ class TestSABRModelCalibrator(TestCase):
         forward = 125.0
         strikes = np.linspace(75.0, 175.0, num=11)
 
-        model = SABRModel(t, alpha, beta, nu, rho)
-        vols = model.calc_lognormal_vol_vec_k(forward, strikes)
+        model = SABRModelLognormalApprox(t, alpha, beta, nu, rho)
+        vols = model.calc_vol_vec_k(forward, strikes)
         weights = np.full(vols.__len__(), 1.0 / vols.__len__())
 
         init_guess = (1.2, 0.7, -0.4)
-        calibrator = SABRModelCalibratorAlphaNuRho(t, forward, strikes, vols, weights, vol_type='Black', beta=beta,
-                                                   init_guess=init_guess)
+        calibrator = SABRModelCalibratorAlphaNuRho(t, forward, strikes, vols, weights, vol_type=VolType.black,
+                                                   beta=beta, init_guess=init_guess)
         model_cal = calibrator.calibrate()
 
         print('no perturbation calibration results')
@@ -42,13 +43,13 @@ class TestSABRModelCalibrator(TestCase):
         perturbation = np.exp(np.random.normal(loc=0.0, scale=0.01, size=strikes.__len__()))
         vols_pert = vols * perturbation
 
-        calibrator_pert = SABRModelCalibratorAlphaNuRho(t, forward, strikes, vols_pert, weights)
+        calibrator_pert = SABRModelCalibratorAlphaNuRho(t, forward, strikes, vols_pert, weights, vol_type=VolType.black)
         model_pert_cal = calibrator_pert.calibrate()
 
-        vols_pert_res = model_pert_cal.calc_lognormal_vol_vec_k(forward, strikes)
+        vols_pert_res = model_pert_cal.calc_vol_vec_k(forward, strikes)
         strikes_len = np.linspace(70.0, 180.0, num=101)
-        vols_len = model.calc_lognormal_vol_vec_k(forward, strikes_len)
-        vols_pert_res_len = model_pert_cal.calc_lognormal_vol_vec_k(forward, strikes_len)
+        vols_len = model.calc_vol_vec_k(forward, strikes_len)
+        vols_pert_res_len = model_pert_cal.calc_vol_vec_k(forward, strikes_len)
 
         print('with perturbation calibration results')
         print('parameter\tinput\tcalibrated\trelative diff')

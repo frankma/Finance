@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 
-from src.SABRModel.SABRModel import SABRModel
+from src.SABRModel.SABRModel import SABRModelLognormalApprox, SABRModelNormalApprox
 
 __author__ = 'frank.ma'
 
@@ -11,10 +11,11 @@ beta = 0.0
 nu = 0.88
 rho = -0.25
 
-model = SABRModel(tau, alpha, beta, nu, rho)
-freq_sim, base_sim = model.sim_forward_den(fwd, rel_bounds=(-20.0, 20.0), n_bins=1000)
-freq_lognormal, base_lognormal = model.calc_lognormal_fwd_den(fwd, rel_bounds=(0.01, 20.0), n_bins=1000)
-freq_normal, base_normal = model.calc_normal_fwd_den(fwd, rel_bounds=(-20.0, 20.0), n_bins=1000)
+model_lognormal = SABRModelLognormalApprox(tau, alpha, beta, nu, rho)
+model_normal = SABRModelNormalApprox(tau, alpha, beta, nu, rho)
+freq_sim, base_sim = model_lognormal.sim_forward_den(fwd, rel_bounds=(-20.0, 20.0), n_bins=1000)
+freq_lognormal, base_lognormal = model_lognormal.calc_fwd_den(fwd, rel_bounds=(0.01, 20.0), n_bins=1000)
+freq_normal, base_normal = model_normal.calc_fwd_den(fwd, rel_bounds=(-20.0, 20.0), n_bins=1000)
 
 sum_sim = sum(base_sim[:-1] * freq_sim[:-1] * (base_sim[1:] - base_sim[:-1]))
 sum_lognormal = sum(base_lognormal[:-1] * freq_lognormal[:-1] * (base_lognormal[1:] - base_lognormal[:-1]))
