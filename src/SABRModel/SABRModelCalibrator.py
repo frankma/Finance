@@ -84,17 +84,25 @@ class SABRModelCalibratorNuRho(SABRModelCalibrator):
 
     def calibrate(self) -> SABRModelLognormalApprox or SABRModelNormalApprox:
         res = opt.minimize(self.error_function, self.init_guess, method='L-BFGS-B', jac=False,
-                           bounds=(self.alpha_bound, self.nu_bound, self.rho_bound), tol=self.tol_lvl_abs)
-        alpha, nu, rho = res.x
-        return SABRModel(self.t, alpha, self.beta, nu, rho)
+                           bounds=(self.nu_bound, self.rho_bound), tol=self.tol_lvl_abs)
+        nu, rho = res.x
+        if self.vol_type == VolType.black:
+            alpha = SABRModelLognormalApprox.solve_alpha(self.forward, self.vol_atm, self.t, self.beta, nu, rho)
+            return SABRModelLognormalApprox(self.t, alpha, self.beta, nu, rho)
+        elif self.vol_type == VolType.normal:
+            alpha = SABRModelNormalApprox.solve_alpha(self.forward, self.vol_atm, self.t, self.beta, nu, rho)
+            return SABRModelNormalApprox(self.t, alpha, self.beta, nu, rho)
+        else:
+            raise ValueError('unrecognized volatility type %s' % self.vol_type.__str__())
 
     def error_function(self, x: tuple):
         nu, rho = x
-        alpha = SABRModel.solve_alpha(self.forward, self.vol_atm, self.t, self.beta, nu, rho, vol_type=self.vol_type)
 
         if self.vol_type == VolType.black:
+            alpha = SABRModelLognormalApprox.solve_alpha(self.forward, self.vol_atm, self.t, self.beta, nu, rho)
             model = SABRModelLognormalApprox(self.t, alpha, self.beta, nu, rho)
         elif self.vol_type == VolType.normal:
+            alpha = SABRModelNormalApprox.solve_alpha(self.forward, self.vol_atm, self.t, self.beta, nu, rho)
             model = SABRModelNormalApprox(self.t, alpha, self.beta, nu, rho)
         else:
             raise ValueError('unrecognized volatility type %s' % self.vol_type.__str__())

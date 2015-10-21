@@ -3,8 +3,7 @@ import time as tm
 
 import numpy as np
 
-from src.SABRModel.SABRModel import SABRModel, SABRModelLognormalApprox, SABRModelNormalApprox
-from src.Utils.VolType import VolType
+from src.SABRModel.SABRModel import SABRModelLognormalApprox, SABRModelNormalApprox
 
 __author__ = 'frank.ma'
 
@@ -141,7 +140,7 @@ class TestSABRModel(TestCase):
               % (toc_vec, toc_sca, (toc_vec - toc_sca)))
         pass
 
-    def test_solve_alpha_from_atm_vol(self):
+    def test_solve_alpha(self):
         tau = 0.25
         alpha = 0.2234
         beta = 1.0
@@ -152,7 +151,7 @@ class TestSABRModel(TestCase):
 
         model_lognormal = SABRModelLognormalApprox(tau, alpha, beta, nu, rho)
         black_vol = model_lognormal.calc_vol(forward, forward)
-        alpha_solved = SABRModel.solve_alpha(forward, black_vol, tau, beta, nu, rho, vol_type=VolType.black)
+        alpha_solved = SABRModelLognormalApprox.solve_alpha(forward, black_vol, tau, beta, nu, rho)
         rel_diff = alpha_solved / alpha - 1.0
         print('lognormal model black vol\n input\t solved \t rel diff\n %.6f\t%.6f\t%.4e'
               % (alpha, alpha_solved, rel_diff))
@@ -160,7 +159,7 @@ class TestSABRModel(TestCase):
 
         model_normal = SABRModelNormalApprox(tau, alpha, beta, nu, rho)
         norm_vol = model_normal.calc_vol(forward, forward)
-        alpha_solved = SABRModel.solve_alpha(forward, norm_vol, tau, beta, nu, rho, vol_type=VolType.normal)
+        alpha_solved = SABRModelNormalApprox.solve_alpha(forward, norm_vol, tau, beta, nu, rho)
         rel_diff = alpha_solved / alpha - 1.0
         print('lognormal model normal vol\n input\t solved \t rel diff\n %.6f\t%.6f\t%.4e'
               % (alpha, alpha_solved, rel_diff))
@@ -170,7 +169,7 @@ class TestSABRModel(TestCase):
         forward = 0.05
         model_lognormal = SABRModelLognormalApprox(tau, alpha, beta, nu, rho)
         black_vol = model_lognormal.calc_vol(forward, forward)
-        alpha_solved = SABRModel.solve_alpha(forward, black_vol, tau, beta, nu, rho, vol_type=VolType.black)
+        alpha_solved = SABRModelLognormalApprox.solve_alpha(forward, black_vol, tau, beta, nu, rho)
         rel_diff = alpha_solved / alpha - 1.0
         print('normal model black vol\n input\t solved \t rel diff\n %.6f\t%.6f\t%.4e'
               % (alpha, alpha_solved, rel_diff))
@@ -178,7 +177,7 @@ class TestSABRModel(TestCase):
 
         model_normal = SABRModelNormalApprox(tau, alpha, beta, nu, rho)
         norm_vol = model_normal.calc_vol(forward, forward)
-        alpha_solved = SABRModel.solve_alpha(forward, norm_vol, tau, beta, nu, rho, vol_type=VolType.normal)
+        alpha_solved = SABRModelNormalApprox.solve_alpha(forward, norm_vol, tau, beta, nu, rho)
         rel_diff = alpha_solved / alpha - 1.0
         print('normal model normal vol\n input\t solved \t rel diff\n %.6f\t%.6f\t%.4e'
               % (alpha, alpha_solved, rel_diff))

@@ -41,50 +41,20 @@ class SABRModel(object):
         return freq, strikes_mid
 
     def calc_vol(self, forward: float, strike: float, vol_type: VolType) -> float:
-        pass
+        raise ValueError('unexpected call of abstract method')
 
     def calc_vol_vec_k(self, forward: float, strikes: np.array, vol_type: VolType) -> np.array:
-        pass
+        raise ValueError('unexpected call of abstract method')
 
     def calc_vol_vec_f(self, forwards: np.array, strike: float, vol_type: VolType) -> np.array:
-        pass
+        raise ValueError('unexpected call of abstract method')
 
     def calc_fwd_den(self, forward: float, rel_bounds: tuple = (0.01, 20.0), n_bins: int = 500):
-        pass
+        raise ValueError('unexpected call of abstract method')
 
     @staticmethod
-    def solve_alpha(forward: float, vol_atm: float, t: float, beta: float, nu: float, rho: float,
-                    vol_type: VolType = VolType.black) -> float:
-        f_pwr_one_m_beta = forward ** (1.0 - beta)
-
-        if vol_type == VolType.black:
-            cubic = ((1.0 - beta) ** 2) * t / 24.0 / (f_pwr_one_m_beta ** 3)
-            quadratic = beta * nu * rho * t / 4.0 / (f_pwr_one_m_beta ** 2)
-            linear = (1.0 + (nu ** 2) * (2.0 - 3.0 * (rho ** 2)) * t / 24.0) / f_pwr_one_m_beta
-            constant = -vol_atm
-
-            alpha_approximate = vol_atm / f_pwr_one_m_beta  # in case of multiple real solutions
-        elif vol_type == VolType.normal:
-            cubic = -beta * (2.0 - beta) * t / 24.0 / (forward ** (2.0 - 3.0 * beta))
-            quadratic = beta * nu * rho * t / 4.0 / (forward ** (1.0 - 2.0 * beta))
-            linear = (1.0 + (nu ** 2) * (2.0 - 3.0 * (rho ** 2)) * t / 24.0) * (forward ** beta)
-            constant = -vol_atm
-
-            alpha_approximate = vol_atm / (forward ** beta)  # in case of multiple real solutions
-        else:
-            raise ValueError('unrecognized volatility type %s' % vol_type.__str__())
-
-        coefficients = np.array([constant, linear, quadratic, cubic])
-        solutions = polyroots(coefficients)
-        solutions = solutions[np.isreal(solutions)].real  # only real solution is usable
-        n_solutions = solutions.__len__()
-        if n_solutions < 1 or all(solutions < 0.0):
-            raise ValueError('cannot find alpha within real domain')
-        elif n_solutions == 1:
-            return solutions[0]
-        else:
-            closest = min(solutions, key=lambda x: abs(x - alpha_approximate))
-            return closest
+    def solve_alpha(forward: float, vol_atm: float, t: float, beta: float, nu: float, rho: float) -> float:
+        raise ValueError('unexpected call of abstract method')
 
 
 class SABRModelLognormalApprox(SABRModel):
@@ -182,6 +152,27 @@ class SABRModelLognormalApprox(SABRModel):
         density = (prices[:-2] + prices[2:] - 2 * prices[1:-1]) / ((strikes[2:] - strikes[1:-1]) ** 2)
         strikes = strikes[1:-1]  # truncate strikes for numerical solution
         return density, strikes
+
+    @staticmethod
+    def solve_alpha(forward: float, vol_atm: float, t: float, beta: float, nu: float, rho: float):
+        f_pwr_one_m_beta = forward ** (1.0 - beta)
+        cubic = ((1.0 - beta) ** 2) * t / 24.0 / (f_pwr_one_m_beta ** 3)
+        quadratic = beta * nu * rho * t / 4.0 / (f_pwr_one_m_beta ** 2)
+        linear = (1.0 + (nu ** 2) * (2.0 - 3.0 * (rho ** 2)) * t / 24.0) / f_pwr_one_m_beta
+        constant = -vol_atm
+
+        coefficients = np.array([constant, linear, quadratic, cubic])
+        solutions = polyroots(coefficients)
+        solutions = solutions[np.isreal(solutions)].real  # only real solution is usable
+        n_solutions = solutions.__len__()
+        if n_solutions < 1 or all(solutions < 0.0):
+            raise ValueError('cannot find alpha within real domain')
+        elif n_solutions == 1:
+            return solutions[0]
+        else:
+            alpha_approximate = vol_atm / f_pwr_one_m_beta
+            closest = min(solutions, key=lambda x: abs(x - alpha_approximate))
+            return closest
 
 
 class SABRModelNormalApprox(SABRModel):
@@ -303,3 +294,24 @@ class SABRModelNormalApprox(SABRModel):
         density = (prices[:-2] + prices[2:] - 2 * prices[1:-1]) / ((strikes[2:] - strikes[1:-1]) ** 2)
         strikes = strikes[1:-1]  # truncate strikes for numerical solution
         return density, strikes
+
+    @staticmethod
+    def solve_alpha(forward: float, vol_atm: float, t: float, beta: float, nu: float, rho: float):
+        f_pwr_one_m_beta = forward ** (1.0 - beta)
+        cubic = -beta * (2.0 - beta) * t / 24.0 / (forward ** (2.0 - 3.0 * beta))
+        quadratic = beta * nu * rho * t / 4.0 / (forward ** (1.0 - 2.0 * beta))
+        linear = (1.0 + (nu ** 2) * (2.0 - 3.0 * (rho ** 2)) * t / 24.0) * (forward ** beta)
+        constant = -vol_atm
+
+        coefficients = np.array([constant, linear, quadratic, cubic])
+        solutions = polyroots(coefficients)
+        solutions = solutions[np.isreal(solutions)].real  # only real solution is usable
+        n_solutions = solutions.__len__()
+        if n_solutions < 1 or all(solutions < 0.0):
+            raise ValueError('cannot find alpha within real domain')
+        elif n_solutions == 1:
+            return solutions[0]
+        else:
+            alpha_approximate = vol_atm / (forward ** beta)
+            closest = min(solutions, key=lambda x: abs(x - alpha_approximate))
+            return closest
