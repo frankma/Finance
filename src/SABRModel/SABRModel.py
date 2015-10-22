@@ -45,13 +45,13 @@ class SABRModel(object):
     def get_normal_approx(self):
         return SABRModelNormalApprox(self.t, self.alpha, self.beta, self.nu, self.rho)
 
-    def calc_z(self, forward, strike):
+    def _calc_z(self, forward, strike):
         return self.nu / self.alpha * np.log(forward / strike) / ((forward * strike) ** ((self.beta - 1.0) / 2.0))
 
-    def calc_z_norm(self, forward, strike):
+    def _calc_z_norm(self, forward, strike):
         return self.nu / self.alpha * (forward - strike)
 
-    def calc_x(self, z):
+    def _calc_x(self, z):
         return np.log((np.sqrt(1.0 - 2.0 * self.rho * z + z ** 2) + z - self.rho) / (1.0 - self.rho))
 
     def calc_vol(self, forward: float, strike: float, vol_type: VolType) -> float:
@@ -97,8 +97,8 @@ class SABRModelLognormalApprox(SABRModel):
                             0.25 * self.rho * self.beta * self.nu * self.alpha / f_mul_k ** (one_m_beta / 2.0) +
                             (2.0 - 3.0 * self.rho ** 2) / 24.0 * self.nu ** 2) * self.t)
         if abs(f_min_k) > 1e-12:
-            z = self.calc_z(forward, strike)
-            x = self.calc_x(z)
+            z = self._calc_z(forward, strike)
+            x = self._calc_x(z)
             term2 = z / x
         black_vol = term1 * term2 * term3
 
@@ -132,8 +132,8 @@ class SABRModelLognormalApprox(SABRModel):
             term3 = (1.0 + (one_m_beta ** 2 / 24.0 * self.alpha ** 2 / (f_mul_k ** one_m_beta) +
                             0.25 * self.rho * self.beta * self.nu * self.alpha / f_mul_k ** (one_m_beta / 2.0) +
                             (2.0 - 3.0 * self.rho ** 2) / 24.0 * self.nu ** 2) * self.t)
-        z = self.calc_z(forward, strikes)
-        x = self.calc_x(z)
+        z = self._calc_z(forward, strikes)
+        x = self._calc_x(z)
         term2[is_not_atm] = z[is_not_atm] / x[is_not_atm]
         black_vols = term1 * term2 * term3
 
@@ -167,8 +167,8 @@ class SABRModelLognormalApprox(SABRModel):
             term3 = (1.0 + (one_m_beta ** 2 / 24.0 * self.alpha ** 2 / (f_mul_k ** one_m_beta) +
                             0.25 * self.rho * self.beta * self.nu * self.alpha / f_mul_k ** (one_m_beta / 2.0) +
                             (2.0 - 3.0 * self.rho ** 2) / 24.0 * self.nu ** 2) * self.t)
-        z = self.calc_z(forwards, strike)
-        x = self.calc_x(z)
+        z = self._calc_z(forwards, strike)
+        x = self._calc_x(z)
         term2[is_not_atm] = z[is_not_atm] / x[is_not_atm]
         black_vols = term1 * term2 * term3
 
@@ -223,8 +223,8 @@ class SABRModelNormalApprox(SABRModel):
         term1, term2, term3 = self.alpha, 1.0, 1.0
         if abs(self.beta) < 1e-12:
             if abs(forward - strike) > 1e-12:
-                z = self.calc_z_norm(forward, strike)
-                x = self.calc_x(z)
+                z = self._calc_z_norm(forward, strike)
+                x = self._calc_x(z)
                 term2 = z / x
             term3 = 1.0 + ((2.0 - 3.0 * self.rho ** 2) / 24.0 * self.nu ** 2) * self.t
         else:
@@ -233,8 +233,8 @@ class SABRModelNormalApprox(SABRModel):
                      (1.0 + (one_m_beta ** 2) * (ln_f_per_k ** 2) / 24.0 +
                       (one_m_beta ** 4) * (ln_f_per_k ** 4) / 1920.0)
             if abs(forward - strike) > 1e-12:
-                z = self.calc_z(forward, strike)
-                x = self.calc_x(z)
+                z = self._calc_z(forward, strike)
+                x = self._calc_x(z)
                 term2 = z / x
             term3 = 1.0 + (-self.beta * (2.0 - self.beta) * (self.alpha ** 2) / 24.0 / (f_mul_k ** one_m_beta) +
                            self.rho * self.alpha * self.nu * self.beta / 4.0 / (f_mul_k ** (one_m_beta / 2.0)) +
@@ -250,25 +250,25 @@ class SABRModelNormalApprox(SABRModel):
             raise ValueError('unrecognized volatility type %s' % vol_type.__str__())
 
     def calc_vol_vec_k(self, forward: float, strikes: np.array, vol_type: VolType = VolType.normal) -> np.array:
-        is_not_atm_or_zero_k = np.logical_and(np.abs(forward - strikes) > 1e-12, np.abs(strikes) > 1e-12)
+        is_not_atm = np.abs(forward - strikes) > 1e-12
         n = strikes.__len__()
         one_m_beta = 1.0 - self.beta
         f_mul_k = forward * strikes
 
         term1, term2, term3 = np.full(n, self.alpha), np.ones(n), np.ones(n)
         if abs(self.beta) < 1e-12:
-            z = self.calc_z_norm(forward, strikes)
-            x = self.calc_x(z)
-            term2[is_not_atm_or_zero_k] = z[is_not_atm_or_zero_k] / x[is_not_atm_or_zero_k]
+            z = self._calc_z_norm(forward, strikes)
+            x = self._calc_x(z)
+            term2[is_not_atm] = z[is_not_atm] / x[is_not_atm]
             term3 = 1.0 + ((2.0 - 3.0 * self.rho ** 2) / 24.0 * self.nu ** 2) * self.t
         else:
             ln_f_per_k = np.log(forward / strikes)
             term1 *= (f_mul_k ** (self.beta / 2.0)) * (1.0 + (ln_f_per_k ** 2) / 24.0 + (ln_f_per_k ** 4) / 1920.0) / \
                      (1.0 + (one_m_beta ** 2) * (ln_f_per_k ** 2) / 24.0 +
                       (one_m_beta ** 4) * (ln_f_per_k ** 4) / 1920.0)
-            z = self.calc_z(forward, strikes)
-            x = self.calc_x(z)
-            term2[is_not_atm_or_zero_k] = z[is_not_atm_or_zero_k] / x[is_not_atm_or_zero_k]
+            z = self._calc_z(forward, strikes)
+            x = self._calc_x(z)
+            term2[is_not_atm] = z[is_not_atm] / x[is_not_atm]
             term3 = 1.0 + (-self.beta * (2.0 - self.beta) * (self.alpha ** 2) / 24.0 / (f_mul_k ** one_m_beta) +
                            self.rho * self.alpha * self.nu * self.beta / 4.0 / (f_mul_k ** (one_m_beta / 2.0)) +
                            (2.0 - 3.0 * (self.rho ** 2)) * (self.nu ** 2) / 24.0) * self.t
@@ -283,25 +283,25 @@ class SABRModelNormalApprox(SABRModel):
             raise ValueError('unrecognized volatility type %s' % vol_type.__str__())
 
     def calc_vol_vec_f(self, forwards: np.array, strike: float, vol_type: VolType = VolType.normal) -> np.array:
-        is_not_atm_or_zero_f = np.logical_and(np.abs(forwards - strike) > 1e-12, np.abs(forwards) > 1e-12)
+        is_not_atm = np.abs(forwards - strike) > 1e-12
         n = forwards.__len__()
         one_m_beta = 1.0 - self.beta
         f_mul_k = forwards * strike
 
         term1, term2, term3 = np.full(n, self.alpha), np.ones(n), np.ones(n)
         if abs(self.beta) < 1e-12:
-            z = self.calc_z_norm(forwards, strike)
-            x = self.calc_x(z)
-            term2[is_not_atm_or_zero_f] = z[is_not_atm_or_zero_f] / x[is_not_atm_or_zero_f]
+            z = self._calc_z_norm(forwards, strike)
+            x = self._calc_x(z)
+            term2[is_not_atm] = z[is_not_atm] / x[is_not_atm]
             term3 = 1.0 + ((2.0 - 3.0 * self.rho ** 2) / 24.0 * self.nu ** 2) * self.t
         else:
             ln_f_per_k = np.log(forwards / strike)
             term1 *= (f_mul_k ** (self.beta / 2.0)) * (1.0 + (ln_f_per_k ** 2) / 24.0 + (ln_f_per_k ** 4) / 1920.0) / \
                      (1.0 + (one_m_beta ** 2) * (ln_f_per_k ** 2) / 24.0 +
                       (one_m_beta ** 4) * (ln_f_per_k ** 4) / 1920.0)
-            z = self.calc_z(forwards, strike)
-            x = self.calc_x(z)
-            term2[is_not_atm_or_zero_f] = z[is_not_atm_or_zero_f] / x[is_not_atm_or_zero_f]
+            z = self._calc_z(forwards, strike)
+            x = self._calc_x(z)
+            term2[is_not_atm] = z[is_not_atm] / x[is_not_atm]
             term3 = 1.0 + (-self.beta * (2.0 - self.beta) * (self.alpha ** 2) / 24.0 / (f_mul_k ** one_m_beta) +
                            self.rho * self.alpha * self.nu * self.beta / 4.0 / (f_mul_k ** (one_m_beta / 2.0)) +
                            (2.0 - 3.0 * (self.rho ** 2)) * (self.nu ** 2) / 24.0) * self.t
