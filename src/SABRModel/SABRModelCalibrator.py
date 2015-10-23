@@ -59,7 +59,7 @@ class SABRModelCalibratorAlphaNuRho(SABRModelCalibrator):
         else:
             raise ValueError('unrecognized volatility type %s' % self.vol_type.__str__())
 
-        imp_vols = model.calc_vol_vec_k(self.forward, self.strikes)
+        imp_vols = model.calc_vol_vec(self.forward, self.strikes)
         errors = np.power((self.vols - imp_vols) * self.weights, 2)
         return sum(errors)
 
@@ -107,6 +107,6 @@ class SABRModelCalibratorNuRho(SABRModelCalibrator):
         else:
             raise ValueError('unrecognized volatility type %s' % self.vol_type.__str__())
 
-        imp_vols = model.calc_vol_vec_k(self.forward, self.strikes)
+        imp_vols = model.calc_vol_vec(self.forward, self.strikes)
         errors = np.power((self.vols - imp_vols) * self.weights, 2)
         return sum(errors)

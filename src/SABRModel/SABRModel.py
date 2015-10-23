@@ -1,3 +1,5 @@
+from math import log
+
 import numpy as np
 
 from numpy.polynomial.polynomial import polyroots
@@ -17,6 +19,7 @@ class SABRModel(object):
         self.beta = beta
         self.nu = nu
         self.rho = rho
+        self.abs_tol = 1e-12
 
     def sim_forward_den(self, forward: float, rel_bounds: tuple = (0.01, 20.0), n_bins: int = 500, n_steps: int = 100,
                         n_scenarios: int = 10 ** 6):
@@ -39,14 +42,14 @@ class SABRModel(object):
         strikes_mid = 0.5 * (strikes[:-1] + strikes[1:])
         return freq, strikes_mid
 
-    def get_lognormal_approx(self):
+    def get_model_lognormal_approx(self):
         return SABRModelLognormalApprox(self.t, self.alpha, self.beta, self.nu, self.rho)
 
-    def get_normal_approx(self):
+    def get_model_normal_approx(self):
         return SABRModelNormalApprox(self.t, self.alpha, self.beta, self.nu, self.rho)
 
     def _calc_z(self, forward, strike):
-        return self.nu / self.alpha * np.log(forward / strike) / ((forward * strike) ** ((self.beta - 1.0) / 2.0))
+        return self.nu / self.alpha * np.log(forward / strike) * ((forward * strike) ** ((1.0 - self.beta) / 2.0))
 
     def _calc_z_norm(self, forward, strike):
         return self.nu / self.alpha * (forward - strike)
@@ -55,20 +58,17 @@ class SABRModel(object):
         return np.log((np.sqrt(1.0 - 2.0 * self.rho * z + z ** 2) + z - self.rho) / (1.0 - self.rho))
 
     def calc_vol(self, forward: float, strike: float, vol_type: VolType) -> float:
-        raise ValueError('unexpected call of abstract method')
+        raise NotImplementedError('unexpected call of abstract method')
 
-    def calc_vol_vec_k(self, forward: float, strikes: np.array, vol_type: VolType) -> np.array:
-        raise ValueError('unexpected call of abstract method')
-
-    def calc_vol_vec_f(self, forwards: np.array, strike: float, vol_type: VolType) -> np.array:
-        raise ValueError('unexpected call of abstract method')
+    def calc_vol_vec(self, forward: float or np.array, strikes: np.array or float, vol_type: VolType) -> np.array:
+        raise NotImplementedError('unexpected call of abstract method')
 
     def calc_fwd_den(self, forward: float, rel_bounds: tuple = (0.01, 20.0), n_bins: int = 500):
-        raise ValueError('unexpected call of abstract method')
+        raise NotImplementedError('unexpected call of abstract method')
 
     @staticmethod
     def solve_alpha(forward: float, vol_atm: float, t: float, beta: float, nu: float, rho: float) -> float:
-        raise ValueError('unexpected call of abstract method')
+        raise NotImplementedError('unexpected call of abstract method')
 
 
 class SABRModelLognormalApprox(SABRModel):
@@ -79,7 +79,7 @@ class SABRModelLognormalApprox(SABRModel):
         one_m_beta = 1.0 - self.beta
         f_min_k = forward - strike
         f_mul_k = forward * strike
-        ln_f_per_k = np.log(forward / strike)
+        ln_f_per_k = log(forward / strike)
 
         term1, term2, term3 = 1.0, 1.0, 1.0
         if abs(self.beta) < 1e-12:
@@ -108,21 +108,32 @@ class SABRModelLognormalApprox(SABRModel):
             # TODO: develop this method -- SABR refactor
             raise ValueError('method not developed yet')
         else:
-            raise ValueError('unrecognized volatility type %s' % vol_type.__str__())
+            raise ValueError('unrecognized volatility type %s' % vol_type.value)
 
-    def calc_vol_vec_k(self, forward: float, strikes: np.array, vol_type: VolType = VolType.black) -> np.array:
-        n = strikes.__len__()
-        f_min_k = forward - strikes
-        f_mul_k = forward * strikes
-        ln_f_per_k = np.log(forward / strikes)
-        is_not_atm = np.abs(f_min_k) > 1e-12
-        is_atm = np.logical_not(is_not_atm)
+    def calc_vol_vec(self, forward: float or np.array, strike: np.array or float,
+                     vol_type: VolType = VolType.black) -> np.array:
+        n_forward = np.size(forward)
+        n_strike = np.size(strike)
+        if n_forward == 1:
+            n = np.size(strike)
+            forward = np.full(n, forward)
+        elif n_strike == 1:
+            n = np.size(forward)
+            strike = np.full(n, strike)
+        else:
+            raise ValueError('only one vectorization is allowed for either forward (%i) or strike (%i)'
+                             % (n_forward, n_strike))
+        f_min_k = forward - strike
+        f_mul_k = forward * strike
+        ln_f_per_k = np.log(forward / strike)
+        is_atm = np.abs(f_min_k) < 1e-12
+        is_not_atm = np.logical_not(is_atm)
         one_m_beta = 1.0 - self.beta
 
         term1, term2, term3 = np.ones(n), np.ones(n), np.ones(n)
         if abs(self.beta) < 1e-12:
             term1[is_not_atm] = self.alpha * ln_f_per_k[is_not_atm] / f_min_k[is_not_atm]
-            term1[is_atm] = self.alpha / forward  # only take special care if there are zero / zero case
+            term1[is_atm] = self.alpha / forward[is_atm]
             term3 = 1.0 + ((self.alpha ** 2) / 24.0 / f_mul_k +
                            (2.0 - 3.0 * (self.rho ** 2)) * (self.nu ** 2) / 24.0) * self.t
         else:
@@ -132,57 +143,22 @@ class SABRModelLognormalApprox(SABRModel):
             term3 = (1.0 + (one_m_beta ** 2 / 24.0 * self.alpha ** 2 / (f_mul_k ** one_m_beta) +
                             0.25 * self.rho * self.beta * self.nu * self.alpha / f_mul_k ** (one_m_beta / 2.0) +
                             (2.0 - 3.0 * self.rho ** 2) / 24.0 * self.nu ** 2) * self.t)
-        z = self._calc_z(forward, strikes)
+        z = self._calc_z(forward, strike)
         x = self._calc_x(z)
         term2[is_not_atm] = z[is_not_atm] / x[is_not_atm]
-        black_vols = term1 * term2 * term3
+        black_vol = term1 * term2 * term3
 
         if vol_type == VolType.black:
-            return black_vols
+            return black_vol
         elif vol_type == VolType.normal:
             # TODO: develop this method -- SABR refactor
             raise ValueError('method not developed yet')
         else:
-            raise ValueError('unrecognized volatility type %s' % vol_type.__str__())
-
-    def calc_vol_vec_f(self, forwards: np.array, strike: float, vol_type: VolType = VolType.black) -> np.array:
-        n = forwards.__len__()
-        f_min_k = forwards - strike
-        f_mul_k = forwards * strike
-        ln_f_per_k = np.log(forwards / strike)
-        is_not_atm = np.abs(f_min_k) > 1e-12
-        is_atm = np.logical_not(is_not_atm)
-        one_m_beta = 1.0 - self.beta
-
-        term1, term2, term3 = np.ones(n), np.ones(n), np.ones(n)
-        if abs(self.beta) < 1e-12:
-            term1[is_not_atm] = self.alpha * ln_f_per_k[is_not_atm] / f_min_k[is_not_atm]
-            term1[is_atm] = self.alpha / forwards[is_atm]  # only take special care if there are zero / zero case
-            term3 = 1.0 + ((self.alpha ** 2) / 24.0 / f_mul_k +
-                           (2.0 - 3.0 * (self.rho ** 2)) * (self.nu ** 2) / 24.0) * self.t
-        else:
-            term1 = self.alpha / (f_mul_k ** (one_m_beta / 2.0)) / \
-                    (1.0 + (one_m_beta ** 2) * (ln_f_per_k ** 2) / 24.0 +
-                     (one_m_beta ** 4) * (ln_f_per_k ** 4) / 1920.0)
-            term3 = (1.0 + (one_m_beta ** 2 / 24.0 * self.alpha ** 2 / (f_mul_k ** one_m_beta) +
-                            0.25 * self.rho * self.beta * self.nu * self.alpha / f_mul_k ** (one_m_beta / 2.0) +
-                            (2.0 - 3.0 * self.rho ** 2) / 24.0 * self.nu ** 2) * self.t)
-        z = self._calc_z(forwards, strike)
-        x = self._calc_x(z)
-        term2[is_not_atm] = z[is_not_atm] / x[is_not_atm]
-        black_vols = term1 * term2 * term3
-
-        if vol_type == VolType.black:
-            return black_vols
-        elif vol_type == VolType.normal:
-            # TODO: develop this method -- SABR refactor
-            raise ValueError('method not developed yet')
-        else:
-            raise ValueError('unrecognized volatility type %s' % vol_type.__str__())
+            raise ValueError('unrecognized volatility type %s' % vol_type.value)
 
     def calc_fwd_den(self, forward: float, rel_bounds: tuple = (0.01, 20.0), n_bins: int = 500):
         strikes = np.linspace(rel_bounds[0] * forward, rel_bounds[1] * forward, num=n_bins + 2)
-        vols = self.calc_vol_vec_k(forward, strikes, vol_type=VolType.black)
+        vols = self.calc_vol_vec(forward, strikes, vol_type=VolType.black)
         # must implied through numerical differentiation
         # since analytical one is incorrect as a collection of lognormal distribution with variable vols
         prices = Black76VecK.price(forward, strikes, self.t, vols, 1.0, OptionType.put)
@@ -228,7 +204,7 @@ class SABRModelNormalApprox(SABRModel):
                 term2 = z / x
             term3 = 1.0 + ((2.0 - 3.0 * self.rho ** 2) / 24.0 * self.nu ** 2) * self.t
         else:
-            ln_f_per_k = np.log(forward / strike)
+            ln_f_per_k = log(forward / strike)
             term1 *= (f_mul_k ** (self.beta / 2.0)) * (1.0 + (ln_f_per_k ** 2) / 24.0 + (ln_f_per_k ** 4) / 1920.0) / \
                      (1.0 + (one_m_beta ** 2) * (ln_f_per_k ** 2) / 24.0 +
                       (one_m_beta ** 4) * (ln_f_per_k ** 4) / 1920.0)
@@ -247,77 +223,53 @@ class SABRModelNormalApprox(SABRModel):
         elif vol_type == VolType.normal:
             return normal_vol
         else:
-            raise ValueError('unrecognized volatility type %s' % vol_type.__str__())
+            raise ValueError('unrecognized volatility type %s' % vol_type.value)
 
-    def calc_vol_vec_k(self, forward: float, strikes: np.array, vol_type: VolType = VolType.normal) -> np.array:
-        is_not_atm = np.abs(forward - strikes) > 1e-12
-        n = strikes.__len__()
+    def calc_vol_vec(self, forward: float or np.array, strike: np.array or float,
+                     vol_type: VolType = VolType.normal) -> np.array:
+        n_forward = np.size(forward)
+        n_strike = np.size(strike)
+        if n_forward == 1:
+            n = np.size(strike)
+        elif n_strike == 1:
+            n = np.size(forward)
+        else:
+            raise ValueError('only one vectorization is allowed for either forward (%i) or strike (%i)'
+                             % (n_forward, n_strike))
+        is_not_atm = np.abs(forward - strike) > self.abs_tol
         one_m_beta = 1.0 - self.beta
-        f_mul_k = forward * strikes
+        f_mul_k = forward * strike
 
         term1, term2, term3 = np.full(n, self.alpha), np.ones(n), np.ones(n)
-        if abs(self.beta) < 1e-12:
-            z = self._calc_z_norm(forward, strikes)
+        if abs(self.beta) < self.abs_tol:
+            z = self._calc_z_norm(forward, strike)
             x = self._calc_x(z)
             term2[is_not_atm] = z[is_not_atm] / x[is_not_atm]
-            term3 = 1.0 + ((2.0 - 3.0 * self.rho ** 2) / 24.0 * self.nu ** 2) * self.t
+            term3 = 1.0 + (2.0 - 3.0 * (self.rho ** 2)) * (self.nu ** 2) * self.t / 24.0
         else:
-            ln_f_per_k = np.log(forward / strikes)
+            ln_f_per_k = np.log(forward / strike)
             term1 *= (f_mul_k ** (self.beta / 2.0)) * (1.0 + (ln_f_per_k ** 2) / 24.0 + (ln_f_per_k ** 4) / 1920.0) / \
                      (1.0 + (one_m_beta ** 2) * (ln_f_per_k ** 2) / 24.0 +
                       (one_m_beta ** 4) * (ln_f_per_k ** 4) / 1920.0)
-            z = self._calc_z(forward, strikes)
+            z = self._calc_z(forward, strike)
             x = self._calc_x(z)
             term2[is_not_atm] = z[is_not_atm] / x[is_not_atm]
             term3 = 1.0 + (-self.beta * (2.0 - self.beta) * (self.alpha ** 2) / 24.0 / (f_mul_k ** one_m_beta) +
                            self.rho * self.alpha * self.nu * self.beta / 4.0 / (f_mul_k ** (one_m_beta / 2.0)) +
                            (2.0 - 3.0 * (self.rho ** 2)) * (self.nu ** 2) / 24.0) * self.t
-        normal_vols = term1 * term2 * term3
+        normal_vol = term1 * term2 * term3
 
         if vol_type == VolType.black:
-            # TODO: develop this method -- SABR refactor
-            raise ValueError('method not developed yet')
+            # TODO: develop this method -- SABR vol conversion
+            raise NotImplementedError('TODO')
         elif vol_type == VolType.normal:
-            return normal_vols
+            return normal_vol
         else:
-            raise ValueError('unrecognized volatility type %s' % vol_type.__str__())
-
-    def calc_vol_vec_f(self, forwards: np.array, strike: float, vol_type: VolType = VolType.normal) -> np.array:
-        is_not_atm = np.abs(forwards - strike) > 1e-12
-        n = forwards.__len__()
-        one_m_beta = 1.0 - self.beta
-        f_mul_k = forwards * strike
-
-        term1, term2, term3 = np.full(n, self.alpha), np.ones(n), np.ones(n)
-        if abs(self.beta) < 1e-12:
-            z = self._calc_z_norm(forwards, strike)
-            x = self._calc_x(z)
-            term2[is_not_atm] = z[is_not_atm] / x[is_not_atm]
-            term3 = 1.0 + ((2.0 - 3.0 * self.rho ** 2) / 24.0 * self.nu ** 2) * self.t
-        else:
-            ln_f_per_k = np.log(forwards / strike)
-            term1 *= (f_mul_k ** (self.beta / 2.0)) * (1.0 + (ln_f_per_k ** 2) / 24.0 + (ln_f_per_k ** 4) / 1920.0) / \
-                     (1.0 + (one_m_beta ** 2) * (ln_f_per_k ** 2) / 24.0 +
-                      (one_m_beta ** 4) * (ln_f_per_k ** 4) / 1920.0)
-            z = self._calc_z(forwards, strike)
-            x = self._calc_x(z)
-            term2[is_not_atm] = z[is_not_atm] / x[is_not_atm]
-            term3 = 1.0 + (-self.beta * (2.0 - self.beta) * (self.alpha ** 2) / 24.0 / (f_mul_k ** one_m_beta) +
-                           self.rho * self.alpha * self.nu * self.beta / 4.0 / (f_mul_k ** (one_m_beta / 2.0)) +
-                           (2.0 - 3.0 * (self.rho ** 2)) * (self.nu ** 2) / 24.0) * self.t
-        normal_vols = term1 * term2 * term3
-
-        if vol_type == VolType.black:
-            # TODO: develop this method -- SABR refactor
-            raise ValueError('method not developed yet')
-        elif vol_type == VolType.normal:
-            return normal_vols
-        else:
-            raise ValueError('unrecognized volatility type %s' % vol_type.__str__())
+            raise ValueError('unrecognized volatility type %s' % vol_type.value)
 
     def calc_fwd_den(self, forward: float, rel_bounds: tuple = (0.01, 20.0), n_bins: int = 500):
         strikes = np.linspace(rel_bounds[0] * forward, rel_bounds[1] * forward, num=n_bins + 2)
-        vols = self.calc_vol_vec_k(forward, strikes, vol_type=VolType.normal)
+        vols = self.calc_vol_vec(forward, strikes, vol_type=VolType.normal)
         # must implied through numerical differentiation
         # since analytical one is incorrect as a collection of lognormal distribution with variable vols
         prices = NormalModelVecK.price(forward, strikes, self.t, vols, 1.0, OptionType.put)
