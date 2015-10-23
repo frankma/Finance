@@ -74,7 +74,7 @@ class TestSABRModel(TestCase):
         model = SABRModelNormalApprox(tau, alpha, beta, nu, rho)
 
         forward = 0.05
-        strikes = np.linspace(-0.1, 0.2, num=21)
+        strikes = np.linspace(-0.1, 0.2, num=31)
 
         norm_vols = model.calc_vol_vec(forward, strikes, vol_type=VolType.normal)
 
@@ -104,7 +104,7 @@ class TestSABRModel(TestCase):
 
         model = SABRModelNormalApprox(tau, alpha, beta, nu, rho)
 
-        forwards = np.linspace(-0.1, 0.2, num=21)
+        forwards = np.linspace(-0.1, 0.2, num=31)
         strike = 0.05
 
         norm_vols = model.calc_vol_vec(forwards, strike, vol_type=VolType.normal)

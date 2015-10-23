@@ -82,8 +82,8 @@ class SABRModelLognormalApprox(SABRModel):
         ln_f_per_k = log(forward / strike)
 
         term1, term2, term3 = 1.0, 1.0, 1.0
-        if abs(self.beta) < 1e-12:
-            if abs(f_min_k) < 1e-12:
+        if abs(self.beta) < self.abs_tol:
+            if abs(f_min_k) < self.abs_tol:
                 term1 = self.alpha / forward
             else:
                 term1 = self.alpha * ln_f_per_k / f_min_k
@@ -96,7 +96,7 @@ class SABRModelLognormalApprox(SABRModel):
             term3 = (1.0 + (one_m_beta ** 2 / 24.0 * self.alpha ** 2 / (f_mul_k ** one_m_beta) +
                             0.25 * self.rho * self.beta * self.nu * self.alpha / f_mul_k ** (one_m_beta / 2.0) +
                             (2.0 - 3.0 * self.rho ** 2) / 24.0 * self.nu ** 2) * self.t)
-        if abs(f_min_k) > 1e-12:
+        if abs(f_min_k) >= self.abs_tol:
             z = self._calc_z(forward, strike)
             x = self._calc_x(z)
             term2 = z / x
@@ -126,12 +126,12 @@ class SABRModelLognormalApprox(SABRModel):
         f_min_k = forward - strike
         f_mul_k = forward * strike
         ln_f_per_k = np.log(forward / strike)
-        is_atm = np.abs(f_min_k) < 1e-12
+        is_atm = np.abs(f_min_k) < self.abs_tol
         is_not_atm = np.logical_not(is_atm)
         one_m_beta = 1.0 - self.beta
 
         term1, term2, term3 = np.ones(n), np.ones(n), np.ones(n)
-        if abs(self.beta) < 1e-12:
+        if abs(self.beta) < self.abs_tol:
             term1[is_not_atm] = self.alpha * ln_f_per_k[is_not_atm] / f_min_k[is_not_atm]
             term1[is_atm] = self.alpha / forward[is_atm]
             term3 = 1.0 + ((self.alpha ** 2) / 24.0 / f_mul_k +
@@ -197,8 +197,8 @@ class SABRModelNormalApprox(SABRModel):
         f_mul_k = forward * strike
 
         term1, term2, term3 = self.alpha, 1.0, 1.0
-        if abs(self.beta) < 1e-12:
-            if abs(forward - strike) > 1e-12:
+        if abs(self.beta) < self.abs_tol:
+            if abs(forward - strike) >= self.abs_tol:
                 z = self._calc_z_norm(forward, strike)
                 x = self._calc_x(z)
                 term2 = z / x
@@ -208,7 +208,7 @@ class SABRModelNormalApprox(SABRModel):
             term1 *= (f_mul_k ** (self.beta / 2.0)) * (1.0 + (ln_f_per_k ** 2) / 24.0 + (ln_f_per_k ** 4) / 1920.0) / \
                      (1.0 + (one_m_beta ** 2) * (ln_f_per_k ** 2) / 24.0 +
                       (one_m_beta ** 4) * (ln_f_per_k ** 4) / 1920.0)
-            if abs(forward - strike) > 1e-12:
+            if abs(forward - strike) >= self.abs_tol:
                 z = self._calc_z(forward, strike)
                 x = self._calc_x(z)
                 term2 = z / x
