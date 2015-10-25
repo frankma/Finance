@@ -3,6 +3,7 @@ import time as tm
 
 import numpy as np
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
 from src.SABRModel.SABRModel import SABRModelLognormalApprox, SABRModelNormalApprox
 from src.Utils.VolType import VolType
@@ -211,16 +212,24 @@ class TestSABRModel(TestCase):
         pass
 
     def test_calc_loc_vol_vec(self):
-        tau = 0.25
+        taus = np.linspace(0.01, 5.01, num=31)
         alpha, beta, nu, rho = 0.22, 1.0, 0.55, -0.33
         forward = 150.0
-        strikes = np.linspace(100.0, 200.0, num=11)
+        mu = 0.01
+        strikes = np.linspace(100.0, 200.0, num=51)
 
-        model = SABRModelLognormalApprox(tau, alpha, beta, nu, rho)
-        blk_vols = model.calc_vol_vec(forward, strikes)
-        loc_vols = model.calc_loc_vol_vec(forward, strikes, 0.01)
+        blk_vols = np.zeros((taus.__len__(), strikes.__len__()))
+        loc_vols = np.zeros((taus.__len__(), strikes.__len__()))
 
-        plt.plot(strikes, blk_vols)
-        plt.plot(strikes, loc_vols)
-        plt.legend(['black', 'local'])
+        for tdx, tau in enumerate(taus):
+            model = SABRModelLognormalApprox(tau, alpha, beta, nu, rho)
+            blk_vols[tdx] = model.calc_vol_vec(forward, strikes)
+            loc_vols[tdx] = model.calc_loc_vol_vec(forward, strikes, mu)
+
+        kk, tt = np.meshgrid(strikes, taus)
+
+        fig = plt.figure()
+        ax = Axes3D(fig)
+        ax.plot_wireframe(kk, tt, blk_vols, color='b', alpha=0.75)
+        ax.plot_wireframe(kk, tt, loc_vols, color='r', alpha=0.75)
         plt.show()

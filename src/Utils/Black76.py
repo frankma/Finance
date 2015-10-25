@@ -121,11 +121,21 @@ class Black76VecK(Black76):
         return np.log(f / k) / sig / sqrt(tau) - 0.5 * sig * np.sqrt(tau)
 
     @staticmethod
-    def price(f: float, k: np.array, tau: float, sig: np.array, b: float, opt_type: OptionType):
+    def price(f: float, k: np.array, tau: float, sig: np.array, b: float, opt_type: OptionType) -> np.array:
         eta = opt_type.value
         d1 = Black76VecK.calc_d1(f, k, tau, sig)
         d2 = Black76VecK.calc_d2(f, k, tau, sig)
         return b * eta * (f * norm.cdf(eta * d1) - k * norm.cdf(eta * d2))
+
+    @staticmethod
+    def imp_vol(f: float, k: np.array, tau: float, price: np.array, b: float, opt_type: OptionType,
+                method='Brent') -> np.array:
+        if k.__len__() != price.__len__():
+            raise ValueError('expect strike and price in the same length')
+        vols = np.zeros(k.__len__())
+        for idx, p in enumerate(price):
+            vols[idx] = Black76.imp_vol(f, k[idx], tau, p, b, opt_type, method=method)
+        return vols
 
     @staticmethod
     def gamma_k(f: float, k: np.array, tau: float, sig: np.array, b: float) -> np.array:

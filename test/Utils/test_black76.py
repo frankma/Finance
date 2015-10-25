@@ -1,7 +1,9 @@
 from unittest import TestCase
 from math import log
 
-from src.Utils.Black76 import Black76
+import numpy as np
+
+from src.Utils.Black76 import Black76, Black76VecK
 from src.Utils.OptionType import OptionType
 
 __author__ = 'frank.ma'
@@ -65,3 +67,36 @@ class TestBlack76(TestCase):
 
         self.assertAlmostEqual(call_lhs, call_rhs, places=6, msg='call PDE check failed')
         self.assertAlmostEqual(put_lhs, put_rhs, places=6, msg='put PDE check failed')
+
+    def test_price_vec(self):
+        forward = 150.0
+        strikes = np.linspace(100.0, 200.0, num=21)
+        ttm = 0.75
+        sigmas = np.full(21, 0.45)
+        bond = 0.92
+
+        call_prices = Black76VecK.price(forward, strikes, ttm, sigmas, bond, OptionType.call)
+        put_prices = Black76VecK.price(forward, strikes, ttm, sigmas, bond, OptionType.put)
+
+        for idx, strike in enumerate(strikes):
+            call_price = Black76.price(forward, strike, ttm, sigmas[idx], bond, OptionType.call)
+            put_price = Black76.price(forward, strike, ttm, sigmas[idx], bond, OptionType.put)
+            self.assertAlmostEqual(call_price, call_prices[idx], places=12, msg='call vectorization differs')
+            self.assertAlmostEqual(put_price, put_prices[idx], places=12, msg='put vectorization differs')
+
+    def test_imp_vol_vec(self):
+        forward = 150.0
+        strikes = np.linspace(100.0, 200.0, num=21)
+        ttm = 0.75
+        sigmas = 0.0001 * ((strikes - forward) ** 2) + 0.25  # use polynomial to define vol smile
+        bond = 0.92
+
+        call_prices = Black76VecK.price(forward, strikes, ttm, sigmas, bond, OptionType.call)
+        put_prices = Black76VecK.price(forward, strikes, ttm, sigmas, bond, OptionType.put)
+
+        call_vols = Black76VecK.imp_vol(forward, strikes, ttm, call_prices, bond, OptionType.call)
+        put_vols = Black76VecK.imp_vol(forward, strikes, ttm, put_prices, bond, OptionType.put)
+
+        for idx, sigma in enumerate(sigmas):
+            self.assertAlmostEqual(sigma, call_vols[idx], places=6, msg='call vol regression failed')
+            self.assertAlmostEqual(sigma, put_vols[idx], places=6, msg='call vol regression failed')

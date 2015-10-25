@@ -165,7 +165,7 @@ class SABRModelLognormalApprox(SABRModel):
         strikes = strikes[1:-1]  # truncate strikes for numerical solution
         return density, strikes
 
-    def calc_loc_vol_vec(self, forward: float, strikes: np.array, miu_t: float) -> np.array:
+    def calc_loc_vol_vec(self, forward: float, strikes: np.array, mu: float) -> np.array:
         if abs(self.beta - 1.0) > self.abs_tol:
             raise ValueError('current method only support reduced form in which beta %r must be one.' % self.beta)
 
@@ -174,7 +174,7 @@ class SABRModelLognormalApprox(SABRModel):
         d_black_d_k = self.__calc_d_black_d_k(forward, strikes)
         d2_black_d_k2 = self.__calc_d2_black_d_k2(forward, strikes)
 
-        num = ((black ** 2) + 2.0 * black * self.t * (d_black_d_t + miu_t * strikes * d_black_d_k))
+        num = ((black ** 2) + 2.0 * black * self.t * (d_black_d_t + mu * strikes * d_black_d_k))
         den = ((1.0 - d_black_d_k * strikes * np.log(strikes / forward) / black) ** 2) + strikes * black * self.t * (
             d_black_d_k - 0.25 * strikes * black * self.t * (d_black_d_k ** 2) + strikes * d2_black_d_k2)
         loc_variance = num / den
