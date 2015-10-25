@@ -1,7 +1,6 @@
 from math import log
 
 import numpy as np
-
 from numpy.polynomial.polynomial import polyroots
 
 from src.Utils.VolType import VolType
@@ -165,6 +164,86 @@ class SABRModelLognormalApprox(SABRModel):
         density = (prices[:-2] + prices[2:] - 2 * prices[1:-1]) / ((strikes[2:] - strikes[1:-1]) ** 2)
         strikes = strikes[1:-1]  # truncate strikes for numerical solution
         return density, strikes
+
+    def calc_loc_vol_vec(self, forward: float, strikes: np.array, miu_t: float) -> np.array:
+        if abs(self.beta - 1.0) > self.abs_tol:
+            raise ValueError('current method only support reduced form in which beta %r must be one.' % self.beta)
+
+        black = self.calc_vol_vec(forward, strikes, vol_type=VolType.black)
+        d_black_d_t = self.__calc_d_black_d_t(forward, strikes)
+        d_black_d_k = self.__calc_d_black_d_k(forward, strikes)
+        d2_black_d_k2 = self.__calc_d2_black_d_k2(forward, strikes)
+
+        num = ((black ** 2) + 2.0 * black * self.t * (d_black_d_t + miu_t * strikes * d_black_d_k))
+        den = ((1.0 - d_black_d_k * strikes * np.log(strikes / forward) / black) ** 2) + strikes * black * self.t * (
+            d_black_d_k - 0.25 * strikes * black * self.t * (d_black_d_k ** 2) + strikes * d2_black_d_k2)
+        loc_variance = num / den
+
+        return np.sqrt(loc_variance)
+
+    def __calc_d_black_d_t(self, forward: float, strikes: np.array) -> np.array:
+        is_atm = np.abs(forward - strikes) < self.abs_tol
+        is_not_atm = np.logical_not(is_atm)
+        d_black_d_t = np.ones(strikes.__len__())
+
+        z = self._calc_z(forward, strikes)
+        x = self._calc_x(z)
+        # use expansion for atm ones which has overflow issue
+        d_black_d_t[is_atm] = 1.0 - 0.5 * self.rho * z[is_atm] + (-(self.rho ** 2) / 4.0 + 1.0 / 6.0) * (z[is_atm] ** 2)
+        d_black_d_t[is_not_atm] *= z[is_not_atm] / x[is_not_atm]
+        d_black_d_t *= (self.__calc_const() - 1.0) / self.t  # reverse calculation to keep commonality
+
+        return d_black_d_t
+
+    def __calc_d_black_d_k(self, forward: float, strikes: np.array) -> np.array:
+        d_black_d_k = -self.nu * self.__calc_dx_dz(forward, strikes) / strikes
+        d_black_d_k *= self.__calc_const()
+
+        return d_black_d_k
+
+    def __calc_d2_black_d_k2(self, forward: float, strikes: np.array) -> np.array:
+        strikes_sq = strikes ** 2
+        d2_black_d_k2 = self.nu * self.__calc_dx_dz(forward, strikes) / strikes_sq + \
+                        (self.nu ** 2) * self.__calc_d2x_dz2(forward, strikes) / self.alpha / strikes_sq
+        d2_black_d_k2 *= self.__calc_const()
+
+        return d2_black_d_k2
+
+    def __calc_dx_dz(self, forward: float, strikes: np.array) -> np.array:
+        is_not_atm = np.abs(forward - strikes) > 1e-12
+        is_atm = np.logical_not(is_not_atm)
+        dx_dz = np.ones(strikes.__len__())
+
+        z = self._calc_z(forward, strikes)
+        x = self._calc_x(z)
+        s = np.sqrt(1.0 - 2.0 * self.rho * z + (z ** 2))
+        rho_sq = self.rho ** 2
+        dx_dz[is_atm] = -self.rho / 2.0 + 2.0 * (-rho_sq / 4.0 + 1.0 / 6.0) * z[is_atm] - \
+                        (6.0 * rho_sq - 5.0) * self.rho * (z[is_atm] ** 2) / 8.0
+        dx_dz[is_not_atm] = (x[is_not_atm] * s[is_not_atm] - z[is_not_atm]) / (x[is_not_atm] ** 2) / s[is_not_atm]
+
+        return dx_dz
+
+    def __calc_d2x_dz2(self, forward: float, strikes: np.array) -> np.array:
+        is_not_atm = np.abs(forward - strikes) > 1e-12
+        is_atm = np.logical_not(is_not_atm)
+        d2x_dz2 = np.ones(strikes.__len__())
+
+        z = self._calc_z(forward, strikes)
+        x = self._calc_x(z)
+        s = np.sqrt(1.0 - 2.0 * self.rho * z + (z ** 2))
+        rho_sq = self.rho ** 2
+        d2x_dz2[is_atm] = 2.0 * (-rho_sq / 4.0 + 1.0 / 6.0) - (6.0 * rho_sq - 5.0) * self.rho * z[is_atm] / 2.0 + \
+                          12.0 * (-5.0 * (rho_sq ** 2) / 16.0 + rho_sq / 3.0 - 17.0 / 360.0) * (z[is_atm] ** 2)
+        d2x_dz2[is_not_atm] = (x[is_not_atm] * (3.0 * self.rho * z[is_not_atm] - (z[is_not_atm] ** 2) - 2.0) +
+                               2.0 * s[is_not_atm] * z[is_not_atm]) / ((x[is_not_atm] * s[is_not_atm]) ** 3)
+
+        return d2x_dz2
+
+    def __calc_const(self):
+        const = (1.0 + (self.alpha * self.nu * self.rho / 4.0 +
+                        (2.0 - 3.0 * (self.rho ** 2)) * (self.nu ** 2) / 24.0) * self.t)
+        return const
 
     @staticmethod
     def solve_alpha(forward: float, vol_atm: float, t: float, beta: float, nu: float, rho: float):

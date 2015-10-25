@@ -2,6 +2,7 @@ from unittest import TestCase
 import time as tm
 
 import numpy as np
+import matplotlib.pyplot as plt
 
 from src.SABRModel.SABRModel import SABRModelLognormalApprox, SABRModelNormalApprox
 from src.Utils.VolType import VolType
@@ -208,3 +209,18 @@ class TestSABRModel(TestCase):
             assert abs(vol_normal - vol_normal_trans) < 1e-12, 'transformed model mismatch'
 
         pass
+
+    def test_calc_loc_vol_vec(self):
+        tau = 0.25
+        alpha, beta, nu, rho = 0.22, 1.0, 0.55, -0.33
+        forward = 150.0
+        strikes = np.linspace(100.0, 200.0, num=11)
+
+        model = SABRModelLognormalApprox(tau, alpha, beta, nu, rho)
+        blk_vols = model.calc_vol_vec(forward, strikes)
+        loc_vols = model.calc_loc_vol_vec(forward, strikes, 0.01)
+
+        plt.plot(strikes, blk_vols)
+        plt.plot(strikes, loc_vols)
+        plt.legend(['black', 'local'])
+        plt.show()
