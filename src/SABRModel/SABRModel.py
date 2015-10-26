@@ -196,20 +196,21 @@ class SABRModelLognormalApprox(SABRModel):
         return d_black_d_t
 
     def __calc_d_black_d_k(self, forward: float, strikes: np.array) -> np.array:
-        d_black_d_k = -self.nu * self.__calc_dx_dz(forward, strikes) / strikes
+        d_black_d_k = -self.nu * self.__calc_d_z_per_x_d_z(forward, strikes) / strikes
         d_black_d_k *= self.__calc_const()
 
         return d_black_d_k
 
     def __calc_d2_black_d_k2(self, forward: float, strikes: np.array) -> np.array:
         strikes_sq = strikes ** 2
-        d2_black_d_k2 = self.nu * self.__calc_dx_dz(forward, strikes) / strikes_sq + \
-                        (self.nu ** 2) * self.__calc_d2x_dz2(forward, strikes) / self.alpha / strikes_sq
+        d2_black_d_k2 = self.nu * self.__calc_d_z_per_x_d_z(forward, strikes) / strikes_sq + \
+                        (self.nu ** 2) * self.__calc_d2_z_per_x_d_z2(forward, strikes) / self.alpha / strikes_sq
         d2_black_d_k2 *= self.__calc_const()
 
         return d2_black_d_k2
 
-    def __calc_dx_dz(self, forward: float, strikes: np.array) -> np.array:
+    def __calc_d_z_per_x_d_z(self, forward: float, strikes: np.array) -> np.array:
+        # calculate first order partial derivative (d (z/(x(z))))/(d z)
         is_not_atm = np.abs(forward - strikes) > 1e-12
         is_atm = np.logical_not(is_not_atm)
         dx_dz = np.ones(strikes.__len__())
@@ -224,7 +225,8 @@ class SABRModelLognormalApprox(SABRModel):
 
         return dx_dz
 
-    def __calc_d2x_dz2(self, forward: float, strikes: np.array) -> np.array:
+    def __calc_d2_z_per_x_d_z2(self, forward: float, strikes: np.array) -> np.array:
+        # calculate second order partial derivative (d^2 (z/x(z)))/(d z^2)
         is_not_atm = np.abs(forward - strikes) > 1e-12
         is_atm = np.logical_not(is_not_atm)
         d2x_dz2 = np.ones(strikes.__len__())
