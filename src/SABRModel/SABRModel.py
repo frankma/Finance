@@ -191,7 +191,7 @@ class SABRModelLognormalApprox(SABRModel):
         # use expansion for atm ones which has overflow issue
         d_black_d_t[is_atm] = 1.0 - 0.5 * self.rho * z[is_atm] + (-(self.rho ** 2) / 4.0 + 1.0 / 6.0) * (z[is_atm] ** 2)
         d_black_d_t[is_not_atm] *= z[is_not_atm] / x[is_not_atm]
-        d_black_d_t *= (self.__calc_const() - 1.0) / self.t  # reverse calculation to keep commonality
+        d_black_d_t *= self.alpha * (self.__calc_const() - 1.0) / self.t  # reverse calculation to keep commonality
 
         return d_black_d_t
 
