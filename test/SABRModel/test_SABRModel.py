@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
 from src.SABRModel.SABRModel import SABRModelLognormalApprox, SABRModelNormalApprox
+from src.SABRModel.SABRModelCalibrator import SABRModelCalibrator, SABRModelCalibratorAlphaNuRho
 from src.Utils.VolType import VolType
 
 __author__ = 'frank.ma'
@@ -233,3 +234,48 @@ class TestSABRModel(TestCase):
         ax.plot_wireframe(kk, tt, blk_vols, color='b', alpha=0.75)
         ax.plot_wireframe(kk, tt, loc_vols, color='r', alpha=0.75)
         plt.show()
+
+        pass
+
+    def test_back_bone(self):
+        # source: F. Rouah "The SABR Model"
+        t = 1.0
+        alpha, beta, nu, rho = 0.0104364434616, 0.0, 0.569567801708, 0.260128643732
+        model_nrm = SABRModelLognormalApprox(t, alpha, beta, nu, rho)
+
+        alpha, beta, nu, rho = 0.13927, 1.0, 0.57788, -0.06867
+        model_lgn = SABRModelLognormalApprox(t, alpha, beta, nu, rho)
+
+        forwards = [0.065, 0.076, 0.088]
+        strikes = np.linspace(0.04, 0.11, num=71)
+
+        plt.subplot(2, 1, 1)
+        legends = []
+        for forward in forwards:
+            vols = model_nrm.calc_vol_vec(forward, strikes)
+            plt.plot(strikes, vols)
+            legends.append('f = %.3f' % forward)
+        bb = np.ones(strikes.__len__())
+        for idx, strike in enumerate(strikes):
+            bb[idx] = model_nrm.calc_vol(strike, strike)
+        plt.plot(strikes, bb, '--')
+        legends.append('Backbone')
+        plt.legend(legends)
+        plt.ylim([0.08, 0.22])
+
+        plt.subplot(2, 1, 2)
+        legends = []
+        for forward in forwards:
+            vols = model_lgn.calc_vol_vec(forward, strikes)
+            plt.plot(strikes, vols)
+            legends.append('f = %.3f' % forward)
+        bb = np.ones(strikes.__len__())
+        for idx, strike in enumerate(strikes):
+            bb[idx] = model_lgn.calc_vol(strike, strike)
+        plt.plot(strikes, bb, '--')
+        legends.append('Backbone')
+        plt.legend(legends)
+        plt.ylim([0.08, 0.22])
+
+        plt.show()
+        pass
