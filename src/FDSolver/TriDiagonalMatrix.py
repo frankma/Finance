@@ -30,7 +30,7 @@ class TriDiagonalMatrix(object):
         # header set
         matrix[0][0] = center[0]
         matrix[0][1] = upper[0]
-        # regular set
+        # body set
         for idx in range(1, n - 1):
             matrix[idx][idx - 1] = lower[idx - 1]
             matrix[idx][idx] = center[idx]

@@ -1,5 +1,6 @@
 import numpy as np
-from src.MiniProjects.HeatEquation.TriDiagonalMatrix import TriDiagonalMatrix
+
+from src.FDSolver.TriDiagonalMatrix import TriDiagonalMatrix
 
 __author__ = 'frank.ma'
 
@@ -8,26 +9,32 @@ def diffusion_coe(tt):
     return 0.16 + 0.08 * np.sin(tt)
 
 
-n_t = 101
-n_x = 321
+prev = 0.0
 
-ts = np.linspace(0.0, 1.0, num=n_t)
-xs = np.linspace(0.0, 1.0, num=n_x)
+print('x incremental\tt incremental\tx value\ty value\tincremental error\tincremental error times 4')
 
-dt = ts[1] - ts[0]
-dx = xs[1] - xs[0]
-mu = (dx ** 2) / dt
+for n_x, n_t in [(11, 9), (21, 17), (41, 33), (81, 65), (161, 129)]:
 
-state = np.matrix(xs * (np.ones(n_x) - xs)).transpose()
-coe_prev = diffusion_coe(ts[0])
+    xs = np.linspace(0.0, 1.0, num=n_x)
+    ts = np.linspace(0.0, 1.0, num=n_t)
 
-for idx, t in enumerate(ts[1:]):
-    td_prev = TriDiagonalMatrix(0.5 * coe_prev, mu - coe_prev, 0.5 * coe_prev, n_x)
-    coe_curr = diffusion_coe(t)
-    td_curr = TriDiagonalMatrix(-0.5 * coe_curr, mu + coe_curr, -0.5 * coe_curr, n_x)
-    coe_prev = coe_curr
-    state[0] = 0.0
-    state[n_x - 1] = 0.0
-    state = td_curr.get_inverse() * (td_prev.get_matrix() * state)
+    dx = 1.0 / (n_x - 1)
+    dt = 1.0 / (n_t - 1.0)
+    mu = dx * dx / dt
 
-print(state[(n_x - 1) / 2])
+    state = np.matrix(xs * (np.ones(n_x) - xs)).transpose()
+    coe_curr = diffusion_coe(ts[0])
+
+    for idx, t in enumerate(ts[:-1]):
+        coe_next = diffusion_coe(t + dt)
+        td_curr = TriDiagonalMatrix(0.5 * coe_curr, mu - coe_curr, 0.5 * coe_curr, n_x - 2)
+        td_next = TriDiagonalMatrix(-0.5 * coe_next, mu + coe_next, -0.5 * coe_next, n_x - 2)
+        coe_curr = coe_next
+
+        state[0] = 0.0
+        state[n_x - 1] = 0.0
+        state[1:- 1] = td_next.get_inverse() * td_curr.get_matrix() * state[1:- 1]
+
+    diff = state[((n_x - 1) / 2, 0)] - prev
+    prev = state[((n_x - 1) / 2, 0)]
+    print('%.6f\t%.6f\t%.2f\t%.8f\t%.4e\t%.4e' % (dx, dt, xs[(n_x - 1) / 2], state[((n_x - 1) / 2, 0)], diff, diff / 4))
