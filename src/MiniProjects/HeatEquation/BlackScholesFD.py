@@ -24,14 +24,23 @@ class BlackScholesFD(object):
         self.tdx = self.ts / self.dt
 
     def solve(self):
-        state = np.matrix(np.maximum(self.xs - self.k, np.zeros(self.n_x, dtype=float))).transpose()
-        lhs_lft = self.r * self.sdx / 4.0 - ((self.sig * self.sdx) ** 2) / 4.0
-        lhs_ctr = 1.0 / self.dt + ((self.sig * self.sdx) ** 2) / 2.0 + self.r / 2.0
-        lhs_upr = -self.r * self.sdx / 4.0 - ((self.sig * self.sdx) ** 2) / 4.0
+        opt_type = OptionType.call
+        state = np.matrix(np.maximum(opt_type.value * (self.xs - self.k), np.zeros(self.n_x, dtype=float))).transpose()
+        lhs_lft = self.r * self.sdx * self.dt / 4.0 - ((self.sig * self.sdx) ** 2) * self.dt / 4.0
+        lhs_ctr = 1.0 + ((self.sig * self.sdx) ** 2) * self.dt / 2.0 + self.r * self.dt / 2.0
+        lhs_upr = -self.r * self.sdx * self.dt / 4.0 - ((self.sig * self.sdx) ** 2) * self.dt / 4.0
+        lhs_ctr[0] = 1.0 + self.r * self.dt / 2.0 + self.r * self.sdx[0] * self.dt / 2.0
+        lhs_upr[0] = -self.r * self.sdx[0] * self.dt / 2.0
+        lhs_lft[-1] = self.r * self.sdx[-1] * self.dt / 2.0
+        lhs_ctr[-1] = 1.0 + self.r * self.dt / 2.0 - self.r * self.sdx[-1] * self.dt / 2.0
         lhs_tdm = TriDiagonalMatrix(lhs_lft[1:], lhs_ctr, lhs_upr[:-1])
         rhs_lft = -lhs_lft
-        rhs_ctr = 1.0 / self.dt - ((self.sig * self.sdx) ** 2) / 2.0 - self.r / 2.0
+        rhs_ctr = 1.0 - ((self.sig * self.sdx) ** 2) * self.dt / 2.0 - self.r * self.dt / 2.0
         rhs_upr = -lhs_upr
+        rhs_ctr[0] = 1.0 - self.r * self.dt / 2.0 - self.r * self.sdx[0] * self.dt / 2.0
+        rhs_upr[0] = self.r * self.sdx[0] * self.dt / 2.0
+        rhs_lft[-1] = -self.r * self.sdx[-1] * self.dt / 2.0
+        rhs_ctr[-1] = 1.0 - self.r * self.dt / 2.0 + self.r * self.sdx[-1] * self.dt / 2.0
         rhs_tdm = TriDiagonalMatrix(rhs_lft[1:], rhs_ctr, rhs_upr[:-1])
 
         show_idx = [0, 1, int(0.2 * self.n_t), int(0.5 * self.n_t), int(0.75 * self.n_t)]
@@ -53,10 +62,10 @@ if __name__ == '__main__':
     tau = 0.75
     spot = 150.0
     strike = 155.0
-    rate = 0.1
-    vol = 0.5
+    rate = 0.05
+    vol = 0.45
 
-    bsm_fd = BlackScholesFD(tau, spot, strike, rate, vol, n_x=1001, n_t=101)
+    bsm_fd = BlackScholesFD(tau, spot, strike, rate, vol, n_x=101, n_t=1001)
     bsm_fd.solve()
 
     ana = BSM.price(spot, strike, tau, rate, 0.0, vol, OptionType.call)
