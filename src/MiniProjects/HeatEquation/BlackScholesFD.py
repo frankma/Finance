@@ -1,5 +1,5 @@
 import numpy as np
-from src.FDSolver.TriDiagonalMatrix import TriDiagonalMatrix
+from src.SolverFD.TriDiagonalMatrix import TriDiagonalMatrix
 from src.Utils.BSM import BSM, BSMVecS
 from src.Utils.OptionType import OptionType
 

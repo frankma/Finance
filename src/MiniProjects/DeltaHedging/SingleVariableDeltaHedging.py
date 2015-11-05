@@ -3,7 +3,7 @@ import matplotlib.pylab as plt
 from scipy.stats import norm
 
 from src.MiniProjects.DeltaHedging.SingleVariableDeltaHedgingValuator import SingleVariableDeltaHedgingValuator
-from src.Simulator.SingleVariableSimulator import SingleVariableSimulator
+from src.SolverMC.SingleVariableSimulator import SingleVariableSimulator
 
 __author__ = 'frank.ma'
 

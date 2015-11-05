@@ -1,6 +1,6 @@
 import numpy as np
 
-from src.FDSolver.TriDiagonalMatrix import TriDiagonalMatrix
+from src.SolverFD.TriDiagonalMatrix import TriDiagonalMatrix
 
 __author__ = 'frank.ma'
 

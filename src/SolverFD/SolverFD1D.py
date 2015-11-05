@@ -4,7 +4,7 @@ __author__ = 'frank.ma'
 
 
 class FDSolver1D(object):
-    def __init__(self, spaces: np.array, times: np.array):
+    def __init__(self, spaces: np.array, times: np.array, init_func, boundary_func):
         pass
 
     def solve(self):
