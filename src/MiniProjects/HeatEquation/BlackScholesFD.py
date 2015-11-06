@@ -8,7 +8,7 @@ __author__ = 'frank.ma'
 
 class BlackScholesFD(object):
     def __init__(self, t: float, s: float, k: float, r: float, sig: float, n_x: int = 100, n_t: int = 100,
-                 domain: float = 8.0):
+                 domain: float = 10.0):
         self.n_x = n_x
         self.n_t = n_t
         self.k = k
@@ -32,6 +32,10 @@ class BlackScholesFD(object):
         lhs_upr[0] = -self.r * self.sdx[0] * self.dt / 2.0
         lhs_lft[-1] = self.r * self.sdx[-1] * self.dt / 2.0
         lhs_ctr[-1] = 1.0 + self.r * self.dt / 2.0 - self.r * self.sdx[-1] * self.dt / 2.0
+        # lhs_ctr[0] = 2.0
+        # lhs_upr[0] = -1.0
+        # lhs_lft[-1] = -1.0
+        # lhs_ctr[-1] = 2.0
         lhs_tdm = TriDiagonalMatrix(lhs_lft[1:], lhs_ctr, lhs_upr[:-1])
         rhs_lft = -lhs_lft
         rhs_ctr = 1.0 - ((self.sig * self.sdx) ** 2) * self.dt / 2.0 - self.r * self.dt / 2.0
@@ -40,6 +44,10 @@ class BlackScholesFD(object):
         rhs_upr[0] = self.r * self.sdx[0] * self.dt / 2.0
         rhs_lft[-1] = -self.r * self.sdx[-1] * self.dt / 2.0
         rhs_ctr[-1] = 1.0 - self.r * self.dt / 2.0 + self.r * self.sdx[-1] * self.dt / 2.0
+        # rhs_ctr[0] = 2.0
+        # rhs_upr[0] = -1.0
+        # rhs_lft[-1] = -1.0
+        # rhs_ctr[-1] = 2.0
         rhs_tdm = TriDiagonalMatrix(rhs_lft[1:], rhs_ctr, rhs_upr[:-1])
 
         tm = rhs_tdm.get_matrix().transpose() * lhs_tdm.get_inverse().transpose()
@@ -61,11 +69,11 @@ if __name__ == '__main__':
     ana = BSM.price(spot, strike, tau, rate, 0.0, vol, OptionType.call)
     print(ana)
 
-    # for n_t in [16, 32, 64, 128, 256]:
-    for n_x in [256, 512, 1024, 2048, 4096]:
+    # for n_t in [16, 32, 64, 128]:
+    for n_x in [256, 512, 1024, 2048]:
         prev = 0.0
         # for n_x in [256, 512, 1024, 2048, 4096]:
-        for n_t in [32, 64, 128, 256, 512]:
+        for n_t in [16, 32, 64, 128]:
             bsm_fd = BlackScholesFD(tau, spot, strike, rate, vol, n_x=n_x, n_t=n_t)
             res = bsm_fd.solve()
             print('%i\t%i\t%.16f\t%.2e\t%.2e' % (n_x, n_t, res, res - prev, res - ana))
