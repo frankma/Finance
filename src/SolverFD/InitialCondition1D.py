@@ -6,22 +6,22 @@ from src.Utils.PayoffType import PayoffType
 __author__ = 'frank.ma'
 
 
-class InitialState1D(object):
+class InitialCondition1D(object):
     def __init__(self):
         pass
 
-    def get_init_state(self, xs: np.array):
+    def get_state(self, xs: np.array):
         pass
 
 
-class InitialState1DVanilla(InitialState1D):
+class InitialCondition1DVanilla(InitialCondition1D):
     def __init__(self, strike: float, opt_type: OptionType, payoff_type: PayoffType):
         super().__init__()
         self.strike = strike
         self.opt_type = opt_type
         self.payoff_type = payoff_type
 
-    def get_init_state(self, xs: np.array):
+    def get_state(self, xs: np.array):
         zeros = np.zeros(xs.shape, dtype=float)
         eta = float(self.opt_type.value)
         if self.payoff_type == PayoffType.European or self.payoff_type == PayoffType.American:

@@ -1,18 +1,26 @@
 import numpy as np
+import pandas as pd
 
-from src.SolverFD.InitialState1D import InitialState1D
+from src.SolverFD.InitialCondition1D import InitialCondition1D
 from src.SolverFD.BoundaryCondition1D import BoundaryCondition1D
 
 __author__ = 'frank.ma'
 
 
 class FDSolver1D(object):
-    def __init__(self, spaces: np.array, times: np.array, init_state: InitialState1D, bound_cond: BoundaryCondition1D):
+    def __init__(self, spaces: np.array, times: np.array, init_condition: InitialCondition1D,
+                 bound_condition: BoundaryCondition1D, storage: np.array):
         self.spaces = spaces
-        self.times = times
-        self.init_state = init_state
-        self.bound_cond = bound_cond
-        self.state = init_state.get_init_state(spaces)
+        self.init_condition = init_condition
+        self.bound_condition = bound_condition
+        self.state = self.init_condition.get_state(spaces)
+        self.idx = 0.0
+        self.storage = storage
+        self.times = np.unique(np.concatenate((times, storage)))
+        self.diagnostic = pd.DataFrame(columns=self.spaces)
+
+    def evolve(self, dt: float):
+
         pass
 
     def solve(self):
