@@ -20,7 +20,7 @@ class FDSolver1D(object):
         self.diagnostic = pd.DataFrame(columns=self.spaces)
 
     def evolve(self, dt: float):
-
+        
         pass
 
     def solve(self):

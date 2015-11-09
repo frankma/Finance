@@ -23,7 +23,7 @@ class SABRModel(object):
     def sim_forward_den(self, forward: float, rel_bounds: tuple = (0.01, 20.0), n_bins: int = 500, n_steps: int = 100,
                         n_scenarios: int = 10 ** 6):
         taus = np.linspace(self.t, 0.0, num=n_steps)
-        strikes = np.linspace(rel_bounds[0] * forward, rel_bounds[1] * forward, num=n_bins)
+        bins = np.linspace(rel_bounds[0] * forward, rel_bounds[1] * forward, num=n_bins)
         # 1st, simulate forwards
         forwards = np.full(n_scenarios, forward)
         sigmas = np.full(n_scenarios, self.alpha)
@@ -37,9 +37,9 @@ class SABRModel(object):
             # use lognormal transform to avoid negative volatility
             sigmas *= np.exp(-0.5 * (self.nu ** 2) * dt + self.nu * rands[:, 1] * sqrt_dt)
         # 2nd, analyse the density
-        freq, strikes = np.histogram(forwards, bins=strikes, normed=True)
-        strikes_mid = 0.5 * (strikes[:-1] + strikes[1:])
-        return freq, strikes_mid
+        freq, bins = np.histogram(forwards, bins=bins, normed=True)
+        bins_mid = 0.5 * (bins[:-1] + bins[1:])
+        return freq, bins_mid
 
     def get_model_lognormal_approx(self):
         return SABRModelLognormalApprox(self.t, self.alpha, self.beta, self.nu, self.rho)
