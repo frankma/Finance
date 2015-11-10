@@ -15,7 +15,7 @@ class BlackScholesFD(object):
         self.s = s
         self.r = r
         self.sig = sig
-        self.xs = np.linspace(1e-12, domain * sig * max(k, s), num=n_x + 1)
+        self.xs = np.linspace(1e-12, domain * sig * np.sqrt(t) * max(k, s), num=n_x + 1)
         self.ts = np.linspace(t, 0.0, num=n_t + 1)
         self.dx = self.xs[1] - self.xs[0]
         self.dt = self.ts[0] - self.ts[1]
