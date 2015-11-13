@@ -13,7 +13,7 @@ class BAW(object):
         s_optimum = BAW.__calc_s_optimum(s, k, tau, r, q, sig, opt_type)
         if s * eta < s_optimum * eta:
             beta = BAW.__calc_beta(tau, r, q, sig, opt_type)
-            alpha = eta * (1.0 - BSM.delta(s_optimum, k, tau, r, q, sig, opt_type)) / beta
+            alpha = (eta - BSM.delta(s_optimum, k, tau, r, q, sig, opt_type)) * s_optimum / beta
             price_ame = BSM.price(s, k, tau, r, q, sig, opt_type) + alpha * ((s / s_optimum) ** beta)
         else:
             price_ame = eta * (s - k)
@@ -36,13 +36,14 @@ class BAW(object):
         s_opt = s  # use s as initial guess
         lhs = s_opt
         rhs = 0.0
-        while abs(lhs - rhs) / k > 1e-6:
+        eta = opt_type.value
+        while abs(lhs - eta * rhs) / k > 1e-6:
             price = BSM.price(s_opt, k, tau, r, q, sig, opt_type)
             delta = BSM.delta(s_opt, k, tau, r, q, sig, opt_type)
             gamma = BSM.gamma(s_opt, k, tau, r, q, sig)
             beta = BAW.__calc_beta(tau, r, q, sig, opt_type)
-            lhs = s_opt - k
-            rhs = price + (1.0 - delta) * s_opt / beta
+            lhs = eta * (s_opt - k)
+            rhs = eta * price + (1 - eta * delta) * s_opt / beta
             slope = delta * (1.0 - 1.0 / beta) + (1.0 - gamma * s_opt) / beta
             s_opt = (k + rhs - slope * s_opt) / (1.0 - slope)
 
