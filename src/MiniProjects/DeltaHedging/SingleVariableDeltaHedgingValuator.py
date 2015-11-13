@@ -1,7 +1,7 @@
 import numpy as np
 
 from src.Utils import OptionType
-from src.Utils.BSM import BSMVecS
+from src.Utils.BSM import BSMVec
 
 __author__ = 'frank.ma'
 
@@ -16,16 +16,16 @@ class SingleVariableDeltaHedgingValuator(object):
         self.model = model
 
     def price(self, s: np.array, tau: float):
-        return BSMVecS.price(s, self.k, tau, self.r, self.q, self.sig, self.opt_type)
+        return BSMVec.price(s, self.k, tau, self.r, self.q, self.sig, self.opt_type)
 
     def payoff(self, s: np.array):
-        return BSMVecS.payoff(s, self.k, self.opt_type)
+        return BSMVec.payoff(s, self.k, self.opt_type)
 
     def delta(self, s: np.array, tau: float):
-        return BSMVecS.delta(s, self.k, tau, self.r, self.q, self.sig, self.opt_type)
+        return BSMVec.delta(s, self.k, tau, self.r, self.q, self.sig, self.opt_type)
 
     def gamma(self, s: np.array, tau: float):
-        return BSMVecS.gamma(s, self.k, tau, self.r, self.q, self.sig)
+        return BSMVec.gamma(s, self.k, tau, self.r, self.q, self.sig)
 
 
 class SingleVariableDeltaHedgingValuatorBasket(object):

@@ -1,6 +1,6 @@
 import numpy as np
 from src.SolverFD.TriDiagonalMatrix import TriDiagonalMatrix
-from src.Utils.BSM import BSM, BSMVecS
+from src.Utils.BSM import BSM, BSMVec
 from src.Utils.OptionType import OptionType
 
 __author__ = 'frank.ma'
