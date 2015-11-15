@@ -10,14 +10,13 @@ class BAW(object):
     @staticmethod
     def price(s: float, k: float, tau: float, r: float, q: float, sig: float, opt_type: OptionType):
         eta = opt_type.value
-        s_optimum = BAW.__calc_s_optimum(s, k, tau, r, q, sig, opt_type)
+        s_optimum = BAW.__calc_s_optimum(k, tau, r, q, sig, opt_type)
         if eta * s < eta * s_optimum:
-            beta = BAW.__calc_lam(tau, r, q, sig, opt_type)
-            alpha = (eta - BSM.delta(s_optimum, k, tau, r, q, sig, opt_type)) * s_optimum / beta
-            price_ame = BSM.price(s, k, tau, r, q, sig, opt_type) + alpha * ((s / s_optimum) ** beta)
+            lam = BAW.__calc_lam(tau, r, q, sig, opt_type)
+            alpha = (eta - BSM.delta(s_optimum, k, tau, r, q, sig, opt_type)) / lam / (s_optimum ** (lam - 1))
+            price_ame = BSM.price(s, k, tau, r, q, sig, opt_type) + alpha * (s ** lam)
         else:
             price_ame = eta * (s - k)
-
         return price_ame
 
     @staticmethod
@@ -32,11 +31,11 @@ class BAW(object):
         return lam
 
     @staticmethod
-    def __calc_s_optimum(s: float, k: float, tau: float, r: float, q: float, sig: float, opt_type: OptionType):
+    def __calc_s_optimum(k: float, tau: float, r: float, q: float, sig: float, opt_type: OptionType):
         eta = opt_type.value
         s_opt = k  # use s as initial guess
         f = s_opt  # an arbitrary larger than tolerance value to start
-        while abs(f) > 1e-6:
+        while abs(f) > 1e-12:
             price = BSM.price(s_opt, k, tau, r, q, sig, opt_type)
             delta = BSM.delta(s_opt, k, tau, r, q, sig, opt_type)
             gamma = BSM.gamma(s_opt, k, tau, r, q, sig)
