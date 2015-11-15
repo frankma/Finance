@@ -1,3 +1,4 @@
+import numpy as np
 from src.Utils.BAW import BAW
 from src.Utils.BSM import BSM
 from src.Utils.OptionType import OptionType
@@ -9,15 +10,15 @@ import unittest
 
 class MyTestCase(unittest.TestCase):
     def test_price(self):
-        s = 150.0
-        k = 155.0
-        tau = 0.5
-        r = 0.02
-        q = 0.1
-        sig = 0.45
-        opt_type = OptionType.call
+        spots = np.linspace(0.97, 0.978, num=9)
+        strike = 0.9
+        tau = 0.25
+        rate = 0.02
+        div = 0.035
+        sigma = 0.1
+        opt_type = OptionType.put
 
-        price_ame = BAW.price(s, k, tau, r, q, sig, opt_type)
-        price_eur = BSM.price(s, k, tau, r, q, sig, opt_type)
-
-        print(price_eur, price_ame)
+        for spot in spots:
+            price_ame = BAW.price(spot, strike, tau, rate, div, sigma, opt_type)
+            price_eur = BSM.price(spot, strike, tau, rate, div, sigma, opt_type)
+            print('%.3f\t%.8f\t%.8f' % (spot, price_eur, price_ame))
