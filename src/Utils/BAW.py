@@ -8,16 +8,19 @@ __author__ = 'frank.ma'
 
 class BAW(object):
     @staticmethod
-    def price(s: float, k: float, tau: float, r: float, q: float, sig: float, opt_type: OptionType):
+    def calc_s_optimum(k: float, tau: float, r: float, q: float, sig: float, opt_type: OptionType):
         eta = opt_type.value
-        s_optimum = BAW.__calc_s_optimum(k, tau, r, q, sig, opt_type)
-        if eta * s < eta * s_optimum:
+        s_opt = k  # use s as initial guess
+        f = s_opt  # start with an arbitrary value greater than tolerance
+        while abs(f) > 1e-6:
+            price = BSM.price(s_opt, k, tau, r, q, sig, opt_type)
+            delta = BSM.delta(s_opt, k, tau, r, q, sig, opt_type)
+            gamma = BSM.gamma(s_opt, k, tau, r, q, sig)
             lam = BAW.__calc_lam(tau, r, q, sig, opt_type)
-            alpha = (eta - BSM.delta(s_optimum, k, tau, r, q, sig, opt_type)) / lam / (s_optimum ** (lam - 1))
-            price_ame = BSM.price(s, k, tau, r, q, sig, opt_type) + alpha * (s ** lam)
-        else:
-            price_ame = eta * (s - k)
-        return price_ame
+            f = eta * (s_opt - k) - price - (eta - delta) * s_opt / lam
+            f_prime = (eta - delta) * (1.0 - 1.0 / lam) + gamma * s_opt / lam
+            s_opt -= f / f_prime
+        return s_opt
 
     @staticmethod
     def __calc_lam(tau: float, r: float, q: float, sig: float, opt_type: OptionType):
@@ -31,17 +34,26 @@ class BAW(object):
         return lam
 
     @staticmethod
-    def __calc_s_optimum(k: float, tau: float, r: float, q: float, sig: float, opt_type: OptionType):
+    def price(s: float, k: float, tau: float, r: float, q: float, sig: float, opt_type: OptionType):
         eta = opt_type.value
-        s_opt = k  # use s as initial guess
-        f = s_opt  # an arbitrary larger than tolerance value to start
-        while abs(f) > 1e-12:
-            price = BSM.price(s_opt, k, tau, r, q, sig, opt_type)
-            delta = BSM.delta(s_opt, k, tau, r, q, sig, opt_type)
-            gamma = BSM.gamma(s_opt, k, tau, r, q, sig)
+        s_optimum = BAW.calc_s_optimum(k, tau, r, q, sig, opt_type)
+        if eta * s < eta * s_optimum:
             lam = BAW.__calc_lam(tau, r, q, sig, opt_type)
-            f = eta * (s_opt - k) - price + (eta - delta) * s_opt / lam
-            f_prime = (eta - delta) * (1.0 - 1.0 / lam) + gamma * s_opt / lam
-            s_opt -= f / f_prime
+            alpha = (eta - BSM.delta(s_optimum, k, tau, r, q, sig, opt_type)) / lam / (s_optimum ** (lam - 1))
+            price_ame = BSM.price(s, k, tau, r, q, sig, opt_type) + alpha * (s ** lam)
+        else:
+            price_ame = eta * (s - k)
+        return price_ame
 
-        return s_opt
+    @staticmethod
+    def delta(s: float, k: float, tau: float, r: float, q: float, sig: float, opt_type: OptionType, ds: float = 1e-6):
+        v_d = BAW.price(s * (1.0 - ds), k, tau, r, q, sig, opt_type)
+        v_u = BAW.price(s * (1.0 + ds), k, tau, r, q, sig, opt_type)
+        return (v_u - v_d) / (2.0 * s * ds)
+
+    @staticmethod
+    def gamma(s: float, k: float, tau: float, r: float, q: float, sig: float, opt_type: OptionType, ds: float = 1e-6):
+        v_d = BAW.price(s * (1.0 - ds), k, tau, r, q, sig, opt_type)
+        v = BAW.price(s, k, tau, r, q, sig, opt_type)
+        v_u = BAW.price(s * (1.0 + ds), k, tau, r, q, sig, opt_type)
+        return (v_u - 2.0 * v + v_d) / ((s * ds) ** 2)
