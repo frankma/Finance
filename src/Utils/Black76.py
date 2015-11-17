@@ -31,12 +31,10 @@ class Black76(object):
     def imp_vol(f: float, k: float, tau: float, price: float, b: float, opt_type: OptionType, method='Brent'):
 
         class PriceFunction(IUnivariateFunction):
-
             def evaluate(self, x):
                 return Black76.price(f, k, tau, x, b, opt_type) - price
 
         class VegaFunction(IUnivariateFunction):
-
             def evaluate(self, x):
                 return Black76.vega(f, k, tau, x, b)
 

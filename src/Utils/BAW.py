@@ -2,26 +2,13 @@ import numpy as np
 
 from src.Utils.BSM import BSM
 from src.Utils.OptionType import OptionType
+from src.Utils.Solver.IVariateFunction import IUnivariateFunction
+from src.Utils.Solver.NewtonRaphson import NewtonRaphson
 
 __author__ = 'frank.ma'
 
 
 class BAW(object):
-    @staticmethod
-    def calc_s_optimum(k: float, tau: float, r: float, q: float, sig: float, opt_type: OptionType):
-        eta = opt_type.value
-        s_opt = k  # use s as initial guess
-        f = s_opt  # start with an arbitrary value greater than tolerance
-        while abs(f) > 1e-6:
-            price = BSM.price(s_opt, k, tau, r, q, sig, opt_type)
-            delta = BSM.delta(s_opt, k, tau, r, q, sig, opt_type)
-            gamma = BSM.gamma(s_opt, k, tau, r, q, sig)
-            lam = BAW.__calc_lam(tau, r, q, sig, opt_type)
-            f = eta * (s_opt - k) - price - (eta - delta) * s_opt / lam
-            f_prime = (eta - delta) * (1.0 - 1.0 / lam) + gamma * s_opt / lam
-            s_opt -= f / f_prime
-        return s_opt
-
     @staticmethod
     def __calc_lam(tau: float, r: float, q: float, sig: float, opt_type: OptionType):
         eta = opt_type.value
@@ -34,13 +21,40 @@ class BAW(object):
         return lam
 
     @staticmethod
+    def calc_s_optimum(k: float, tau: float, r: float, q: float, sig: float, opt_type: OptionType):
+        eta = opt_type.value
+        lam = BAW.__calc_lam(tau, r, q, sig, opt_type)
+
+        class FFunction(IUnivariateFunction):
+            def evaluate(self, x):
+                price = BSM.price(x, k, tau, r, q, sig, opt_type)
+                delta = BSM.delta(x, k, tau, r, q, sig, opt_type)
+                return eta * (x - k) - price - (eta - delta) * x / lam
+
+        class FPrimFunction(IUnivariateFunction):
+            def evaluate(self, x):
+                delta = BSM.delta(x, k, tau, r, q, sig, opt_type)
+                gamma = BSM.gamma(x, k, tau, r, q, sig)
+                return (eta - delta) * (1.0 - 1.0 / lam) + gamma * x / lam
+
+        f = FFunction()
+        f_prime = FPrimFunction()
+
+        nr = NewtonRaphson(f, f_prime, k)
+        nr.ABS_TOL = 1e-6
+        s_opt = nr.solve()
+
+        return s_opt
+
+    @staticmethod
     def price(s: float, k: float, tau: float, r: float, q: float, sig: float, opt_type: OptionType):
         eta = opt_type.value
         s_optimum = BAW.calc_s_optimum(k, tau, r, q, sig, opt_type)
         if eta * s < eta * s_optimum:
             lam = BAW.__calc_lam(tau, r, q, sig, opt_type)
-            alpha = (eta - BSM.delta(s_optimum, k, tau, r, q, sig, opt_type)) / lam / (s_optimum ** (lam - 1))
-            price_ame = BSM.price(s, k, tau, r, q, sig, opt_type) + alpha * (s ** lam)
+            delta_optimum = BSM.delta(s_optimum, k, tau, r, q, sig, opt_type)
+            alpha = (eta - delta_optimum) / lam
+            price_ame = BSM.price(s, k, tau, r, q, sig, opt_type) + alpha * s_optimum * ((s / s_optimum) ** lam)
         else:
             price_ame = eta * (s - k)
         return price_ame
