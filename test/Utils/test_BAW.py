@@ -1,5 +1,6 @@
 import unittest
 
+import matplotlib.pyplot as plt
 import numpy as np
 
 from src.Utils.BAW import BAW
@@ -10,7 +11,33 @@ __author__ = 'frank.ma'
 
 
 class MyTestCase(unittest.TestCase):
-    def test_price(self):
+    def test_error_term(self):
+        taus = np.linspace(1.0 / 365.0, 10.0, num=101)
+        call_d_h_d_tau_s = np.zeros(np.shape(taus))
+        put_d_h_d_tau_s = np.zeros(np.shape(taus))
+        s, k, r, q, sig = 100.0, 120.0, 0.08, 0.12, 0.2
+
+        def __h(ttm: float, opt_type: OptionType):
+            eta = opt_type.value
+            s_opt = BAW.calc_s_optimum(k, ttm, r, q, sig, opt_type)
+            lam = BAW.calc_lambda(ttm, r, q, sig, opt_type)
+            delta = BSM.delta(s_opt, k, ttm, r, q, sig, opt_type)
+            g = 1.0 - np.exp(-r * ttm)
+            return (eta - delta) / (g * lam) * s_opt * ((s / s_opt) ** lam)
+
+        dt = 1e-2
+        for idx, tau in enumerate(taus):
+            t_d = tau * (1.0 - dt)
+            t_u = tau * (1.0 + dt)
+            call_d_h_d_tau_s[idx] = (__h(t_u, OptionType.call) - __h(t_d, OptionType.call)) / (t_u - t_d)
+            put_d_h_d_tau_s[idx] = (__h(t_u, OptionType.put) - __h(t_d, OptionType.put)) / (t_u - t_d)
+            self.assertLess(call_d_h_d_tau_s[idx], 3.0)  # loose check for call
+            self.assertLess(put_d_h_d_tau_s[idx], 3.0)  # loose check for put
+
+        # plt.plot(taus, call_d_h_d_tau_s, '+-')
+        # plt.plot(taus, put_d_h_d_tau_s, 'x-')
+        # plt.legend(['call', 'put'])
+        plt.show()
         pass
 
     # recover the cases described in Barone-Adesi and Whaley (1987)

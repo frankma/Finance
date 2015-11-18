@@ -10,20 +10,20 @@ __author__ = 'frank.ma'
 
 class BAW(object):
     @staticmethod
-    def __calc_lam(tau: float, r: float, q: float, sig: float, opt_type: OptionType):
+    def calc_lambda(tau: float, r: float, q: float, sig: float, opt_type: OptionType):
         eta = opt_type.value
         sig_sq = sig ** 2
-        m = 2.0 * r / sig_sq
-        n = 2.0 * (r - q) / sig_sq
-        n_min_one = n - 1.0
+        beta_0 = 2.0 * r / sig_sq
+        beta_1 = 2.0 * (r - q) / sig_sq
+        beta_1_min_one = beta_1 - 1.0
         g = 1.0 - np.exp(-r * tau)
-        lam = 0.5 * (-n_min_one + eta * np.sqrt((n_min_one ** 2) + 4.0 * m / g))
+        lam = 0.5 * (-beta_1_min_one + eta * np.sqrt((beta_1_min_one ** 2) + 4.0 * beta_0 / g))
         return lam
 
     @staticmethod
     def calc_s_optimum(k: float, tau: float, r: float, q: float, sig: float, opt_type: OptionType):
         eta = opt_type.value
-        lam = BAW.__calc_lam(tau, r, q, sig, opt_type)
+        lam = BAW.calc_lambda(tau, r, q, sig, opt_type)
 
         class FFunction(IUnivariateFunction):
             def evaluate(self, x):
@@ -51,7 +51,7 @@ class BAW(object):
         eta = opt_type.value
         s_optimum = BAW.calc_s_optimum(k, tau, r, q, sig, opt_type)
         if eta * s < eta * s_optimum:
-            lam = BAW.__calc_lam(tau, r, q, sig, opt_type)
+            lam = BAW.calc_lambda(tau, r, q, sig, opt_type)
             delta_optimum = BSM.delta(s_optimum, k, tau, r, q, sig, opt_type)
             alpha = (eta - delta_optimum) / lam
             price_ame = BSM.price(s, k, tau, r, q, sig, opt_type) + alpha * s_optimum * ((s / s_optimum) ** lam)
