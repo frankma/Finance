@@ -60,14 +60,25 @@ class BAW(object):
         return price_ame
 
     @staticmethod
-    def delta(s: float, k: float, tau: float, r: float, q: float, sig: float, opt_type: OptionType, ds: float = 1e-6):
-        v_d = BAW.price(s * (1.0 - ds), k, tau, r, q, sig, opt_type)
-        v_u = BAW.price(s * (1.0 + ds), k, tau, r, q, sig, opt_type)
-        return (v_u - v_d) / (2.0 * s * ds)
+    def delta(s: float, k: float, tau: float, r: float, q: float, sig: float, opt_type: OptionType):
+        eta = opt_type.value
+        s_optimum = BAW.calc_s_optimum(k, tau, r, q, sig, opt_type)
+        if eta * s < eta * s_optimum:
+            delta_eur = BSM.delta(s, k, tau, r, q, sig, opt_type)
+            delta_opt = BSM.delta(s_optimum, k, tau, r, q, sig, opt_type)
+            lam = BAW.calc_lambda(tau, r, q, sig, opt_type)
+            return delta_eur + (eta - delta_opt) * ((s / s_optimum) ** (lam - 1.0))
+        else:
+            return eta
 
     @staticmethod
-    def gamma(s: float, k: float, tau: float, r: float, q: float, sig: float, opt_type: OptionType, ds: float = 1e-6):
-        v_d = BAW.price(s * (1.0 - ds), k, tau, r, q, sig, opt_type)
-        v = BAW.price(s, k, tau, r, q, sig, opt_type)
-        v_u = BAW.price(s * (1.0 + ds), k, tau, r, q, sig, opt_type)
-        return (v_u - 2.0 * v + v_d) / ((s * ds) ** 2)
+    def gamma(s: float, k: float, tau: float, r: float, q: float, sig: float, opt_type: OptionType):
+        eta = opt_type.value
+        s_optimum = BAW.calc_s_optimum(k, tau, r, q, sig, opt_type)
+        if eta * s < eta * s_optimum:
+            gamma_eur = BSM.gamma(s, k, tau, r, q, sig)
+            delta_opt = BSM.delta(s_optimum, k, tau, r, q, sig, opt_type)
+            lam = BAW.calc_lambda(tau, r, q, sig, opt_type)
+            return gamma_eur + (eta - delta_opt) * (lam - 1.0) * ((s / s_optimum) ** (lam - 2.0)) / s_optimum
+        else:
+            return 0.0
