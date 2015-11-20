@@ -82,3 +82,11 @@ class BAW(object):
             return gamma_eur + (eta - delta_opt) * (lam - 1.0) * ((s / s_optimum) ** (lam - 2.0)) / s_optimum
         else:
             return 0.0
+
+    @staticmethod
+    def theta(s: float, k: float, tau: float, r: float, q: float, sig: float, opt_type: OptionType):
+        price = BAW.price(s, k, tau, r, q, sig, opt_type)
+        delta = BAW.delta(s, k, tau, r, q, sig, opt_type)
+        gamma = BAW.gamma(s, k, tau, r, q, sig, opt_type)
+        theta = r * price - (r - q) * s * delta - 0.5 * (sig ** 2) * (s ** 2) * gamma
+        return theta

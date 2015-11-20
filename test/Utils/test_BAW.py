@@ -251,3 +251,18 @@ class MyTestCase(unittest.TestCase):
                 print('%r\t%s\t%.12f\t%.12f\t%.6e' % (s, opt_type.name, gamma, gamma_n, diff))
                 self.assertAlmostEqual(0.0, diff, places=6)
         pass
+
+    def test_theta(self):
+        s, k, r, q, sig = 100.0, 110.0, 0.02, 0.04, 0.4
+        dt = 1e-6
+        ts = list(np.linspace(0.25, 4.25, num=9))
+        for tau in ts:
+            for opt_type in [OptionType.call, OptionType.put]:
+                theta = BAW.theta(s, k, tau, r, q, sig, opt_type)
+                v_d = BAW.price(s, k, tau * (1.0 + dt), r, q, sig, opt_type)
+                v_u = BAW.price(s, k, tau * (1.0 - dt), r, q, sig, opt_type)
+                theta_n = (v_u - v_d) / (2.0 * tau * dt)
+                diff = theta / theta_n - 1.0
+                print('%r\t%s\t%.12f\t%.12f\t%.6e' % (tau, opt_type.name, theta, theta_n, diff))
+                self.assertAlmostEqual(0.0, diff / 10.0, places=1)  # up to 10% allowance for long maturities
+        pass
