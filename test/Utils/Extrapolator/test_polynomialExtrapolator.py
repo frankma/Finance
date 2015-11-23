@@ -136,15 +136,15 @@ class TestPolynomialExtrapolator(TestCase):
         plt.plot(ks_full, vols_ful)
         legends = ['SABR']
 
-        for opt_type, lam in cases:
-            k = k_left if opt_type == OptionType.put else k_right
-            ks = ks_left if opt_type == OptionType.put else ks_right
-            zeroth, first, second = __calc_derivatives(model, f, k, tau, opt_type)
-            pe = PolynomialExtrapolator.quadratic_fit_vs_wing(lam, k, zeroth, first, second, opt_type)
+        for option_type, lam in cases:
+            k = k_left if option_type == OptionType.put else k_right
+            ks = ks_left if option_type == OptionType.put else ks_right
+            zeroth, first, second = __calc_derivatives(model, f, k, tau, option_type)
+            pe = PolynomialExtrapolator.quadratic_fit_vs_wing(lam, k, zeroth, first, second, option_type)
             prices = pe.extrapolate(ks)
-            vols = Black76VecK.imp_vol(f, ks, tau, prices, b, opt_type)
+            vols = Black76VecK.imp_vol(f, ks, tau, prices, b, option_type)
             plt.plot(ks, vols)
-            legends += [opt_type.name + '_' + lam.__str__()]
+            legends += [option_type.name + '_' + lam.__str__()]
         plt.legend(legends)
 
         plt.subplot(2, 1, 2)
@@ -152,12 +152,12 @@ class TestPolynomialExtrapolator(TestCase):
         dens_full, ks_den_ful = model.calc_fwd_den(f, rel_bounds=(k_flr / f, k_cap / f))
         plt.plot(ks_den_ful, dens_full)
 
-        for opt_type, lam in cases:
-            k = k_left if opt_type == OptionType.put else k_right
-            ks = ks_left if opt_type == OptionType.put else ks_right
-            zeroth, first, second = __calc_derivatives(model, f, k, tau, opt_type)
-            pe = PolynomialExtrapolator.quadratic_fit_vs_wing(lam, k, zeroth, first, second, opt_type)
-            dens = pe.second_order(ks, pe.betas, lam, opt_type == OptionType.call)
+        for option_type, lam in cases:
+            k = k_left if option_type == OptionType.put else k_right
+            ks = ks_left if option_type == OptionType.put else ks_right
+            zeroth, first, second = __calc_derivatives(model, f, k, tau, option_type)
+            pe = PolynomialExtrapolator.quadratic_fit_vs_wing(lam, k, zeroth, first, second, option_type)
+            dens = pe.second_order(ks, pe.betas, lam, option_type == OptionType.call)
             plt.plot(ks, dens)
         plt.legend(legends)
         plt.show()
