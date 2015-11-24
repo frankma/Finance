@@ -117,16 +117,16 @@ class TestPolynomialExtrapolator(TestCase):
             return price, delta_k, gamma_k
 
         f = 97.4
-        tau = 5.0
+        tau = 3.5
         b = 1.0
-        k_flr, k_left, k_right, k_cap = 5.0, 80.0, 200.0, 300.0
+        k_flr, k_left, k_right, k_cap = 1.0, 60.0, 200.0, 300.0
         alpha, beta, nu, rho = 0.12, 1.0, 0.88, -0.66
 
         ks_full = np.linspace(k_flr, k_cap, num=int(k_cap - k_flr))
         ks_left = np.linspace(k_flr, k_left, num=int(k_left - k_flr))
         ks_right = np.linspace(k_right, k_cap, num=int(k_cap - k_right))
 
-        cases = [(OptionType.put, 2.33), (OptionType.put, 5.0), (OptionType.put, 15.0),
+        cases = [(OptionType.put, 1.2), (OptionType.put, 2.0), (OptionType.put, 3.0),
                  (OptionType.call, 2.33), (OptionType.call, 5.0), (OptionType.call, 15.0)]
         model = SABRModelLognormalApprox(tau, alpha, beta, nu, rho)
         vols_ful = model.calc_vol_vec(f, ks_full)
@@ -160,4 +160,5 @@ class TestPolynomialExtrapolator(TestCase):
             dens = pe.second_order(ks, pe.betas, lam, option_type == OptionType.call)
             plt.plot(ks, dens)
         plt.legend(legends)
+        plt.plot(ks_full, np.zeros(np.shape(ks_full)), 'k--')
         plt.show()
