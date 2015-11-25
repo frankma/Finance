@@ -13,6 +13,8 @@ __author__ = 'frank.ma'
 
 class TestPolynomialExtrapolator(TestCase):
     def test_first_order(self):
+        # numerical implication of first derivative against analytical
+        # expect to see regression with high precision as central difference is applied
         xs = np.linspace(10.0, 200.0, num=191)
         dx = 1e-6
         lam = 0.5
@@ -33,6 +35,8 @@ class TestPolynomialExtrapolator(TestCase):
         pass
 
     def test_second_order(self):
+        # numerical implication of second derivative against analytical
+        # expect to see regression with moderate precision as this is second derivative
         xs = np.linspace(10.0, 200.0, num=191)
         dx = 1e-4
         lam = 0.5
@@ -54,6 +58,8 @@ class TestPolynomialExtrapolator(TestCase):
         pass
 
     def test_eta(self):
+        # reciprocal recovery, identical function but one is the reciprocal
+        # expect to recover derivatives after chain rule
         xs = np.linspace(10.0, 50.0, num=2)
         xs_rec = np.reciprocal(xs)
         lam = 0.5
@@ -78,7 +84,9 @@ class TestPolynomialExtrapolator(TestCase):
             self.assertAlmostEqual(second[idx], second_rec[idx], places=12)
         pass
 
-    def test_quadratic_fit_vs_wing(self):
+    def test_quadratic_fit(self):
+        # fit to the calibration point price, delta_k and gamma_k
+        # expect to recover derivatives with high precision
         f = 150.0
         tau = 0.75
         sig = 0.4
@@ -91,7 +99,7 @@ class TestPolynomialExtrapolator(TestCase):
             delta_k = Black76.delta_k(f, k, tau, sig, b, opt_type)
             gamma_k = Black76.gamma_k(f, k, tau, sig, b)
 
-            pe = PolynomialExtrapolator.quadratic_fit_vs_wing(lam, k, price, delta_k, gamma_k, opt_type)
+            pe = PolynomialExtrapolator.quadratic_fit(lam, k, price, delta_k, gamma_k, opt_type)
             is_reciprocal = opt_type == OptionType.call
             zeroth = pe.zeroth_order(k, pe.betas, lam, is_reciprocal)
             first = pe.first_order(k, pe.betas, lam, is_reciprocal)
@@ -99,8 +107,11 @@ class TestPolynomialExtrapolator(TestCase):
             self.assertAlmostEqual(price, zeroth, places=12)
             self.assertAlmostEqual(delta_k, first, places=12)
             self.assertAlmostEqual(gamma_k, second, places=12)
+        pass
 
     def test_extrapolate(self):
+        # visualize extrapolation implied vol and density function
+        # expect to see density function varies with lambda
 
         def __calc_derivatives(sabr_model: SABRModelLognormalApprox, forward: float, strike: float, ttm: float,
                                opt_type: OptionType, dk: float = 1e-2):
@@ -140,7 +151,7 @@ class TestPolynomialExtrapolator(TestCase):
             k = k_left if option_type == OptionType.put else k_right
             ks = ks_left if option_type == OptionType.put else ks_right
             zeroth, first, second = __calc_derivatives(model, f, k, tau, option_type)
-            pe = PolynomialExtrapolator.quadratic_fit_vs_wing(lam, k, zeroth, first, second, option_type)
+            pe = PolynomialExtrapolator.quadratic_fit(lam, k, zeroth, first, second, option_type)
             prices = pe.extrapolate(ks)
             vols = Black76VecK.imp_vol(f, ks, tau, prices, b, option_type)
             plt.plot(ks, vols)
@@ -156,9 +167,10 @@ class TestPolynomialExtrapolator(TestCase):
             k = k_left if option_type == OptionType.put else k_right
             ks = ks_left if option_type == OptionType.put else ks_right
             zeroth, first, second = __calc_derivatives(model, f, k, tau, option_type)
-            pe = PolynomialExtrapolator.quadratic_fit_vs_wing(lam, k, zeroth, first, second, option_type)
+            pe = PolynomialExtrapolator.quadratic_fit(lam, k, zeroth, first, second, option_type)
             dens = pe.second_order(ks, pe.betas, lam, option_type == OptionType.call)
             plt.plot(ks, dens)
         plt.legend(legends)
         plt.plot(ks_full, np.zeros(np.shape(ks_full)), 'k--')
         plt.show()
+        pass

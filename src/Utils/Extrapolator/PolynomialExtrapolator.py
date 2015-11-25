@@ -23,12 +23,13 @@ class PolynomialExtrapolator(object):
 
     # fit to the wing quote on the volatility surface, assume lower strikes are put quotes and higher strikes are calls
     @staticmethod
-    def quadratic_fit_vs_wing(lam: float, strike: float, price: float, delta_k: float, gamma_k: float,
-                              opt_type: OptionType):
+    def quadratic_fit(lam: float, strike: float, price: float, delta_k: float, gamma_k: float, opt_type: OptionType):
+        # since always consider OTM options as the prices move towards zero, put for low strike and call for the other.
         is_reciprocal = opt_type == OptionType.call
         base = PolynomialExtrapolator.__get_base(strike, is_reciprocal)
         first = delta_k
         second = gamma_k
+        # term need to be cancelled if reciprocal as derivative is on the base but not the strike
         if is_reciprocal:
             first /= -base ** 2
             second -= first * 2.0 * (base ** 3)
@@ -48,7 +49,7 @@ class PolynomialExtrapolator(object):
 
     @staticmethod
     def __get_poly_derivative(xs: np.array, betas: np.array, order: int = 1):
-        poly = np.poly1d(betas[::-1])  #
+        poly = np.poly1d(betas[::-1])  # poly1d takes polynomial starts from high order to low
         derivative = np.polyder(poly, m=order)
         return derivative(xs)
 
@@ -63,6 +64,7 @@ class PolynomialExtrapolator(object):
         base = PolynomialExtrapolator.__get_base(xs, is_reciprocal)
         zeroth = PolynomialExtrapolator.zeroth_order(base, betas, lam, False)
         first = zeroth * (lam / base + PolynomialExtrapolator.__get_poly_derivative(base, betas, order=1))
+        # first order chain rule: ∂ V / ∂ X = ∂ V / ∂ (1 / X)  / (-X^2)
         if is_reciprocal:
             first *= -base ** 2
         return first
@@ -74,6 +76,7 @@ class PolynomialExtrapolator(object):
         first = PolynomialExtrapolator.first_order(base, betas, lam, False)
         second = (first ** 2) / zeroth
         second += zeroth * (PolynomialExtrapolator.__get_poly_derivative(base, betas, order=2) - lam / (base ** 2))
+        # second order chain rule: ∂^2 V / ∂ X^2 = ∂^2 V / ∂ (1 / X)^2 / X^4 + ∂ V / ∂ (1 / X) * 2 / X^3
         if is_reciprocal:
             second *= base ** 4
             second += first * 2.0 * (base ** 3)
