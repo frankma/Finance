@@ -1,12 +1,11 @@
-from unittest import TestCase
 import time as tm
+from unittest import TestCase
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 
 from src.SABRModel.SABRModel import SABRModelLognormalApprox, SABRModelNormalApprox
-from src.SABRModel.SABRModelCalibrator import SABRModelCalibrator, SABRModelCalibratorAlphaNuRho
 from src.Utils.VolType import VolType
 
 __author__ = 'frank.ma'
@@ -233,6 +232,7 @@ class TestSABRModel(TestCase):
         ax = Axes3D(fig)
         ax.plot_wireframe(kk, tt, blk_vols, color='b', alpha=0.75)
         ax.plot_wireframe(kk, tt, loc_vols, color='r', alpha=0.75)
+        ax.legend(['black vol', 'local vol'])
         plt.show()
 
         pass
@@ -278,4 +278,24 @@ class TestSABRModel(TestCase):
         plt.ylim([0.08, 0.22])
 
         plt.show()
+        pass
+
+    def test_calc_fwd_den_sp(self):
+        t = 3.0
+        alpha, beta, nu, rho = 0.2, 1.0, 0.4, -0.25
+        model = SABRModelLognormalApprox(t, alpha, beta, nu, rho)
+
+        forward = 150.0
+        den_sim, bins_sim = model.sim_fwd_den(forward)
+        den_num, bins_num = model.calc_fwd_den(forward)
+        den_sp, bins_sp = model.calc_fwd_den_sp(forward)
+
+        plt.plot(bins_sim, den_sim)
+        plt.plot(bins_num, den_num)
+        plt.plot(bins_sp, den_sp)
+        plt.legend(['simulated', 'numerical', 'analytical'])
+        plt.xlim([0.0, 2.5 * forward])
+        plt.title('SABR model density functions')
+        plt.show()
+
         pass

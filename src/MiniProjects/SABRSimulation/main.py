@@ -13,7 +13,7 @@ rho = -0.25
 
 model_lognormal = SABRModelLognormalApprox(tau, alpha, beta, nu, rho)
 model_normal = SABRModelNormalApprox(tau, alpha, beta, nu, rho)
-freq_sim, base_sim = model_lognormal.sim_forward_den(fwd, rel_bounds=(-20.0, 20.0), n_bins=1000)
+freq_sim, base_sim = model_lognormal.sim_fwd_den(fwd, rel_bounds=(-20.0, 20.0), n_bins=1000)
 freq_lognormal, base_lognormal = model_lognormal.calc_fwd_den(fwd, rel_bounds=(0.01, 20.0), n_bins=1000)
 freq_normal, base_normal = model_normal.calc_fwd_den(fwd, rel_bounds=(-20.0, 20.0), n_bins=1000)
 

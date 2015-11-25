@@ -136,6 +136,30 @@ class Black76VecK(Black76):
         return vols
 
     @staticmethod
+    def vega(f: float, k: np.array, tau: float, sig: np.array, b: float) -> np.array:
+        d1 = Black76VecK.calc_d1(f, k, tau, sig)
+        return b * f * norm.pdf(d1) * sqrt(tau)
+
+    @staticmethod
+    def vomma(f: float, k: np.array, tau: float, sig: np.array, b: float) -> np.array:
+        vega = Black76VecK.vega(f, k, tau, sig, b)
+        d1 = Black76VecK.calc_d1(f, k, tau, sig)
+        d2 = Black76VecK.calc_d2(f, k, tau, sig)
+        return vega * d1 * d2 / sig
+
+    @staticmethod
+    def delta_k(f: float, k: np.array, tau: float, sig: np.array, b: float, opt_type: OptionType) -> np.array:
+        eta = opt_type.value
+        d2 = Black76VecK.calc_d2(f, k, tau, sig)
+        return -eta * b * norm.pdf(eta * d2)
+
+    @staticmethod
     def gamma_k(f: float, k: np.array, tau: float, sig: np.array, b: float) -> np.array:
         d2 = Black76VecK.calc_d2(f, k, tau, sig)
         return b * norm.pdf(d2) / k / sig / sqrt(tau)
+
+    @staticmethod
+    def vanna_k(f: float, k: np.array, tau: float, sig: np.array, b: float) -> np.array:
+        vega = Black76VecK.vega(f, k, tau, sig, b)
+        d1 = Black76VecK.calc_d1(f, k, tau, sig)
+        return vega * d1 / sig / sqrt(tau) / k
