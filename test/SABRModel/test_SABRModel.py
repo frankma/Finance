@@ -13,6 +13,8 @@ __author__ = 'frank.ma'
 
 class TestSABRModel(TestCase):
     def test_calc_vol_vec_k_lognormal(self):
+        # test the vectorization correctness and speed
+        # expect to see high precision alliance between none vectorized and vectorized volatility
         tau = 0.25
         alpha, beta, nu, rho = 0.04, 0.5, 0.4, -0.45
 
@@ -28,11 +30,11 @@ class TestSABRModel(TestCase):
                                                      ' strike %.2f with diff %.14f.' % (strike, (vol - imp_vols[idx]))
         # speed test
         tic = tm.time()
-        for _ in range(10 ** 4):
+        for _ in range(10 ** 3):
             model.calc_vol_vec(forward, strikes, vol_type=VolType.black)
         toc_vec = tm.time() - tic
         tic = tm.time()
-        for _ in range(10 ** 4):
+        for _ in range(10 ** 3):
             for strike in strikes:
                 model.calc_vol(forward, strike, vol_type=VolType.black)
         toc_sca = tm.time() - tic
@@ -41,6 +43,8 @@ class TestSABRModel(TestCase):
         pass
 
     def test_calc_vol_vec_f_lognormal(self):
+        # test the vectorization correctness and speed
+        # expect to see high precision alliance between none vectorized and vectorized volatility
         tau = 0.25
         alpha, beta, nu, rho = 0.04, 0.5, 0.4, -0.45
 
@@ -57,11 +61,11 @@ class TestSABRModel(TestCase):
                                                      ' forward %.2f with diff %.14f.' % (forward, (vol - imp_vols[idx]))
         # speed test
         tic = tm.time()
-        for _ in range(10 ** 4):
+        for _ in range(10 ** 3):
             model.calc_vol_vec(forwards, strike, vol_type=VolType.black)
         toc_vec = tm.time() - tic
         tic = tm.time()
-        for _ in range(10 ** 4):
+        for _ in range(10 ** 3):
             for forward in forwards:
                 model.calc_vol(forward, strike, vol_type=VolType.black)
         toc_sca = tm.time() - tic
@@ -70,6 +74,8 @@ class TestSABRModel(TestCase):
         pass
 
     def test_calc_vol_vec_k_normal(self):
+        # test the vectorization correctness and speed
+        # expect to see high precision alliance between none vectorized and vectorized volatility
         tau = 0.25
         alpha, beta, nu, rho = 0.2, 0.0, 0.4, -0.25
 
@@ -88,11 +94,11 @@ class TestSABRModel(TestCase):
 
         # speed test
         tic = tm.time()
-        for _ in range(10 ** 4):
+        for _ in range(10 ** 3):
             model.calc_vol_vec(forward, strikes, vol_type=VolType.normal)
         toc_vec = tm.time() - tic
         tic = tm.time()
-        for _ in range(10 ** 4):
+        for _ in range(10 ** 3):
             for strike in strikes:
                 model.calc_vol(forward, strike, vol_type=VolType.normal)
         toc_sca = tm.time() - tic
@@ -101,6 +107,8 @@ class TestSABRModel(TestCase):
         pass
 
     def test_calc_vol_vec_f_normal(self):
+        # test the vectorization correctness and speed
+        # expect to see high precision alliance between none vectorized and vectorized volatility
         tau = 0.25
         alpha, beta, nu, rho = 0.2, 0.0, 0.4, -0.25
 
@@ -119,11 +127,11 @@ class TestSABRModel(TestCase):
 
         # speed test
         tic = tm.time()
-        for _ in range(10 ** 4):
+        for _ in range(10 ** 3):
             model.calc_vol_vec(forwards, strike, vol_type=VolType.normal)
         toc_vec = tm.time() - tic
         tic = tm.time()
-        for _ in range(10 ** 4):
+        for _ in range(10 ** 3):
             for forward in forwards:
                 model.calc_vol(forward, strike, vol_type=VolType.normal)
         toc_sca = tm.time() - tic
@@ -132,6 +140,8 @@ class TestSABRModel(TestCase):
         pass
 
     def test_solve_alpha(self):
+        # test the alpha solver
+        # expect to see high precision alpha reversal
         tau = 0.25
         alpha, beta, nu, rho = 0.2234, 1.0, 0.4, -0.25
 
@@ -174,6 +184,8 @@ class TestSABRModel(TestCase):
         pass
 
     def test_get_model_lognormal_approx(self):
+        # model switch from normal to lognormal
+        # expect to see high precision between transformed and original
         tau = 0.25
         alpha, beta, nu, rho = 0.22, 1.0, 0.55, -0.33
         forward = 150.0
@@ -193,6 +205,8 @@ class TestSABRModel(TestCase):
         pass
 
     def test_get_model_normal_approx(self):
+        # model switch from  lognormal to normal
+        # expect to see high precision between transformed and original
         tau = 0.25
         alpha, beta, nu, rho = 0.22, 1.0, 0.55, -0.33
         forward = 150.0
@@ -212,6 +226,8 @@ class TestSABRModel(TestCase):
         pass
 
     def test_calc_loc_vol_vec(self):
+        # test the local vol calculation
+        # expect to see a working sample
         taus = np.linspace(0.01, 5.01, num=31)
         alpha, beta, nu, rho = 0.22, 1.0, 0.55, -0.33
         forward = 150.0
@@ -239,6 +255,7 @@ class TestSABRModel(TestCase):
 
     def test_back_bone(self):
         # source: F. Rouah "The SABR Model"
+        # expect to recover Fabrice Rouah's paper on SABR model back bone part
         t = 1.0
         alpha, beta, nu, rho = 0.0104364434616, 0.0, 0.569567801708, 0.260128643732
         model_nrm = SABRModelLognormalApprox(t, alpha, beta, nu, rho)
@@ -281,6 +298,9 @@ class TestSABRModel(TestCase):
         pass
 
     def test_calc_fwd_den_sp(self):
+        # test to compare density function from simulation, numerical implication, and special case analytical result
+        # the special case is beta of one which gives possibility of derivation
+        # expect to see three density plots very close to each other
         t = 3.0
         alpha, beta, nu, rho = 0.2, 1.0, 0.4, -0.25
         model = SABRModelLognormalApprox(t, alpha, beta, nu, rho)

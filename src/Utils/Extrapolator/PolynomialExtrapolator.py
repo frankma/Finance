@@ -36,7 +36,10 @@ class PolynomialExtrapolator(object):
             second /= base ** 4
         beta_2 = 0.5 * (second / price - ((first / price) ** 2) + lam / (base ** 2))
         beta_1 = first / price - lam / base - 2.0 * beta_2 * base
+        # beta_1 = (first - second * base) / price - 2.0 * lam / base + (first / price) ** 2 * base
         beta_0 = np.log(price / (base ** lam)) - beta_1 * base - beta_2 * (base ** 2)
+        # beta_0 = np.log(price) - lam * np.log(base) - first / price * base \
+        #          + 0.5 * second * (base ** 2) / price + 1.5 * lam - 0.5 * ((first * base / price) ** 2)
         betas = np.array([beta_0, beta_1, beta_2])
         return PolynomialExtrapolator(lam, betas, is_reciprocal)
 
