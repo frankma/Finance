@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from src.SABRModel.SABRModel import SABRModelLognormalApprox
-from src.Utils.Black76 import Black76, Black76VecK
+from src.Utils.Black76 import Black76, Black76Vec
 from src.Utils.Extrapolator.PolynomialExtrapolator import PolynomialExtrapolator
 from src.Utils.OptionType import OptionType
 
@@ -153,7 +153,7 @@ class TestPolynomialExtrapolator(TestCase):
             zeroth, first, second = __calc_derivatives(model, f, k, tau, option_type)
             pe = PolynomialExtrapolator.quadratic_fit(lam, k, zeroth, first, second, option_type)
             prices = pe.extrapolate(ks)
-            vols = Black76VecK.imp_vol(f, ks, tau, prices, b, option_type)
+            vols = Black76Vec.imp_vol(f, ks, tau, prices, b, option_type)
             plt.plot(ks, vols)
             legends += [option_type.name + '_' + lam.__str__()]
         plt.legend(legends)

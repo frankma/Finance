@@ -2,7 +2,7 @@ from math import log
 import numpy as np
 from numpy.polynomial.polynomial import polyroots
 from src.Utils.VolType import VolType
-from src.Utils.Black76 import Black76VecK
+from src.Utils.Black76 import Black76Vec
 from src.Utils.NormalModel import NormalModelVecK
 from src.Utils.OptionType import OptionType
 
@@ -158,7 +158,7 @@ class SABRModelLognormalApprox(SABRModel):
         vols = self.calc_vol_vec(forward, strikes, vol_type=VolType.black)
         # must implied through numerical differentiation
         # since analytical one is incorrect as a collection of lognormal distribution with variable vols
-        prices = Black76VecK.price(forward, strikes, self.t, vols, 1.0, OptionType.put)
+        prices = Black76Vec.price(forward, strikes, self.t, vols, 1.0, OptionType.put)
         density = (prices[:-2] + prices[2:] - 2 * prices[1:-1]) / ((strikes[2:] - strikes[1:-1]) ** 2)
         strikes = strikes[1:-1]  # truncate strikes for numerical solution
         return density, strikes
@@ -168,10 +168,10 @@ class SABRModelLognormalApprox(SABRModel):
         strikes = np.linspace(rel_bounds[0] * forward, rel_bounds[1] * forward, num=n_bins)
         vols = self.calc_vol_vec(forward, strikes, vol_type=VolType.black)
         b = 1.0  # forward valuation, discount must be zero
-        gamma_k = Black76VecK.gamma_k(forward, strikes, self.t, vols, b)
-        vanna_k = Black76VecK.vanna_k(forward, strikes, self.t, vols, b)
-        vomma = Black76VecK.vomma(forward, strikes, self.t, vols, b)
-        vega = Black76VecK.vega(forward, strikes, self.t, vols, b)
+        gamma_k = Black76Vec.gamma_k(forward, strikes, self.t, vols, b)
+        vanna_k = Black76Vec.vanna_k(forward, strikes, self.t, vols, b)
+        vomma = Black76Vec.vomma(forward, strikes, self.t, vols, b)
+        vega = Black76Vec.vega(forward, strikes, self.t, vols, b)
         d_black_d_k = self.__calc_d_black_d_k(forward, strikes)
         d2_black_d_k2 = self.__calc_d2_black_d_k2(forward, strikes)
         density = gamma_k + 2.0 * vanna_k * d_black_d_k + vomma * (d_black_d_k ** 2) + vega * d2_black_d_k2
