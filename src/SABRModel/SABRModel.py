@@ -3,7 +3,7 @@ import numpy as np
 from numpy.polynomial.polynomial import polyroots
 from src.Utils.VolType import VolType
 from src.Utils.Black76 import Black76Vec
-from src.Utils.NormalModel import NormalModelVecK
+from src.Utils.NormalModel import NormalModelVec
 from src.Utils.OptionType import OptionType
 
 __author__ = 'frank.ma'
@@ -365,7 +365,7 @@ class SABRModelNormalApprox(SABRModel):
         vols = self.calc_vol_vec(forward, strikes, vol_type=VolType.normal)
         # must implied through numerical differentiation
         # since analytical one is incorrect as a collection of lognormal distribution with variable vols
-        prices = NormalModelVecK.price(forward, strikes, self.t, vols, 1.0, OptionType.put)
+        prices = NormalModelVec.price(forward, strikes, self.t, vols, 1.0, OptionType.put)
         density = (prices[:-2] + prices[2:] - 2 * prices[1:-1]) / ((strikes[2:] - strikes[1:-1]) ** 2)
         strikes = strikes[1:-1]  # truncate strikes for numerical solution
         return density, strikes

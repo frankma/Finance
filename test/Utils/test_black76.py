@@ -1,6 +1,8 @@
-from unittest import TestCase
 from math import log
+from unittest import TestCase
+
 import numpy as np
+
 from src.Utils.Black76 import Black76, Black76Vec
 from src.Utils.OptionType import OptionType
 
@@ -69,6 +71,8 @@ class TestBlack76(TestCase):
 
 class TestBlack76Vec(TestCase):
     def test_price_vec(self):
+        # test vectorization correctness against none-vectorized method
+        # expect high precision reconciliation
         forward = 150.0
         strikes = np.linspace(100.0, 200.0, num=21)
         ttm = 0.75
@@ -86,8 +90,10 @@ class TestBlack76Vec(TestCase):
         pass
 
     def test_imp_vol_vec(self):
+        # test recovery of implied vol searching function
+        # expect medium to high precision of recovered implied volatility
         forward = 150.0
-        strikes = np.linspace(100.0, 200.0, num=21)
+        strikes = np.array(np.linspace(100.0, 200.0, num=21))
         ttm = 0.75
         sigmas = 0.0001 * ((strikes - forward) ** 2) + 0.25  # use polynomial to define vol smile
         bond = 0.92
@@ -104,7 +110,63 @@ class TestBlack76Vec(TestCase):
         pass
 
     def test_backward_pde(self):
+        # test parity of the backward pde where theta + 1/2 F^2 sigma^2 Gamma = r V
+        # expect high precision of parity
+        forward = 150.0
+        strikes = np.array(np.linspace(100.0, 200.0, num=21))
+        ttm = 0.75
+        sigmas = 0.0001 * ((strikes - forward) ** 2) + 0.25  # use polynomial to define vol smile
+        bond = 0.92
+
+        r = -np.log(bond) / ttm
+
+        call_prices = Black76Vec.price(forward, strikes, ttm, sigmas, bond, OptionType.call)
+        put_prices = Black76Vec.price(forward, strikes, ttm, sigmas, bond, OptionType.put)
+        call_theta = Black76Vec.theta(forward, strikes, ttm, sigmas, bond, OptionType.call)
+        put_theta = Black76Vec.theta(forward, strikes, ttm, sigmas, bond, OptionType.put)
+        gamma = Black76Vec.gamma(forward, strikes, ttm, sigmas, bond)
+
+        call_lhs = call_theta + 0.5 * (forward ** 2) * (sigmas ** 2) * gamma
+        put_lhs = put_theta + 0.5 * (forward ** 2) * (sigmas ** 2) * gamma
+        call_rhs = call_prices
+        call_rhs *= r
+        put_rhs = put_prices
+        put_rhs *= r
+
+        for idx, k in enumerate(strikes):
+            self.assertAlmostEqual(call_lhs[idx], call_rhs[idx], places=12,
+                                   msg='backward pde parity failed for call with strike %f' % k)
+            self.assertAlmostEqual(put_lhs[idx], put_rhs[idx], places=12,
+                                   msg='backward pde parity failed for put with strike %f' % k)
         pass
 
     def test_forward_pde(self):
+        # test parity of the forward pde where theta + 1/2 K^2 sigma^2 Gamma_K = r V
+        # expect high precision of parity
+        forward = 150.0
+        strikes = np.array(np.linspace(100.0, 200.0, num=21))
+        ttm = 0.75
+        sigmas = 0.0001 * ((strikes - forward) ** 2) + 0.25  # use polynomial to define vol smile
+        bond = 0.92
+
+        r = -np.log(bond) / ttm
+
+        call_prices = Black76Vec.price(forward, strikes, ttm, sigmas, bond, OptionType.call)
+        put_prices = Black76Vec.price(forward, strikes, ttm, sigmas, bond, OptionType.put)
+        call_theta = Black76Vec.theta(forward, strikes, ttm, sigmas, bond, OptionType.call)
+        put_theta = Black76Vec.theta(forward, strikes, ttm, sigmas, bond, OptionType.put)
+        gamma_k = Black76Vec.gamma_k(forward, strikes, ttm, sigmas, bond)
+
+        call_lhs = call_theta + 0.5 * (strikes ** 2) * (sigmas ** 2) * gamma_k
+        put_lhs = put_theta + 0.5 * (strikes ** 2) * (sigmas ** 2) * gamma_k
+        call_rhs = call_prices
+        call_rhs *= r
+        put_rhs = put_prices
+        put_rhs *= r
+
+        for idx, k in enumerate(strikes):
+            self.assertAlmostEqual(call_lhs[idx], call_rhs[idx], places=12,
+                                   msg='backward pde parity failed for call with strike %f' % k)
+            self.assertAlmostEqual(put_lhs[idx], put_rhs[idx], places=12,
+                                   msg='backward pde parity failed for put with strike %f' % k)
         pass

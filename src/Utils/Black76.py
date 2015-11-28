@@ -1,6 +1,8 @@
 from math import log, sqrt
+
 import numpy as np
 from scipy.stats import norm
+
 from src.Utils.OptionType import OptionType
 from src.Utils.Solver.Brent import Brent
 from src.Utils.Solver.IVariateFunction import IUnivariateFunction
@@ -149,6 +151,23 @@ class Black76Vec(Black76):
     def vega(f: np.array, k: np.array, tau: float, sig: np.array, b: float) -> np.array:
         d1 = Black76Vec.calc_d1(f, k, tau, sig)
         return b * f * norm.pdf(d1) * sqrt(tau)
+
+    @staticmethod
+    def theta(f: np.array, k: np.array, tau: float, sig: np.array, b: float, opt_type: OptionType):
+        d1 = Black76Vec.calc_d1(f, k, tau, sig)
+        price = Black76Vec.price(f, k, tau, sig, b, opt_type)
+        r = -np.log(b) / tau
+        return -b * f * norm.pdf(d1) * sig / 2. / sqrt(tau) + r * price
+
+    @staticmethod
+    def theta_s(f: float, k: float, tau: float, sig: float, b: float, opt_type: OptionType):
+        eta = opt_type.value
+        d1 = Black76Vec.calc_d1(f, k, tau, sig)
+        d2 = Black76Vec.calc_d2(f, k, tau, sig)
+        r = -np.log(b) / tau
+        q = np.log(k / f) / tau + r
+        return -b * f * norm.pdf(d1) * sig / 2. / sqrt(tau) + b * eta * \
+                                                              (q * f * norm.cdf(eta * d1) - r * k * norm.cdf(eta * d2))
 
     @staticmethod
     def gamma(f: np.array, k: np.array, tau: float, sig: np.array, b: float) -> np.array:
