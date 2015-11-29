@@ -61,9 +61,20 @@ class BSM(object):
         return eta * exp(-q * tau) * norm.cdf(eta * d1)
 
     @staticmethod
+    def delta_k(s: float, k: float, tau: float, r: float, q: float, sig: float, opt_type: OptionType):
+        eta = opt_type.value
+        d2 = BSM.calc_d2(s, k, tau, r, q, sig)
+        return -eta * exp(-r * tau) * norm.cdf(eta * d2)
+
+    @staticmethod
     def gamma(s: float, k: float, tau: float, r: float, q: float, sig: float):
         d1 = BSM.calc_d1(s, k, tau, r, q, sig)
         return exp(-q * tau) * norm.pdf(d1) / s / sig / sqrt(tau)
+
+    @staticmethod
+    def gamma_k(s: float, k: float, tau: float, r: float, q: float, sig: float):
+        d2 = BSM.calc_d2(s, k, tau, r, q, sig)
+        return exp(-r * tau) * norm.pdf(d2) / k / sig / sqrt(tau)
 
     @staticmethod
     def vega(s: float, k: float, tau: float, r: float, q: float, sig: float):

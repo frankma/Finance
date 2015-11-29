@@ -1,12 +1,13 @@
 import numpy as np
+
 from src.SolverFD.TriDiagonalMatrix import TriDiagonalMatrix
-from src.Utils.BSM import BSM, BSMVec
+from src.Utils.BSM import BSM
 from src.Utils.OptionType import OptionType
 
 __author__ = 'frank.ma'
 
 
-class BlackScholesFD(object):
+class BlackScholesBackwardPDE(object):
     def __init__(self, t: float, s: float, k: float, r: float, sig: float, n_x: int = 100, n_t: int = 100,
                  domain: float = 10.0):
         self.n_x = n_x
@@ -15,8 +16,8 @@ class BlackScholesFD(object):
         self.s = s
         self.r = r
         self.sig = sig
-        self.xs = np.linspace(1e-12, domain * sig * np.sqrt(t) * max(k, s), num=n_x + 1)
-        self.ts = np.linspace(t, 0.0, num=n_t + 1)
+        self.xs = np.array(np.linspace(1e-12, domain * sig * np.sqrt(t) * max(k, s), num=n_x + 1))
+        self.ts = np.array(np.linspace(t, 0.0, num=n_t + 1))
         self.dx = self.xs[1] - self.xs[0]
         self.dt = self.ts[0] - self.ts[1]
         self.sdx = self.xs / self.dx
@@ -24,7 +25,7 @@ class BlackScholesFD(object):
 
     def solve(self):
         opt_type = OptionType.call
-        state = np.matrix(np.maximum(opt_type.value * (self.xs - self.k), np.full(self.xs.__len__(), 0.0)))
+        state = np.matrix(np.maximum(opt_type.value * (self.xs - self.k), np.full(np.shape(self.xs), 0.0)))
         lhs_lft = self.r * self.sdx * self.dt / 4.0 - ((self.sig * self.sdx) ** 2) * self.dt / 4.0
         lhs_ctr = 1.0 + ((self.sig * self.sdx) ** 2) * self.dt / 2.0 + self.r * self.dt / 2.0
         lhs_upr = -self.r * self.sdx * self.dt / 4.0 - ((self.sig * self.sdx) ** 2) * self.dt / 4.0
@@ -52,7 +53,7 @@ class BlackScholesFD(object):
 
         tm = rhs_tdm.get_matrix().transpose() * lhs_tdm.get_inverse().transpose()
 
-        for t in self.ts[:-1]:
+        for _ in self.ts[:-1]:
             state *= tm  # save vector space for calculation
 
         vec = np.asarray(state).reshape(-1)
@@ -70,11 +71,11 @@ if __name__ == '__main__':
     print(ana)
 
     # for n_t in [16, 32, 64, 128]:
-    for n_x in [256, 512, 1024, 2048]:
+    for num_s in [256, 512, 1024, 2048]:
         prev = 0.0
-        # for n_x in [256, 512, 1024, 2048, 4096]:
-        for n_t in [16, 32, 64, 128]:
-            bsm_fd = BlackScholesFD(tau, spot, strike, rate, vol, n_x=n_x, n_t=n_t)
+        # for n_s in [256, 512, 1024, 2048, 4096]:
+        for num_t in [16, 32, 64, 128]:
+            bsm_fd = BlackScholesBackwardPDE(tau, spot, strike, rate, vol, n_x=num_s, n_t=num_t)
             res = bsm_fd.solve()
-            print('%i\t%i\t%.16f\t%.2e\t%.2e' % (n_x, n_t, res, res - prev, res - ana))
+            print('%i\t%i\t%.16f\t%.2e\t%.2e' % (num_s, num_t, res, res - prev, res - ana))
             prev = res
