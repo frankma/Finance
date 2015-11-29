@@ -89,7 +89,7 @@ class BSM(object):
         term1 = -exp(-q * tau) * s * norm.pdf(d1) * sig / 2.0 / sqrt(tau)
         term2 = eta * q * s * exp(-q * tau) * norm.cdf(eta * d1)
         term3 = - eta * r * k * exp(-r * tau) * norm.cdf(eta * d2)
-        return term1 * term2 * term3
+        return term1 + term2 + term3
 
     @staticmethod
     def rho(s: float, k: float, tau: float, r: float, q: float, sig: float, opt_type: OptionType):
