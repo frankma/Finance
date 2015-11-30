@@ -17,34 +17,35 @@ class BlackScholesBackwardPDE(object):
         self.r = r
         self.sig = sig
         self.xs = np.array(np.linspace(1e-12, domain * sig * np.sqrt(t) * max(k, s), num=n_x + 1))
-        self.ts = np.array(np.linspace(t, 0.0, num=n_t + 1))
-        self.dx = self.xs[1] - self.xs[0]
+        self.ts = np.linspace(t, 0.0, num=n_t + 1)
+        self.ds = self.xs[1] - self.xs[0]
         self.dt = self.ts[0] - self.ts[1]
-        self.sdx = self.xs / self.dx
+        self.sdx = self.xs / self.ds
         self.tdx = self.ts / self.dt
 
     def solve(self):
-        opt_type = OptionType.call
-        state = np.matrix(np.maximum(opt_type.value * (self.xs - self.k), np.full(np.shape(self.xs), 0.0)))
+        state = np.matrix(np.maximum(OptionType.call.value * (self.xs - self.k), np.full(np.shape(self.xs), 0.0)))
+
         lhs_lft = self.r * self.sdx * self.dt / 4.0 - ((self.sig * self.sdx) ** 2) * self.dt / 4.0
         lhs_ctr = 1.0 + ((self.sig * self.sdx) ** 2) * self.dt / 2.0 + self.r * self.dt / 2.0
         lhs_upr = -self.r * self.sdx * self.dt / 4.0 - ((self.sig * self.sdx) ** 2) * self.dt / 4.0
-        lhs_ctr[0] = 1.0 + self.r * self.dt / 2.0 + self.r * self.sdx[0] * self.dt / 2.0
+        lhs_ctr[0] = 1.0 + self.r * self.sdx[0] * self.dt / 2.0 + self.r * self.dt / 2.0
         lhs_upr[0] = -self.r * self.sdx[0] * self.dt / 2.0
         lhs_lft[-1] = self.r * self.sdx[-1] * self.dt / 2.0
-        lhs_ctr[-1] = 1.0 + self.r * self.dt / 2.0 - self.r * self.sdx[-1] * self.dt / 2.0
+        lhs_ctr[-1] = 1.0 - self.r * self.sdx[-1] * self.dt / 2.0 + self.r * self.dt / 2.0
         # lhs_ctr[0] = 2.0
         # lhs_upr[0] = -1.0
         # lhs_lft[-1] = -1.0
         # lhs_ctr[-1] = 2.0
         lhs_tdm = TriDiagonalMatrix(lhs_lft[1:], lhs_ctr, lhs_upr[:-1])
+
         rhs_lft = -lhs_lft
         rhs_ctr = 1.0 - ((self.sig * self.sdx) ** 2) * self.dt / 2.0 - self.r * self.dt / 2.0
         rhs_upr = -lhs_upr
-        rhs_ctr[0] = 1.0 - self.r * self.dt / 2.0 - self.r * self.sdx[0] * self.dt / 2.0
+        rhs_ctr[0] = 1.0 - self.r * self.sdx[0] * self.dt / 2.0 - self.r * self.dt / 2.0
         rhs_upr[0] = self.r * self.sdx[0] * self.dt / 2.0
         rhs_lft[-1] = -self.r * self.sdx[-1] * self.dt / 2.0
-        rhs_ctr[-1] = 1.0 - self.r * self.dt / 2.0 + self.r * self.sdx[-1] * self.dt / 2.0
+        rhs_ctr[-1] = 1.0 + self.r * self.sdx[-1] * self.dt / 2.0 - self.r * self.dt / 2.0
         # rhs_ctr[0] = 2.0
         # rhs_upr[0] = -1.0
         # rhs_lft[-1] = -1.0
