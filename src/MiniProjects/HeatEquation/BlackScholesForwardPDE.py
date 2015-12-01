@@ -26,50 +26,40 @@ class BlackScholesForwardPDE(object):
     def solve(self):
         state = np.matrix(np.maximum(OptionType.call.value * (self.s - self.ks), np.full(np.shape(self.ks), 0.0)))
 
-        for t in self.ts[1:]:
-            vol_loc = self.calc_loc_vol(self.s, self.k, t, self.r, 0.0, self.sig, opt_type)
-            # vol_loc = self.sig
+        vol_loc = self.sig  # assume flat vol across time and strike, then local vol equals to implied vol
 
-            lhs_lft = -self.r * self.kdx * self.dt / 4.0 - ((vol_loc * self.kdx) ** 2) * self.dt / 4.0
-            lhs_ctr = 1.0 + ((vol_loc * self.kdx) ** 2) * self.dt / 2.0 + self.r * self.dt / 2.0
-            lhs_upr = self.r * self.kdx * self.dt / 4.0 - ((vol_loc * self.kdx) ** 2) * self.dt / 4.0
-            lhs_ctr[0] = 1.0 - self.r * self.kdx[0] * self.dt / 2.0 + self.r * self.dt / 2.0
-            lhs_upr[0] = -self.r * self.kdx[0] * self.dt / 2.0
-            lhs_lft[-1] = self.r * self.kdx[-1] * self.dt / 2.0
-            lhs_ctr[-1] = 1.0 + self.r * self.kdx[-1] * self.dt / 2.0 + self.r * self.dt / 2.0
-            lhs_tdm = TriDiagonalMatrix(lhs_lft[1:], lhs_ctr, lhs_upr[:-1])
+        lhs_lft = -self.r * self.kdx * self.dt / 4.0 - ((vol_loc * self.kdx) ** 2) * self.dt / 4.0
+        lhs_ctr = 1.0 + ((vol_loc * self.kdx) ** 2) * self.dt / 2.0
+        lhs_upr = self.r * self.kdx * self.dt / 4.0 - ((vol_loc * self.kdx) ** 2) * self.dt / 4.0
+        lhs_ctr[0] = 1.0 - self.r * self.kdx[0] * self.dt / 2.0
+        lhs_upr[0] = -self.r * self.kdx[0] * self.dt / 2.0
+        lhs_lft[-1] = self.r * self.kdx[-1] * self.dt / 2.0
+        lhs_ctr[-1] = 1.0 + self.r * self.kdx[-1] * self.dt / 2.0
+        lhs_tdm = TriDiagonalMatrix(lhs_lft[1:], lhs_ctr, lhs_upr[:-1])
 
-            rhs_lft = -lhs_lft
-            rhs_ctr = 1.0 - ((vol_loc * self.kdx) ** 2) * self.dt / 2.0 - self.r * self.dt / 2.0
-            rhs_upr = -lhs_upr
-            rhs_ctr[0] = 1.0 + self.r * self.kdx[0] * self.dt / 2.0 - self.r * self.dt / 2.0
-            rhs_upr[0] = self.r * self.kdx[0] * self.dt / 2.0
-            rhs_lft[-1] = -self.r * self.kdx[-1] * self.dt / 2.0
-            rhs_ctr[-1] = 1.0 - self.r * self.kdx[-1] * self.dt / 2.0 - self.r * self.dt / 2.0
-            rhs_tdm = TriDiagonalMatrix(rhs_lft[1:], rhs_ctr, rhs_upr[:-1])
+        rhs_lft = -lhs_lft
+        rhs_ctr = 1.0 - ((vol_loc * self.kdx) ** 2) * self.dt / 2.0
+        rhs_upr = -lhs_upr
+        rhs_ctr[0] = 1.0 + self.r * self.kdx[0] * self.dt / 2.0
+        rhs_upr[0] = self.r * self.kdx[0] * self.dt / 2.0
+        rhs_lft[-1] = -self.r * self.kdx[-1] * self.dt / 2.0
+        rhs_ctr[-1] = 1.0 - self.r * self.kdx[-1] * self.dt / 2.0
+        rhs_tdm = TriDiagonalMatrix(rhs_lft[1:], rhs_ctr, rhs_upr[:-1])
 
-            tm = rhs_tdm.get_matrix().transpose() * lhs_tdm.get_inverse().transpose()
+        tm = rhs_tdm.get_matrix().transpose() * lhs_tdm.get_inverse().transpose()
 
+        for _ in self.ts[:-1]:
             state *= tm  # save vector space for calculation
 
         vec = np.asarray(state).reshape(-1)
         return np.interp([self.k], self.ks, vec)[0]
-
-    @staticmethod
-    def calc_loc_vol(s, k, t, r, q, sig, o_t: OptionType):
-        price = BSM.price(s, k, t, r, q, sig, o_t)
-        theta_t = -BSM.theta(s, k, t, r, q, sig, o_t)
-        delta_k = BSM.delta_k(s, k, t, r, q, sig, o_t)
-        gamma_k = BSM.gamma_k(s, k, t, r, q, sig)
-        vol_loc = np.sqrt(2.0 * (theta_t - (r - q) * (price - k * delta_k)) / (k ** 2 * gamma_k))
-        return vol_loc
 
 if __name__ == '__main__':
     tau = 0.5
     spot = 150.0
     strike = 150.0
     rate = 0.05
-    div = 0.0  # this has to be zero as carray rate wasn't factored into the later code
+    div = 0.0  # this has to be zero as carry rate wasn't factored into the later code
     vol = 0.45
 
     opt_type = OptionType.call

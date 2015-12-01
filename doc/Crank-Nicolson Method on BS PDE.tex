@@ -1,0 +1,168 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+
+\title{Crank-Nicolson Method on BS PDE}
+\author{Frank Ma}
+\date{October 2015}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+    This paper describes details on the Crank-Nicolson method to discretize the partial differential equation of Black-Scholes-Merton model.
+\end{abstract}
+
+
+\section{Introduction}
+
+Black-Scholes Equation lays the cornerstone for the modern quantitative finance.
+It starts from defining a stochastic process of the underlying asset git sas formula \ref{BS SDE} and then a generic derivative value function $ V(S, t) $.
+Later the Partial Differential Equation \ref{BS PDE} is provided to govern the evolution of derivative value.
+\begin{align}
+    & d S = \mu S d t + \sigma S d W \label{BS SDE} \\
+    & \frac{\partial V}{\partial t} + r S \frac{\partial V}{\partial S} + \frac{1}{2} \sigma^2 S^2 \frac{\partial^2 V}{\partial S^2} - r V = 0 \label{BS PDE}
+\end{align}
+
+To solve present value of derivative prices, multiple approaches such as Analytic, Monte Carlo Simulation and Finite Difference can be used.
+In this paper, we discuss Finite Difference methods with focus on Crank-Nicolson.
+
+
+\section{Crank-Nicolson Method}
+
+Crank-Nicolson method is a discretization tool to solve heat equations numerically.
+This method assures error term converges in second order with respect to both time and space as it is based on trapezoidal rule.
+We arbitrary define two consecutive time steps of three spatially adjacent points as below.
+\begin{equation}
+    \begin{array}{|l c|l}
+        V_{t - \Delta t}^{S - \Delta S} & \quad & V_{t}^{S - \Delta S} \\
+        V_{t - \Delta t}^{S} & \quad & V_{t}^{S} \\
+        V_{t - \Delta t}^{S + \Delta S} & \quad & V_{t}^{S + \Delta S}
+    \end{array}
+\end{equation}
+
+Specific to the Black-Scholes model, PDE is solved backward. The LHS state will be in $ t - \Delta t $ while the RHS one will be in $ t $.
+A generic discretization can be found as follows.
+\begin{align}
+    & \frac{V_{t - \Delta t}^{S} - V_{t}^{S}}{-\Delta t} + r S \frac{1}{2} \left(\frac{V_{t - \Delta t}^{S + \Delta S} - V_{t - \Delta t}^{S - \Delta S}}{2 \Delta S} + \frac{V_{t}^{S + \Delta S} - V_{t}^{S - \Delta S}}{2 \Delta S}\right) \nonumber \\
+    & \quad + \frac{1}{2} \sigma^2 S^2 \frac{1}{2} \left(\frac{V_{t - \Delta t}^{S + \Delta S} - 2 V_{t - \Delta t}^{S} + V_{t - \Delta t}^{S - \Delta S}}{{(\Delta S)}^2} + \frac{V_{t}^{S + \Delta S} - 2 V_{t}^{S} + V_{t}^{S - \Delta S}}{{(\Delta S)}^2} \right) \nonumber \\
+    & \quad - r \frac{1}{2} \left(V_{t - \Delta t}^{S} + V_{t}^{S}\right) = 0 \label{BS PDE CN Discretized}
+\end{align}
+
+Reorganize the left-hand-side of the equation in the state of $ t - \Delta t $ while the right-hand-side in the state of $ t $.
+\begin{align}
+    & \left(\frac{r S}{4 \Delta S} - \frac{\sigma^2 S^2}{4 (\Delta S)^2)}\right) V_{t - \Delta t}^{S - \Delta S} + \left(\frac{1}{\Delta t}  + \frac{\sigma^2 S^2}{2 (\Delta S)^2} + \frac{r}{2}\right) V_{t - \Delta t}^{S} \nonumber \\
+    & \quad + \left(-\frac{r S}{4 \Delta S} - \frac{\sigma^2 S^2}{4 (\Delta S)^2}\right) V_{t - \Delta t}^{S + \Delta S} = \left(-\frac{r S}{4 \Delta S} + \frac{\sigma^2 S^2}{4 (\Delta S)^2}\right) V_{t}^{S - \Delta S} \nonumber \\
+    & \quad + \left(\frac{1}{\Delta t} - \frac{\sigma^2 S^2}{2 (\Delta S)^2} - \frac{r}{2}\right) V_{t}^{S} + \left(\frac{r S}{4 \Delta S} + \frac{\sigma^2 S^2}{4 (\Delta S)^2}\right) V_{t}^{S + \Delta S}
+\end{align}
+
+In general, the discretized PDE is transformed into a linear system as below.
+\begin{equation}
+    {LHS} \cdot V_{t - \Delta t} = {RHS} \cdot V_{t}
+\end{equation}
+
+
+\section{Boundary Conditions}
+
+Special care is needed on the boundaries of the solution domain as the central limit discretization is undefined on the edge.
+There are a few standard approaches to overcome the boundary issue:
+Dirichlet boundary condition which specifies fixed values on the boundaries;
+or Neumann boundary condition that provides deterministic first order derivative on the boundaries. 
+
+In this paper we presents a method similar to Neumann method by creating phantom out-of-bound points through Linear extrapolation.
+This application also results in zero second derivative on the bounds $ \frac{\partial^2 V}{\partial S^2} = 0 $ as linear extrapolation is surely curve-less.
+
+At the lower bound, immediate out bound point is $ V^{-1} = 2 V^{0} - V^{1} $ and the central limit discretization on the bound will be $ \frac{V^{1} - 2 V^{0} - V^{1}}{2 \Delta S} = \frac{V^{1} - V^{0}}{\Delta S}$. The discretization of PDE on the lower bound will be as follows.
+\begin{align}
+    & \frac{V_{t - \Delta t}^{S^{0}} - V_{t}^{S^{0}}}{-\Delta t} + r S^{0} \frac{1}{2} \left(\frac{V_{t - \Delta t}^{S^{1}} - V_{t - \Delta t}^{S^{0}}}{\Delta S} + \frac{V_{t}^{S^{1}} - V_{t}^{S^{0}}}{\Delta S}\right) \nonumber \\
+    & \quad - r \frac{1}{2} \left(V_{t - \Delta t}^{S^{0}} + V_{t}^{S^{0}}\right) = 0 \nonumber \\
+    & \left(\frac{1}{\Delta t} + \frac{r S^{0}}{2 \Delta S} + \frac{r}{2}\right) V_{t - \Delta t}^{S^{0}} + \left(-\frac{r S^{0}}{2 \Delta S}\right) V_{t - \Delta t}^{S^{1}} \nonumber \\
+    & \quad = \left(\frac{1}{\Delta t} - \frac{r S^{0}}{2 \Delta S} - \frac{r}{2}\right) V_{t}^{S^{0}} + \left(\frac{r S^{0}}{2 \Delta S}\right) V_{t}^{S^{1}}
+\end{align}
+
+At the upper bound, immediate out bound point is $ V^{n + 1} = 2 V^{n} - V^{n - 1} $ and the central limit discretization on the bound will be $ \frac{2 V^{n} - V^{n - 1} - V^{n - 1}}{2 \Delta S} = \frac{V^{n} - V^{n - 1}}{\Delta S}$.
+The discretization of PDE on the upper bound will be as follows.
+\begin{align}
+    & \frac{V_{t - \Delta t}^{S^{n}} - V_{t}^{S^{n}}}{-\Delta t} + r S^{n} \frac{1}{2} \left(\frac{V_{t - \Delta t}^{S^{n}} - V_{t - \Delta t}^{S^{n - 1}}}{\Delta S} + \frac{V_{t}^{S^{n}} - V_{t}^{S_{n-1}}}{\Delta S}\right) \nonumber \\
+    & \quad -r \frac{1}{2} \left(V_{t - \Delta t}^{S^{n}} + V_{t}^{S^{n}}\right) = 0 \nonumber \\
+    & \left(\frac{r S^{n}}{2 \Delta S}\right) V_{t - \Delta t}^{S^{n - 1}} + \left(\frac{1}{\Delta t} - \frac{r S^{n}}{2 \Delta S} + \frac{r}{2}\right) V_{t - \Delta t}^{S^{n}} \nonumber \\
+    & \quad = \left(-\frac{r S^{n}}{2 \Delta S}\right) V_{t}^{S^{n - 1}} + \left(\frac{1}{\Delta t} + \frac{r S^{n}}{\Delta S} - \frac{r}{2}\right) V_{t}^{S^{n}}
+\end{align}
+
+With the boundary condition absorbed into the transition matrix, we re-organize tri-diagonal matrices as follows.
+\begin{align}
+    LHS &= \left| \begin{matrix}
+        1 + \frac{r S^{0} \Delta t}{2 \Delta S} + \frac{r \Delta t}{2} & - \frac{r S^{0} \Delta t}{2 \Delta S} & 0 \\
+        \vdots & \ddots & \vdots \\
+        \frac{r S^* \Delta t}{4 \Delta S} - \frac{\sigma^2 {S^*}^2 \Delta t}{4 (\Delta S)^2} & 1 + \frac{\sigma^2 {S^*}^2 \Delta t}{2 (\Delta S)^2} + \frac{r \Delta t}{2} & -\frac{r S^* \Delta t}{4 \Delta S} - \frac{\sigma^2 {S^*}^2 \Delta t}{4 (\Delta S)^2} \\
+        \vdots & \ddots & \vdots \\
+        0 & -\frac{r S^{n} \Delta t}{\Delta S} & 1 - \frac{r S^{n} \Delta t}{2 \Delta S} + \frac{r \Delta t}{2}
+    \end{matrix} \right| \\ \nonumber \\
+    RHS &= \left| \begin{matrix}
+        1 - \frac{r S^{0} \Delta t}{2 \Delta S} - \frac{r \Delta t}{2} & \frac{r S^{0} \Delta t}{2 \Delta S} & 0 \\
+        \vdots & \ddots & \vdots \\
+        - \frac{r S^* \Delta t}{4 \Delta S} + \frac{\sigma^2 {S^*}^2 \Delta t}{4 (\Delta S)^2} & 1 - \frac{\sigma^2 {S^*}^2 \Delta t}{2 (\Delta S)^2} - \frac{r \Delta t}{2} & \frac{r S^* \Delta t}{4 \Delta S} + \frac{\sigma^2 {S^*}^2 \Delta t}{4 (\Delta S)^2}\\
+        \vdots & \ddots & \vdots \\
+        0 & \frac{r S^{n} \Delta t}{\Delta S} & 1 + \frac{r S^{n} \Delta t}{2 \Delta S} - \frac{r \Delta t}{2}
+    \end{matrix} \right|
+\end{align}
+
+The evolution of the derivative price vector is as follows.
+\begin{align}
+    LHS \left| \begin{matrix} V_{t - \Delta t}^{S^0} \\ \vdots \\ V_{t - \Delta t}^{S^*} \\ \vdots \\ V_{t - \Delta t}^{S^n} \end{matrix}\right| &= RHS \left| \begin{matrix} V_{t}^{S^0} \\ \vdots \\ V_{t}^{S^*} \\ \vdots \\ V_{t}^{S^n} \end{matrix}\right| \\
+    LHS \cdot V_{t - \Delta t} &= RHS \cdot V_{t}
+\end{align}
+
+The finite difference solving process is the the governed by the following system.
+\begin{equation}
+    V_{t - \Delta t} = {LHS}^{-1} \cdot RHS \cdot V_{t} \label{BS PDE discretized}
+\end{equation}
+
+When the PDE is Homogeneous, formula \ref{BS PDE discretized} can be transformed for engineering benefit as below
+\begin{equation}
+    V_{t - \Delta t}' = V_{t}' \cdot RHS' \cdot {LHS'}^{-1}
+\end{equation}
+
+
+\section{Convergence Speed Analysis}
+
+One major benefit from the Crank-Nicolson method is the second order convergence rate on the the time discretization. To prove it, we apply Taylor expansion to $ V_{t - \Delta t}^{*} $, $ V_{*}^{S - \Delta S} $ and $ V_{*}^{S + \Delta S} $ till second order with respect to time and third order with respect to space.
+\begin{align}
+    V_{t - \Delta t}^{*} &= V_{t}^{*} - \frac{\partial V_{t}^{*}}{\partial t} \Delta t + \frac{1}{2} \frac{\partial^2 V_{t}^{*}}{\partial t^2} (\Delta t)^2 + \mathcal{O}\left(\left(\Delta t\right)^3\right) \\
+    V_{*}^{S - \Delta S} &= V_{*}^{S} - \frac{\partial V_{*}^{S}}{\partial S} \Delta S + \frac{1}{2} \frac{\partial^2 V_{*}^{S}}{\partial S^2} (\Delta S)^2 - \frac{1}{6} \frac{\partial^3 V_{*}^{S}}{\partial S^3} (\Delta S)^3 + \mathcal{O}\left(\left(\Delta S\right)^4\right) \\
+    V_{*}^{S + \Delta S} &= V_{*}^{S} + \frac{\partial V_{*}^{S}}{\partial S} \Delta S + \frac{1}{2} \frac{\partial^2 V_{*}^{S}}{\partial S^2} (\Delta S)^2 + \frac{1}{6} \frac{\partial^3 V_{*}^{S}}{\partial S^3} (\Delta S)^3 + \mathcal{O}\left(\left(\Delta S\right)^4\right)
+\end{align}
+
+Plug above ones into derivative discretizations $ \frac{V_{t - \Delta t}^{*} - V_{t}^{*}}{-\Delta t} $,  $ \frac{V_{*}^{S + \Delta S} - V_{*}^{S - \Delta S}}{2 \Delta S} $ and $ \frac{V_{*}^{S + \Delta S} - 2 V_{*}^{S} + V_{*}^{S - \Delta S}}{(\Delta S)^2} $ to find the follow relationships, omitting any residual terms higher than the order of two.
+\begin{align}
+    \frac{V_{t - \Delta t}^{*} - V_{t}^{*}}{-\Delta t} &= \frac{\partial V_{t}^{*}}{\partial t} - \frac{1}{2} \frac{\partial^2 V_{t}^{*}}{\partial t^2} \Delta t + \mathcal{O}\left(\left(\Delta t\right)^2\right) \\
+    \frac{V_{*}^{S + \Delta S} - V_{*}^{S - \Delta S}}{2 \Delta S} &= \frac{\partial V_{*}^{S}}{\partial S} + \mathcal{O}\left(\left(\Delta S\right)^2\right) \\
+    \frac{V_{*}^{S + \Delta S} - 2 V_{*}^{S} + V_{*}^{S - \Delta S}}{(\Delta S)^2} &= \frac{\partial^2 V_{*}^{S}}{\partial S^2} + \mathcal{O}\left(\left(\Delta S\right)^2\right)
+\end{align}
+
+Plug discretization into formula \ref{BS PDE CN Discretized} to get the following equation.
+\begin{align}
+    & \frac{\partial V_{t}^{S}}{\partial t} - \frac{1}{2} \frac{\partial^2 V_{t}^{S}}{\partial t^2} \Delta t + \mathcal{O}\left(\left(\Delta t\right)^2\right) + r S \frac{1}{2} \left(\frac{\partial V_{t - \Delta t}^{S}}{\partial S} + \frac{\partial V_{t}^{S}}{\partial S} + \mathcal{O}\left(\left(\Delta S\right)^2\right)\right) \nonumber \\
+    & \quad + \frac{1}{2} \sigma^2 S^2 \left(\frac{\partial^2 V_{t - \Delta t}^{S}}{\partial S^2} + \frac{\partial^2 V_{t}^{S}}{\partial S^2} + \mathcal{O}\left(\left(\Delta S\right)^2\right)\right) \nonumber \\
+    & \quad - r S \frac{1}{2} \left(V_{t - \Delta t}^{S} + V_{t}^{S}\right) = 0 \label{BS PDE CN reverted}
+\end{align}
+
+Since base point of is $ V_{t}^{S} $, further discretization of derivatives on time axis is applied as below.
+\begin{align}
+    \frac{\partial V_{t - \Delta t}^{S}}{\partial S} + \mathcal{O}\left(\left(\Delta S\right)^2\right) &= \frac{\partial V_{t}^{S}}{\partial S} - \frac{\partial \frac{\partial V_{t}^{S}}{\partial S}}{\partial t} \Delta t + \mathcal{O}\left(\left(\Delta t\right)^2, \left(\Delta S\right)^2\right) \\
+    \frac{\partial^2 V_{t - \Delta t}^{S}}{\partial S^2} + \mathcal{O}\left(\left(\Delta S\right)^2\right) &= \frac{\partial^2 V_{t}^{S}}{\partial S^2} - \frac{\partial \frac{\partial^2 V_{t}^{S}}{\partial S^2}}{\partial t} \Delta t + \mathcal{O}\left(\left(\Delta t\right)^2, \left(\Delta S\right)^2\right)
+\end{align}
+
+With further time discretization on derivatives, formula \ref{BS PDE CN reverted} transforms into the following.
+\begin{align}
+    & \frac{\partial V_{t}^{S}}{\partial t} - \frac{1}{2} \frac{\partial^2 V_{t}^{S}}{\partial t^2} \Delta t + r S \frac{1}{2} \left(\frac{\partial V_{t}^{S}}{\partial S} - \frac{\partial \frac{\partial V_{t}^{S}}{\partial S}}{\partial t} \Delta t + \frac{\partial V_{t}^{S}}{\partial S}\right) \nonumber \\
+    & \quad + \frac{1}{2} \sigma^2 S^2 \frac{1}{2} \left(\frac{\partial^2 V_{t}^{S}}{\partial S^2} - \frac{\partial \frac{\partial^2 V_{t}^{S}}{\partial S^2}}{\partial t} \Delta t + \frac{\partial^2 V_{t}^{S}}{\partial S^2}\right) \nonumber \\
+    & \quad -r \frac{1}{2} \left(V_{t}^{S} - \frac{\partial V_{t}^{S}}{\partial t} \Delta t + V_{t}^{S}\right) + \mathcal{O}\left(\left(\Delta t\right)^2, \left(\Delta S\right)^2\right) = 0 \nonumber \\
+    & \frac{\partial V_{t}^{S}}{\partial t} + r S \frac{\partial V_{t}^{S}}{\partial S} + \frac{1}{2} \sigma^2 S^2 \frac{\partial^2 V_{t}^{S}}{\partial S^2} -r V_{t}^{S} + \mathcal{O}\left(\left(\Delta t\right)^2, \left(\Delta S\right)^2\right) \nonumber \\
+    & \quad - \frac{1}{2} \left(\frac{\partial^2 V_{t}^{S}}{\partial t^2} + r S \frac{\partial \frac{\partial V_{t}^{S}}{\partial S}}{\partial t} + \frac{1}{2} \sigma^2 S^2 \frac{\partial \frac{\partial^2 V_{t}^{S}}{\partial S^2}}{\partial t} - r \frac{\partial V_{t}^{S}}{\partial t} \right) \Delta t = 0 \label{BS PDE CN reverted 2}
+\end{align}
+
+Because the expression $ \frac{\partial^2 V_{t}^{S}}{\partial t^2} + r S \frac{\partial \frac{\partial V_{t}^{S}}{\partial S}}{\partial t} + \frac{1}{2} \sigma^2 S^2 \frac{\partial \frac{\partial^2 V_{t}^{S}}{\partial S^2}}{\partial t} - r \frac{\partial V_{t}^{S}}{\partial t} $ is indeed the first derivative of the left-hand-side Black-Scholes PDE with respect to $ t $ and this term must be zero, equation \ref{BS PDE CN Discretized} end up to be equivalent to Black Scholes PDE with error term of $ \mathcal{O}\left(\left(\Delta t\right)^2, \left(\Delta S\right)^2\right) $.
+
+\end{document}
