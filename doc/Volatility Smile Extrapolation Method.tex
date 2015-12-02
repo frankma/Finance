@@ -1,0 +1,177 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+
+\title{Volatility Smile Extrapolation Method}
+\author{Frank Ma}
+\date{November 2015}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+    This paper explores a few methods to extrapolate volatility smile.
+    No-arbitrage and curve smoothness are critically concerned.
+\end{abstract}
+
+
+\section{Introduction}
+
+Quotes of volatility instrument are finite, usually scattered sparsely.
+Great amount of applications requires off-node market quotes which could never be available to the practitioners.
+Interpolation and extrapolation techniques are used to find such points uncommon in the liquid market but critical to applications. 
+
+Extrapolation methods are the focus in this paper. 
+he study starts from the constrains of volatility surface and move on to the extrapolation methods.
+The conclusion make proper comparison of the introduced methods.
+
+
+\section{Constrains}
+
+\subsection{Risk Neutral Forward Density}
+Forward value of the option prices $ C_T^T $ or $ P_T^T $ at expiry $ T $ can be written as an expectation of the following.
+\begin{subequations}
+    \begin{align}
+        C_T^T &= \int_{K}^{\infty}{(S_T - K) \mathcal{P}\left(S_T\right)} d S_T \\
+        P_T^T &= \int_{0}^{K}{(K - S_T) \mathcal{P}\left(S_T\right)} d S_T
+    \end{align}
+\end{subequations}
+Where $ \mathcal{P}(S_T) $ defines the forward density function of $ S_T $.
+
+Taking the derivative of option forward prices against strikes to reach the probability cumulative function.
+Note, the Leibniz Integral Rule as
+\begin{equation}
+    \frac{d \int_{a(t)}^{b(t)}{f(x, t)} d x}{d t} = \int_{a(t)}^{b(t)}{\frac{\partial f(x, t)}{\partial t} d x} + f\left(b(t), t\right) \frac{d b(t)}{d t} - f\left(a(t), t\right) \frac{d a(t)}{d t}
+\end{equation}
+
+\begin{subequations}
+    \begin{align}
+        \frac{\partial C_T^T}{\partial K} &= -\int_{K}^{\infty}{\mathcal{P}(S_T) d S_T} + 0 - (K - K) \mathcal{P}(S_T) \cdot 1\nonumber \\
+        &= -\int_{K}^{\infty}{\mathcal{P}(S_T) d S_T} \\
+        \frac{\partial P_T^T}{\partial K} &= \int_{0}^{K}{\mathcal{P}(S_T) d S_T} + \left(K - K\right) \mathcal{P}(S_T) \cdot 1 - 0\nonumber \\
+        &= \int_{0}^{K}{\mathcal{P}(S_T) d S_T}
+    \end{align}
+\end{subequations}
+
+Furthermore, second derivative of option forward price against strike reaches probability density function as bellow
+
+\begin{subequations}
+    \begin{align}
+        \frac{\partial^2 C_T^T}{\partial K^2} &= -0 + 0 + \mathcal{P}(K) \cdot 1 \nonumber \\
+        &= \mathcal{P}(K) \\
+        \frac{\partial^2 P_T^T}{\partial K^2} &= 0 + \mathcal{P}(K) \cdot 1 - 0 \nonumber \\
+        &= \mathcal{P}(K)
+    \end{align}
+\end{subequations}
+
+Apparently, valid value ranges of Cumulative-Density-Function (CDF) and Probability-Density-Function (PDF) are $ [0, 1] $ and $ [0, +\infty) $.
+That means, second derivative of forward option price against strike $ \frac{\partial^2 V}{\partial K^2} $ must be strictly positive to assure arbitrage-free volatility quotes. 
+
+\subsection{Smoothness}
+Smoothness of the volatility surface is also a reasonable concern of volatility surface construction as exotic instrument pricing usually rely on a robust and smooth volatility surface. 
+
+
+\section{Polynomial Method}
+
+Benaim, Dodgson and Kainth (2008) described a method to extrapolate volatility surface on the price domain as following.
+\begin{subequations}
+    \begin{align}
+        P &= K^{\lambda} \cdot e^{\beta_0 + \beta_1 K + \beta_2 K^2} \\
+        C &= K^{-\lambda} \cdot e^{\beta_0 + \beta_1 K^{-1} + \beta_2 K^{-2}}
+    \end{align}
+\end{subequations}
+
+To reconcile the above formula, we change variable from $ K $ to $ X $ with the relationship of $ X = K^{-\eta} $, where $ \eta = 1 $ for out-the-money call options, and $ \eta = -1 $ for out-the-money put options.
+OTM options are used because their prices converge to zero with deeper out-the-money.
+$ \lambda $ term is carefully chosen to enforce the convergence and arbitrage-free.
+For low strikes, $ \lambda \geq 1 $ and for high strikes, $ \lambda \geq 0 $.
+\begin{subequations}
+    \begin{align}   
+        V &= X^{\lambda} \cdot e^{\beta_0 + \beta_1 X + \beta_2 X^2} \\
+        X &= K^{-\eta} \text{, where } \eta = 
+        \begin{cases}
+            1 \text{, if call} \\
+            -1 \text{, if put}
+        \end{cases}
+    \end{align}
+\end{subequations}
+
+First derivative $ \Delta_X $ against $ X $ can be find as bellow.
+\begin{align}
+    \frac{\partial V}{\partial X} &= \lambda X^{\lambda - 1} e^{\beta_0 + \beta_1 X + \beta_2 X^2} + X^{\lambda} e^{\beta_0 + \beta_1 X + \beta_2 X^2} \left(\beta_1 + 2 \beta_2 X \right) \nonumber \\
+    &= \frac{\lambda}{X} V + V \left(\beta_1 + 2 \beta_2 X\right) \nonumber \\
+    &= V \left(\frac{\lambda}{X} + \beta_1 + 2 \beta_2 X\right)
+\end{align}
+
+Second derivative $ \Gamma_X $ against $ X $ is as the follwoing.
+\begin{align}
+    \frac{\partial^2 V}{\partial X^2} &= \frac{\partial V}{\partial X} \left(\frac{\lambda}{X} + \beta_1 + \beta_2 X^2\right) + V \left(-\frac{\lambda}{X^2} + 2 \beta_2\right) \nonumber \\
+    &= \frac{\partial V}{\partial X} \frac{\frac{\partial V}{\partial X}}{V} + V \left(-\frac{\lambda}{X^2} + 2 \beta_2\right) \nonumber \\
+    &= V \left(\left(\frac{\Delta_k}{V}\right)^2 -\frac{\lambda}{X^2} + 2 \beta_2 \right)
+\end{align}
+
+Bijection can be found between the coefficient set of $ \beta_0 $, $ \beta_1 $, and $ \beta_2 $ and the derivative set of $ V $, $ \Delta_X $ and, $ \Gamma_X $.
+\begin{subequations}
+    \begin{align}
+        \beta_2 &= \frac{1}{2} \left(\frac{\lambda}{X^2} + \frac{\Gamma_X}{V} - \left(\frac{\Delta_X}{V}\right)^2\right) \\
+        \beta_1 &= \frac{\Delta_X}{V} - \frac{\lambda}{X} - 2 \beta_2 X \nonumber \\
+        &= - 2 \frac{\lambda}{X} + \frac{\Delta_X}{V} - \left(\frac{\Gamma_X}{V} - \left(\frac{\Delta_X}{V}\right)^2\right) X \\
+        \beta_0 &= \ln{V} - \lambda \ln{X} - \beta_1 X - \beta_2 X^2 \nonumber \\
+        &= \ln{V} - \lambda \ln{X} + \frac{3}{2} \lambda - \frac{\Delta_X}{V} X + \frac{1}{2} \left(\frac{\Gamma_X}{V} - \left(\frac{\Delta_X}{V}\right)^2\right) X^2
+    \end{align}
+\end{subequations}
+
+The natural base is on strike $ K $ not the variable of $ X $.
+Apparently, chain rule can be found the following relationships.
+\begin{subequations}
+    \begin{align}
+        \frac{\partial V}{\partial K} &= \frac{\partial V}{\partial X} \frac{\partial X}{\partial K} \\
+        \frac{\partial^2 V}{\partial K^2} &= \frac{\partial^2 V}{\partial X^2} \left(\frac{\partial X}{\partial K}\right)^2 + \frac{\partial V}{\partial X} \frac{\partial^2 X}{\partial K^2}
+    \end{align}
+\end{subequations}
+
+Interchangeably, derivative against strike $ K $ can be transformed into derivative against the substitute variable $ X $ as the following.
+\begin{subequations}
+    \begin{align}
+        \frac{\partial V}{\partial X} &= \frac{\partial V}{\partial K} \bigg/ \frac{\partial X}{\partial K} \\
+        \frac{\partial^2 V}{\partial X^2} &= \left(\frac{\partial^2 V}{\partial K^2} - \frac{\partial V}{\partial X} \frac{\partial^2 X}{\partial K^2}\right) \bigg/ \left(\frac{\partial X}{\partial K}\right)^2
+    \end{align}
+\end{subequations}
+
+
+Where first and second derivative of $ X $ against K can be found with the cases of $ \eta $ as belows.
+\begin{subequations}
+    \begin{align}
+        \frac{\partial X}{\partial K} &= 
+        \begin{cases}
+            -K^{-2}, &\eta = 1 \\
+            1, &\eta = -1
+        \end{cases}\\
+        \frac{\partial^2 X}{\partial K^2} &= 
+        \begin{cases}
+            2 K^{-3}, &\eta = 1 \\
+            0, &\eta = -1
+        \end{cases}
+    \end{align}
+\end{subequations}
+
+
+\section{Conclusion}
+
+Conclusion
+
+
+\begin{thebibliography}{9}
+    \bibitem{An arbitrage-free method for smile extrapolation} 
+    Benaim S., Dodgson M., and Kainth D.
+    \textit{An arbitrage-free method for smile extrapolation}
+    Technical report, Royal Bank of Scotland, 2008
+    
+    \bibitem{Smile Interpolation and Extrapolation}
+    Iwashita Y.
+    \textit{Smile Interpolation and Extrapolation}
+    OpenGamma Quantitative Research n. 25, 2014
+\end{thebibliography}
+
+\end{document}

@@ -127,7 +127,8 @@ When the PDE is Homogeneous, formula \ref{BS PDE discretized} can be transformed
 
 \section{Convergence Speed Analysis}
 
-One major benefit from the Crank-Nicolson method is the second order convergence rate on the the time discretization. To prove it, we apply Taylor expansion to $ V_{t - \Delta t}^{*} $, $ V_{*}^{S - \Delta S} $ and $ V_{*}^{S + \Delta S} $ till second order with respect to time and third order with respect to space.
+One major benefit from the Crank-Nicolson method is the second order convergence rate on the the time discretization.
+To prove it, we apply Taylor expansion to $ V_{t - \Delta t}^{*} $, $ V_{*}^{S - \Delta S} $ and $ V_{*}^{S + \Delta S} $ till second order with respect to time and third order with respect to space.
 \begin{align}
     V_{t - \Delta t}^{*} &= V_{t}^{*} - \frac{\partial V_{t}^{*}}{\partial t} \Delta t + \frac{1}{2} \frac{\partial^2 V_{t}^{*}}{\partial t^2} (\Delta t)^2 + \mathcal{O}\left(\left(\Delta t\right)^3\right) \\
     V_{*}^{S - \Delta S} &= V_{*}^{S} - \frac{\partial V_{*}^{S}}{\partial S} \Delta S + \frac{1}{2} \frac{\partial^2 V_{*}^{S}}{\partial S^2} (\Delta S)^2 - \frac{1}{6} \frac{\partial^3 V_{*}^{S}}{\partial S^3} (\Delta S)^3 + \mathcal{O}\left(\left(\Delta S\right)^4\right) \\
