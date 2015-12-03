@@ -1,0 +1,193 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+
+\title{Caplets Volatility Surface SABR Bootstrapper}
+\author{Frank Ma}
+\date{June 2015}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+
+This paper describes a method to bootstrap cap quotes and calibrate a parametrized model of caplet volatility surface.
+The general idea is to calibrate while bootstrapping and reduce the interpolation on cap volatilities or prices to the minimum.
+Two fitting goals are under scrutiny: the repricing of calibration instrument and smoothness of caplet volatility surface.
+
+\end{abstract}
+
+\section{Introduction}
+
+Caplets and floorlets are not directly traded in the market.
+They must be implied from caps and floors which are actively traded standardized instruments.
+Caps and floors are quoted in either flat black volatility or premium.
+Two dimensions define caps and floors: expiry and strike.
+The expiry typically ranges from 1 Year to 15 Years while the strikes are a set of absolute rates along with ATM straddles with floating term structure.
+Any given cap and floor consist of multiple consecutive caplets and floorlets, each is a vanilla option on Libor rate.
+\begin{align}
+    {payoff}_{caplet}\left(i - 1, i, K\right) &= \tau\left(i - 1, i\right) \left(Libor\left(i - 1, i|{i - 1}\right) - K\right)^{+} \\
+    P_{caplet} \left(i-1, i, K, \sigma_i^{caplet}\right) &= B{(0, i)} \mathrm{E}^{\mathrm{Q}} \left[{(L(i - 1, i) - K)}^{+}\right] \\
+    P_{cap}\left(0, T, K, \sigma_T^{cap}\right) &= \sum_{i=1}^T{P_{caplet}\left(i - 1, i, K, \sigma_i^{caplet}\right)}
+\end{align}
+
+When bootstrapping caplet volatility surfaces out of cap quotes, two major challenges arises.
+Firstly, from one cap expiry to the next, multiple caplets exists while only one incremental cap price is known.
+To solve such an over-specified problem, assumptions are required to generate unique solution.
+Secondly, plainly bootstrap ATM straddles is not applicable as the swap rates vary across different expiries.
+
+
+\section{Methodologies}
+
+In this section, we start from presenting the commonly used term structure bootstrapping method and corresponding issues on constructing the caplet volatility surface.
+Then a global bootstrapping method is introduced to overcome the problems from the term structure bootstrapping method.
+To conclude this section, we will overview the pro and cons of the two methods.
+
+\subsection{Term structure bootstrapping method}
+
+Term structure bootstrapping method is based on a straightforward idea: even the number of unknown caplets to the number of known caps by either placing a local interpolator on cap volatility term structure or assuming a specific term structure of caplet volatilities between two cap expiries.
+In practice, the method branches to many varieties and are widely used because it is straightforward to comprehend, easy to implement and fast to solve.
+Most practitioners prefer to implement local interpolations such as linear, spline or piece wise constant on cap flat volatilities.
+
+Under this method, caps are broken down by strikes and caplet are bootstrapped on interpolated cap vols.
+The direct benefit is almost surely repricing of each calibration instruments with minimum of errors.
+Two notorious issues, however, arise: exclusion of ATM straddles and a seriously bumpy caplet volatility surface.
+Skipping ATM quotes means excluding a great portion of high quality data as straddles are usually most frequently traded.
+A non-smooth caplet implied volatility surface not only complicates the exotic instrument pricing but also critically creates undesired trading signal noises that a false arbitrage opportunities exists from the vol surface.
+In more common situation, practitioners further fit the bootstrapped caplet volatility surface into a parametrized model such as SABR.
+Low quality inputs definitely discredit the trustworthy of the later model outputs.
+
+\subsection{SABR based bootstrapping method}
+
+Since we meant to parametrize the caplet volatility surface into SABR model space, the proposed approach adopts SABR model calibration while doing the bootstrapping.
+Any unnecessary assumptions of interpolation on either cap volatilities or prices are lifted but the only interpolation is applied to SABR model parameters.
+SABR parameters are interpolated from one cap expiry to the next and interim SABR models are created to price the corresponding caplets.
+Direct benefits are apparent: no distinguish is ever needed between fixed and float strikes and volatility smile is naturally captured by the model.
+In brief, we are proposing a global bootstrapper method.
+
+Since $ \beta $ and $ \rho $ both control the skewness of implied vol surface, we remove the freedom of beta but choose a deterministic value to simplify the calibration work.
+Note a lognormal model is formed when setting $ \beta $ to one; 
+a normal model is configured when setting $ \beta $ to zero. 
+We assume that model parameter interpolation will be applied to the vol of vol $ \nu $, skewness $ \rho $, and ATM vol level $ \alpha $ as the following.
+\begin{subequations}
+    \begin{align}
+        \nu_{t + j} &= \nu_{t} + \frac{\nu_{t + 1} - \nu_{t}}{\tau_{t + 1} - \tau_t} \left(\tau_{t + j} - \tau_t\right) \\
+        \rho_{t + j} &= \rho_{t} + \frac{\rho_{t + 1} - \rho_{t}}{\tau_{t + 1} - \tau_t} \left(\tau_{t + j} - \tau_t\right) \\
+        \alpha_{t + j} &= \alpha_{t} + \frac{\alpha_{t + 1} - \alpha_{t}}{\tau_{t + 1} - \tau_t} \left(\tau_{t + j} - \tau_t\right) \\
+        &where, \quad 0< j < 1 \nonumber
+    \end{align}
+\end{subequations}
+
+While bootstrapping, ATM cap price at previous period  $ Cap^{ATM_{t}}{(0, t - 1)} $ is not know but can be implied from the fitted models.
+Note $ l $ denotes the length of the underlying libor rate.
+\begin{align}
+    Cap^{ATM_{t}}{(0, t - 1)} = \sum_{i = 0}^{t - 1 - l}{Cplt\left(i, i + l, K^{ATM_{t}}, \sigma_{B}^{SABR}\left(i, K^{ATM_{t}}\right)\right)} \\
+    \sum_{j = -1}^{- l}{Cplt(t + j, t + j + l, K^{ATM_{t}})} = Cap^{ATM_{t}}{(0, t)} - Cap^{ATM_{t}}{(0, t - 1)}
+\end{align}
+
+For the first cap expiry, as interpolation is not plausible.
+Flat extrapolation is applied.
+
+\subsection{Term structure and global bootstrapping method}
+
+Empirical evidences show apparent trade-offs between exact reprice of the cap prices and smoothness of caplet volatility surface with minimum arbitrage opportunities.
+Given the importance of caplet volatility surfaces on pricing off-node caps and exotic instruments, we are better off to have a smooth volatility surface while ensuring calibration instrument re-pricing are within an acceptable tolerance.
+Furthermore, given that SABR model is not guaranteed to generate an arbitrage-free volatility surface, we need to be cautious on using the calibrated results at the wings of the volatility surface and extrapolation.
+
+\section{SABR Model}
+
+SABR model is a stochastic volatility model capable of capturing the volatility smile.
+One primary use of this model is to interpolate volatility surface. 
+\begin{subequations} \label{SABR SDEs}
+    \begin{align} 
+        dF_t &= \alpha_t F_t^{\beta} dW^{F_t}, \quad F_0 = F\left(0, T\right) \label{SABR fwd SDE} \\
+        d\alpha_t &= {\nu}_t \alpha_t dW^{\alpha_t}, \quad \alpha_0 = \alpha \label{SABR vol SDE} \\
+        dW^{F} dW^{\alpha} &= \rho dt, \quad \rho \in \left[-1, 1\right] \label{SABR rand correl}
+    \end{align}
+\end{subequations}
+
+Hangan et al \cite{Managing Smile Risk} present an approximation formula for vanilla European option pricings in the SABR model.
+The equivalent implied black volatility of an European option with strike $ K $ and expiry $ T $ is approximated by
+\begin{subequations} \label{SABR lognormal vol}
+    \begin{align}
+        \sigma_B\left(F, K\right) &\approx \frac{\alpha}{{\left(FK\right)}^{\frac{1 - \beta}{2}} \left(1 + \frac{{(1 - \beta)}^{2}}{24} \ln^{2}{\frac{F}{K}} + \frac{{(1 - \beta)}^{4}}{1920} \ln^{4}{\frac{F}{K}}\right)} \nonumber \cdot{\frac{z}{x\left(z\right)}} \nonumber \\
+        & \cdot{\left(1 + \left(\frac{\alpha^2 {(1 - \beta)}^{2}}{24 {(F K)}^{1 - \beta}} + \frac{\alpha \beta \nu \rho}{4 {(F K)}^{\frac{1 - \beta}{2}}} + \frac{\nu^2 \left(2 - 3 \rho^2\right)}{24} \right) T \right)} \\
+        z &= \frac{\nu}{\alpha} {(F K)} ^ {\frac{1 - \beta}{2}} \ln{\frac{F}{K}} \\
+        x\left(z\right) &= \ln{\frac{\sqrt{1 - 2 \rho z + z^2} - \rho + z}{1 - \rho}}
+    \end{align}
+\end{subequations}
+
+Similarly, the normal volatility approximation is provided as the following.
+\begin{subequations} \label{SABR normal vol}
+    \begin{align}
+        \sigma_N\left(F, K\right) &\approx \alpha \left(F K\right)^{\frac{\beta}{2}} \frac{1 + \frac{1}{24} \ln^2{\frac{F}{K} + \frac{1}{1920} \ln^4{\frac{F}{K}}}}{1 + \frac{\left(1 - \beta\right)^2}{24} \ln^2{\frac{F}{K} + \frac{\left(1 - \beta\right)^2}{1920} \ln^4{\frac{F}{K}}}} \cdot{\frac{z}{x\left(z\right)}} \nonumber \\
+        & \cdot{\left(1 + \left(-\frac{\alpha^2 \beta \left(2 - \beta\right)}{24 \left(F K\right)^{1 - \beta}} + \frac{\alpha \beta \nu \rho}{4 \left(F K\right)^{\frac{1 - \beta}{2}}} + \frac{\nu^2 \left(2 - 3 \rho^2\right)}{24}  \right) T\right)} \\
+        z &= \frac{\nu}{\alpha} \left(F K\right)^{\frac{1 - \beta}{2}} \ln{\frac{F}{K}} \\
+        x\left(z\right) &= \ln{\frac{\sqrt{1 - 2 \rho z + z^2} - \rho + z}{1 - \rho}}
+    \end{align}
+\end{subequations}
+
+Under normal volatility model, the restriction of strictly positive on forward and strikes should be lifted.
+However, the approximation of normal volatility in formula \ref{SABR normal vol} might yield imaginary number under the case of negative forward or strike. An intuitive fix is to force beta to zero which reduces the formula \ref{SABR normal vol} to the following.
+\begin{subequations} \label{SABR normal vol with zero beta}
+    \begin{align}
+        \sigma_N\left(F, K\right) &\approx \alpha \cdot \frac{z}{x\left(z\right)} \cdot \left(1 + \frac{\nu^2 \left(2 - 3 \rho^2\right)}{24} T\right) \\
+        z &= \frac{\nu}{\alpha} \left(F - K\right) \\
+        x\left(z\right) &= \ln{\frac{\sqrt{1 - 2 \rho z + z^2} - \rho + z}{1 - \rho}}
+    \end{align}
+\end{subequations}
+
+
+\section{Calibration}
+
+When calibrating SABR model, we usually assume a specific $ \beta $ level to start with.
+That means the rest three model parameters ($ \nu, \rho, \alpha $) need to be searched.
+From the nature of the model, each parameter corresponds to a certain feature of the implied volatility surface.
+In general, $ \nu $ controls the convexity of the surface;
+$ \rho $ changes the skewness;
+and $ \alpha $ correspond to the at-the-money volatility level.
+
+Note, $ \alpha $ term has an analytical form, when at-the-money implied volatility is known and $ \beta $ and $ \rho $ are given.
+For the ATM implied volatility, SABR black volatility approximation formula \ref{SABR normal vol} will be reduced to the following.
+\begin{align}
+    \sigma_B\left(F, F\right) &\approx term1 \cdot term2 \cdot term3 \\
+    term1 &= \frac{\alpha}{F^{1 - \beta}} \nonumber \\
+    term2 &= \lim_{z \to 0} \frac{z}{x(z)} \nonumber \\
+    &= \lim_{z \to 0} \frac{1}{\frac{1 - \rho}{\sqrt{1 - 2 \rho z + z^2} - \rho + z} \cdot \frac{\frac{1}{2} {(1 - 2 \rho z + z^2)}^{-\frac{1}{2}} (- 2 \rho + 2 z) + 1}{1 - \rho}} \nonumber \\
+    &= \lim_{z \to 0} \sqrt{1 - 2 \rho z + z^2} \nonumber \\
+    &= 1 \nonumber \\
+    term3 &= 1 + \left(\frac{\alpha^2 {(1 - \beta)}^2}{24 F^{2 - 2\beta}} + \frac{\alpha \beta \nu \rho}{4 F^{1 - \beta}} + \frac{\nu^2 \left(2 - 3 \rho^2\right)}{24} \right) T \nonumber
+\end{align}
+
+Reorganize to a cubic polynomial equation on $ \alpha $ as the following.
+\begin{equation} \label{alpha cubic polynomial}
+    \frac{{(1 - \beta)}^2 T}{24 F^{3 - 3 \beta}} \alpha^3 + \frac{\beta \nu \rho T}{4 F^{2 - 2 \beta}} \alpha^2 + \frac{1 + \frac{\nu^2 \left(2 - 3 \rho^2\right)}{24} T}{F^{1 - \beta}} \alpha - \sigma_B\left(F, F\right) = 0
+\end{equation}
+
+The solution of the cubic polynomial equation \ref{alpha cubic polynomial} might range from one to three.
+Criteria must be satisfied that $ \alpha $ should be strictly larger than zero.
+When multiple greater-than-zero solutions coexists, closest one to the $ \alpha $ approximation will be chosen.
+\begin{equation}
+    \alpha \approx \frac{\sigma_B(F, F)}{F^{1 - \beta}}
+\end{equation}
+
+Similarly, the cubic polynomial equation of normal volatility approximation on $ \alpha $ is as below.
+\begin{equation}
+    \frac{\left(\left(1 - \beta\right)^2 - 1\right) T}{24 F^{2 - 3 \beta}} \alpha^3 + \frac{\beta \nu \rho T}{4 F^{1 - 2 \beta}} \alpha^2 + \frac{1 +  \frac{\nu^2 \left(2 - 3 \rho^2 T \right)}{24} }{F^{-\beta}} \alpha - \sigma_N\left(F, F\right) = 0
+\end{equation}
+
+With the approximation to break the tie.
+\begin{equation}
+    \alpha \approx \frac{\sigma_N \left(F, F \right)}{F^{-\beta}}
+\end{equation}
+
+
+\begin{thebibliography}{9}
+\bibitem{Managing Smile Risk}
+Hagan, P., Kumar, D., Lesniewski, A., Woodward, D.
+\textit{Managing Smile Risk}
+Wilmott Magazine, September, 2002.
+\end{thebibliography}
+
+\end{document}
