@@ -32,7 +32,6 @@ class TestFXQuotesConverter(TestCase):
         rate_dom = 0.04
         rate_for = 0.02
         strikes = [50.0, 100.0, 150.0, 200.0, 250.0]
-        # strikes = [50.0]
         vols = [0.3, 0.25, 0.2, 0.21, 0.26]
 
         for tau in taus:
@@ -44,3 +43,4 @@ class TestFXQuotesConverter(TestCase):
                 self.assertAlmostEqual(strike, strike_rep, places=12,
                                        msg='vol %.4f to strike %.2f at delta %.12f conversion failed at tau %.4f'
                                            % (vol, strike, delta, tau))
+        pass
