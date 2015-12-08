@@ -1,5 +1,7 @@
 from unittest import TestCase
 
+import numpy as np
+
 from src.Utils.BSM import BSM
 from src.Utils.FXQuotesConverter import FXQuotesConverter
 from src.Utils.OptionType import OptionType
@@ -53,6 +55,7 @@ class TestFXQuotesConverter(TestCase):
                 vol = vols[kdx]
                 opt_type = OptionType.call if strike > spot else OptionType.put  # OTM quotes convert much faster
                 delta = BSM.delta(spot, strike, tau, rate_dom, rate_for, vol, opt_type=opt_type)
+                delta *= np.exp(rate_for * tau)  # make it forward delta
                 strike_rep = FXQuotesConverter.vol_to_strike(vol, delta, tau, spot, rate_dom, rate_for)
                 self.assertAlmostEqual(strike, strike_rep, places=12,
                                        msg='vol %.4f to strike %.2f at delta %.12f conversion failed at tau %.4f'
@@ -61,18 +64,51 @@ class TestFXQuotesConverter(TestCase):
 
     def test_convert(self):
         spot = 1.10265
-        tau = 0.498288843
-        rate_dom = 0.00262834
-        rate_for = -0.005218988
-        quotes = {'rr_10': -0.030858411,
-                  'rr_25': -0.018367746,
-                  'atm_50': 0.103690639,
-                  'sm_25': 0.002870256,
-                  'sm_10': 0.008569103}
+        tau = 0.019164956
+        rate_dom = 0.001318942
+        rate_for = -0.003122754
+        quotes = {'rr_10': 0.00212848,
+                  'rr_25': 0.00184351,
+                  'atm_50': 0.101191497,
+                  'sm_25': 0.001390179,
+                  'sm_10': 0.003914945}
 
         converter = FXQuotesConverter(spot, tau, rate_dom, rate_for, quotes)
         strikes, vols = converter.convert()
 
+        print(tau)
+        print(strikes)
+        print(vols)
+
+        tau = 5.002053388
+        rate_dom = 0.014129503
+        rate_for = -0.004354661
+        quotes = {'rr_10': -0.002650901,
+                  'rr_25': -0.001451186,
+                  'atm_50': 0.105951789,
+                  'sm_25': 0.002881223,
+                  'sm_10': 0.010264397}
+
+        converter = FXQuotesConverter(spot, tau, rate_dom, rate_for, quotes)
+        strikes, vols = converter.convert()
+
+        print(tau)
+        print(strikes)
+        print(vols)
+
+        tau = 30.00684463
+        rate_dom = 0.024621777
+        rate_for = 0.011894741
+        quotes = {'rr_10': -0.005413679,
+                  'rr_25': -0.002916912,
+                  'atm_50': 0.12517186,
+                  'sm_25': 0.00078497,
+                  'sm_10': 0.00606068}
+
+        converter = FXQuotesConverter(spot, tau, rate_dom, rate_for, quotes)
+        strikes, vols = converter.convert()
+
+        print(tau)
         print(strikes)
         print(vols)
         pass
