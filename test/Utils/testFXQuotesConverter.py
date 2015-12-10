@@ -50,19 +50,20 @@ class TestFXQuotesConverter(TestCase):
         rate_for = 0.02
         strikes = [130.0, 140.0, 150.0, 160.0, 170.0]
         vols = [0.3, 0.25, 0.2, 0.21, 0.26]
+        is_atm = [False, False, True, False, False]
 
         for tau in taus:
             for kdx, strike in enumerate(strikes):
                 vol = vols[kdx]
                 opt_type = OptionType.call if strike > spot else OptionType.put  # OTM quotes convert much faster
                 delta = BSM.delta(spot, strike, tau, rate_dom, rate_for, vol, opt_type=opt_type)
-                strike_rep = FXQuotesConverter.vol_to_strike(vol, delta, tau, spot, rate_dom, rate_for,
+                strike_rep = FXQuotesConverter.vol_to_strike(vol, delta, tau, spot, rate_dom, rate_for, is_atm[kdx],
                                                              is_forward_delta=False)
                 self.assertAlmostEqual(strike, strike_rep, places=12,
                                        msg='vol %.4f to strike %.2f at delta %.12f conversion failed at tau %.4f'
                                            % (vol, strike, delta, tau))
                 delta *= np.exp(rate_for * tau)  # make it forward delta
-                strike_rep = FXQuotesConverter.vol_to_strike(vol, delta, tau, spot, rate_dom, rate_for,
+                strike_rep = FXQuotesConverter.vol_to_strike(vol, delta, tau, spot, rate_dom, rate_for, is_atm[kdx],
                                                              is_forward_delta=True)
                 self.assertAlmostEqual(strike, strike_rep, places=12,
                                        msg='vol %.4f to strike %.2f at delta %.12f conversion failed at tau %.4f'
@@ -75,13 +76,13 @@ class TestFXQuotesConverter(TestCase):
                 eta = float(opt_type.value)
                 d2 = BSM.calc_d2(spot, strike, tau, rate_dom, rate_for, vol)
                 delta = strike / spot * eta * np.exp(-rate_for * tau) * norm.cdf(eta * d2)
-                strike_rep = FXQuotesConverter.vol_to_strike(vol, delta, tau, spot, rate_dom, rate_for,
+                strike_rep = FXQuotesConverter.vol_to_strike(vol, delta, tau, spot, rate_dom, rate_for, is_atm[kdx],
                                                              is_forward_delta=False, is_premium_adj=True)
                 self.assertAlmostEqual(strike, strike_rep, places=12,
                                        msg='vol %.4f to strike %.2f at delta %.12f conversion failed at tau %.4f'
                                            % (vol, strike, delta, tau))
                 delta *= np.exp(rate_for * tau)  # cancel foreign bound to make forward delta
-                strike_rep = FXQuotesConverter.vol_to_strike(vol, delta, tau, spot, rate_dom, rate_for,
+                strike_rep = FXQuotesConverter.vol_to_strike(vol, delta, tau, spot, rate_dom, rate_for, is_atm[kdx],
                                                              is_forward_delta=True, is_premium_adj=True)
                 self.assertAlmostEqual(strike, strike_rep, places=12,
                                        msg='vol %.4f to strike %.2f at delta %.12f conversion failed at tau %.4f'
