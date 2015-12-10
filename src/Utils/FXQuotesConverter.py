@@ -1,13 +1,18 @@
 import numpy as np
 from scipy.stats import norm
 
+from src.Utils.BSM import BSM
 from src.Utils.OptionType import OptionType
+from src.Utils.Solver.Brent import Brent
+from src.Utils.Solver.IVariateFunction import IUnivariateFunction
+from src.Utils.Solver.NewtonRaphson import NewtonRaphson
 
 __author__ = 'frank.ma'
 
 
 class FXQuotesConverter(object):
-    def __init__(self, spot: float, tau: float, rate_dom: float, rate_for: float, quotes: dict):
+    def __init__(self, spot: float, tau: float, rate_dom: float, rate_for: float, quotes: dict,
+                 is_premium_adj: bool = False, is_forward_delta: bool = True):
         self.tau = tau
         self.spot = spot
         self.rate_dom = rate_dom
@@ -15,6 +20,8 @@ class FXQuotesConverter(object):
         self.quotes = quotes
         self.strikes = None
         self.vols = None
+        self.is_premium_adj = is_premium_adj
+        self.is_forward_delta = is_forward_delta
 
     def convert(self, method: str = 'Newton-Raphson'):
         keys = ['rr_10', 'rr_25', 'atm_50', 'sm_25', 'sm_10']
@@ -26,6 +33,7 @@ class FXQuotesConverter(object):
         ks = np.zeros(np.shape(vols), dtype=float)
         for kdx, delta in enumerate(deltas):
             ks[kdx] = self.vol_to_strike(vols[kdx], delta, self.tau, self.spot, self.rate_dom, self.rate_for,
+                                         is_premium_adj=self.is_premium_adj, is_forward_delta=self.is_forward_delta,
                                          method=method)
         self.strikes = ks
         self.vols = vols
@@ -62,15 +70,50 @@ class FXQuotesConverter(object):
         return vols_vec
 
     @staticmethod
-    def vol_to_strike(sig: float, forward_delta: float, tau: float, spot: float, rate_dom: float, rate_for: float,
-                      is_premium_adj: bool = False, method='Newton-Raphson'):
+    def vol_to_strike(sig: float, delta: float, tau: float, spot: float, rate_dom: float, rate_for: float,
+                      is_premium_adj: bool = False, is_forward_delta: bool = True, method='Newton-Raphson'):
+        opt_type = OptionType.call if delta > 0.0 else OptionType.put
+        eta = float(opt_type.value)
+        bond_for = np.exp(-rate_for * tau)
+
         if is_premium_adj:
-            # TODO: make a proper method search for this
-            raise NotImplementedError('not implemented yet')
+            # in case of premium adjusted, no analytical solution can be easily found hence solve it numerically
+
+            class _ZerothFunc(IUnivariateFunction):
+
+                def evaluate(self, x):
+                    d2 = BSM.calc_d2(spot, x, tau, rate_dom, rate_for, sig)
+                    delta_tgt = eta * x / spot * norm.cdf(eta * d2)
+                    if not is_forward_delta:
+                        delta_tgt *= bond_for
+                    return delta_tgt - delta
+
+            class _FirstFunc(IUnivariateFunction):
+
+                def evaluate(self, x):
+                    d2 = BSM.calc_d2(spot, x, tau, rate_dom, rate_for, sig)
+                    first_derivative = (eta * norm.cdf(eta * d2) - norm.pdf(d2) / sig / np.sqrt(tau)) / spot
+                    if not is_forward_delta:
+                        first_derivative *= bond_for
+                    return first_derivative
+
+            zeroth = _ZerothFunc()
+            first = _FirstFunc()
+
+            if method == 'Brent':
+                bt = Brent(zeroth, 1e-4 * spot, 10.0 * spot)
+                strike = bt.solve()
+            elif method == 'Newton-Raphson':
+                nr = NewtonRaphson(zeroth, first, spot)
+                strike = nr.solve()
+            else:
+                raise ValueError('Unrecognized optimization method %s.' % method)
+
         else:
-            opt_type = OptionType.call if forward_delta > 0.0 else OptionType.put
-            eta = float(opt_type.value)
-            strike = spot / np.exp(eta * norm.ppf(eta * forward_delta) * sig * np.sqrt(tau)
-                                   - (rate_dom - rate_for + 0.5 * (sig ** 2)) * tau)
+            if is_forward_delta:
+                rev_term = eta * norm.ppf(eta * delta) * sig * np.sqrt(tau)
+            else:
+                rev_term = eta * norm.ppf(eta * delta / bond_for) * sig * np.sqrt(tau)
+            strike = spot / np.exp(rev_term - (rate_dom - rate_for + 0.5 * (sig ** 2)) * tau)
 
         return strike
