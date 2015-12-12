@@ -19,7 +19,7 @@ class TestBrent(TestCase):
                 return self.poly(x)
 
         third_order_poly = _PolyMin([3.0, -5.0, 1.0, 1.0])
-        bt = Brent(third_order_poly, -10.0, 4.0 / 3.0)
+        bt = Brent(third_order_poly, -4.0, 4.0 / 3.0)
         res = bt.solve()
         res2 = bt.solve_loc()
         print(res, res2)

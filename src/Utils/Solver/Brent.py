@@ -27,9 +27,11 @@ class Brent(ISolver):
         c = self.a
         d = c
         v_c = v_a
-        flg = False
+        flg = True
+        iterator_count = 0
 
-        while abs(v_b) > self.ABS_TOL or abs(b - a) > self.ABS_TOL:
+        while (abs(v_b) > self.ABS_TOL) or abs(b - a) > self.ABS_TOL:
+            iterator_count += 1
             if abs(v_a - v_c) > self.ABS_TOL and abs(v_b - v_c) > self.ABS_TOL:
                 s = self.inverse_quadratic_method(self.f.evaluate, a, b, c)
             else:
@@ -47,19 +49,25 @@ class Brent(ISolver):
             else:
                 flg = False
 
-            v_a = self.f.evaluate(a)
-            v_b = self.f.evaluate(b)
-            v_s = self.f.evaluate(s)
             d = c
             c = b
 
+            v_s = self.f.evaluate(s)
+            v_a = self.f.evaluate(a)
+            v_b = self.f.evaluate(b)
+            v_c = self.f.evaluate(b)
+
             if v_a * v_s < 0.0:
-                b = s
+                b, v_b = s, v_s
             else:
-                a = s
+                a, v_a = s, v_s
 
             if abs(v_a) < abs(v_b):
                 a, b = b, a
+
+            if iterator_count > self.ITR_TOL:
+                print('WARNING: maximum iteration count (%i) reached' % self.ITR_TOL)
+                break
 
         return b
 
