@@ -27,9 +27,21 @@ class VarianceReplication(object):
     def calc_variance(self):
         # integral starts from zero till highest strike with piecewise constant evaluation towards left
         strikes, prices = self.prepare_replication_portfolio()
-        increment = strikes[1:] - strikes[:-1]
-        increment = np.insert(increment, 0, strikes[0])  # first element is accumulated from zero
-        integral = np.sum(increment * prices / (strikes ** 2))
+        increments = strikes[1:] - strikes[:-1]
+        increments = np.insert(increments, 0, strikes[0])  # first element is accumulated from zero
+        integral = np.sum(increments * prices / (strikes ** 2))
+        return 2.0 * integral / self.b / self.tau
+
+    def calc_variance_cd(self):
+        # central discretize
+        strikes, prices = self.prepare_replication_portfolio()
+        increments = strikes[1:] - strikes[:-1]
+        increments_cd = 0.5 * (increments[1:] + increments[:-1])
+        left = 0.5 * (strikes[1] + strikes[0])
+        increments_cd = np.insert(increments_cd, 0, left)
+        right = 0.5 * (strikes[-2] + strikes[-1])
+        increments_cd = np.insert(increments_cd, increments_cd.__len__() - 1, right)
+        integral = np.sum(increments_cd * prices / (strikes ** 2))
         return 2.0 * integral / self.b / self.tau
 
     @staticmethod
