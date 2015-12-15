@@ -1,10 +1,12 @@
 from math import log
+
 import numpy as np
 from numpy.polynomial.polynomial import polyroots
-from src.Utils.VolType import VolType
-from src.Utils.Black76 import Black76Vec
-from src.Utils.NormalModel import NormalModelVec
+
 from src.Utils.OptionType import OptionType
+from src.Utils.Valuator.Black76 import Black76Vec
+from src.Utils.Valuator.NormalModel import NormalModelVec
+from src.Utils.VolType import VolType
 
 __author__ = 'frank.ma'
 

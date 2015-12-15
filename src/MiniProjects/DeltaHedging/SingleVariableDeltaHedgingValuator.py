@@ -1,7 +1,7 @@
 import numpy as np
 
 from src.Utils import OptionType
-from src.Utils.BSM import BSMVec
+from src.Utils.Valuator.BSM import BSMVec
 
 __author__ = 'frank.ma'
 

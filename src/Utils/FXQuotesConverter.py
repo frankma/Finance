@@ -1,10 +1,11 @@
 import numpy as np
 from scipy.stats import norm
-from src.Utils.BSM import BSM
+
 from src.Utils.OptionType import OptionType
 from src.Utils.Solver.Brent import Brent
 from src.Utils.Solver.IVariateFunction import IUnivariateFunction
 from src.Utils.Solver.NewtonRaphson import NewtonRaphson
+from src.Utils.Valuator.BSM import BSM
 
 __author__ = 'frank.ma'
 

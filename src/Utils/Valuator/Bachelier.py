@@ -1,5 +1,5 @@
-from src.Utils.NormalModel import NormalModel
 from src.Utils.OptionType import OptionType
+from src.Utils.Valuator.NormalModel import NormalModel
 
 __author__ = 'frank.ma'
 

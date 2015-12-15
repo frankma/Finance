@@ -3,8 +3,8 @@ from unittest import TestCase
 
 import numpy as np
 
-from src.Utils.Black76 import Black76, Black76Vec
 from src.Utils.OptionType import OptionType
+from src.Utils.Valuator.Black76 import Black76, Black76Vec
 
 __author__ = 'frank.ma'
 

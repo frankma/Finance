@@ -25,23 +25,12 @@ class VarianceReplication(object):
         return strikes, prices
 
     def calc_variance(self):
-        # integral starts from zero till highest strike with piecewise constant evaluation towards left
+        # follow the CBOE VIX white paper method to integrate OTM option prices with central discretization
         strikes, prices = self.prepare_replication_portfolio()
-        increments = strikes[1:] - strikes[:-1]
-        increments = np.insert(increments, 0, strikes[0])  # first element is accumulated from zero
+        increments = 0.5 * (strikes[2:] - strikes[:-2])
+        increments = np.insert(increments, 0, strikes[1] - strikes[0])  # first element is second minus first
+        increments = np.append(increments, strikes[-1] - strikes[-2])  # last element is last minus second last
         integral = np.sum(increments * prices / (strikes ** 2))
-        return 2.0 * integral / self.b / self.tau
-
-    def calc_variance_cd(self):
-        # central discretize
-        strikes, prices = self.prepare_replication_portfolio()
-        increments = strikes[1:] - strikes[:-1]
-        increments_cd = 0.5 * (increments[1:] + increments[:-1])
-        left = 0.5 * (strikes[1] + strikes[0])
-        increments_cd = np.insert(increments_cd, 0, left)
-        right = 0.5 * (strikes[-2] + strikes[-1])
-        increments_cd = np.insert(increments_cd, increments_cd.__len__() - 1, right)
-        integral = np.sum(increments_cd * prices / (strikes ** 2))
         return 2.0 * integral / self.b / self.tau
 
     @staticmethod
