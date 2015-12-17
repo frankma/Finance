@@ -1,0 +1,198 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+
+\title{BAW Model and Extensions}
+\author{Frank Ma}
+\date{November 2015}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+    This paper demonstrates an analytical approximation of American style option solutions named as the BAW model.
+    Derivations and extensions are provided in details.
+\end{abstract}
+
+
+\section{Introduction}
+
+While European style option is analytically priced by Black-Scholes-Merton model, American style option is usually valued numerically. 
+Barone-Adesi and Whaley (1987) demonstrated an approximation approach to evaluate American style options semi-analytically. 
+The method starts from the intuitive fact that any American option must be no cheaper than the European option with same term and strike.
+\begin{equation}
+    V_{Ame} = V_{Eur} + V_{prem}
+\end{equation}
+Where $ V_{prem} \geq 0 $, and all three components in above must be governed by the general Black-Scholes-Merton model Partial Differential Equation as below 
+\begin{equation}
+    \frac{\partial V}{\partial t} + \left(r - q\right) S \frac{\partial V}{\partial S} + \frac{1}{2} \sigma^2 S^2 \frac{\partial^2 V}{\partial S^2} - r V = 0
+\end{equation}
+
+BAW model then focuses on the early exercise premium $ V_{prem} $ term and manages to find an close enough approximation of PDE which is semi-analytically solvable.
+The model finally searches for critical spot price $ S^* $ at which point, option is optimum to be exercised immediately to max out the benefit to the option holder.
+\begin{equation} \label{BAW formula}
+    V_{Ame} = 
+    \begin{cases} 
+        V_{Eur} + V_{prem}, & \mbox{if $ \eta S < \eta S^* $} \\
+        \eta \left(S - K\right), & \mbox{if $ \eta S \geq \eta S^* $}
+    \end{cases}
+\end{equation}
+Where $ \eta $ is a binary variable with value of $ 1 $ for call option and $ -1 $ for put.
+
+
+\section{Derivation}
+
+We start from applying a few change of variables to simplify further derivations.
+Define time to maturity as $ \tau = T - t$, early exercise premium as $ V_{prem} = g\left(\tau\right) \cdot h\left(S, g\left(\tau\right)\right) $, and $ g\left(\tau\right) = 1 - e^{-r \tau} $.
+The substitute into the BSM PDE to find the following equation.
+\begin{equation}
+    -\frac{\partial g}{\partial \tau} h - g \frac{\partial h}{\partial g} \frac{\partial g}{\partial \tau} + (r - q) S g \frac{\partial h}{\partial S} + \frac{1}{2} \sigma^2 S^2 g \frac{\partial^2 g}{\partial S^2} - r g h = 0
+\end{equation}
+
+Knowing the first derivative of $ g $ function is $ g' = r e^{-r \tau} = r \left(1 - g\right) $, we reformat the above PDE into below.
+\begin{equation}
+    -r \left(1 - g\right) h - g \frac{\partial h}{\partial g} r \left(1 - g\right) + (r - g) S g \frac{\partial h}{\partial S} + \frac{1}{2} \sigma^2 S^2 g \frac{\partial^2 h}{\partial S^2} - r g h = 0
+\end{equation}
+
+Reorganize the PDE with respect to $ S $ to find
+\begin{equation}
+    \frac{1}{2} \sigma^2 S^2 g \frac{\partial^2 h}{\partial S} + \left(r - q\right) S g \frac{\partial h}{\partial S} - r h - g r \left(1 - g\right) \frac{\partial h}{\partial \tau} = 0
+\end{equation}
+
+Note the last term $ g r \left(1 - g\right) \frac{\partial h}{\partial \tau} $ is equivalent to $ g \frac{\partial h}{\partial \tau} $ by chain rule.
+Barone-Adesi and Whaley \cite{Efficient Analytic Approximation of American Option Values} approximated this term as zero to reduced the PDE into an analytically solvable ODE of $ h $ with respect to $ S $ as bellow.
+
+\begin{equation}
+    S^2 \frac{\partial^2 h}{\partial S^2} + S \frac{2 \left(r - q\right)}{\sigma^2} \frac{\partial h}{\partial S} - \frac{2 r h}{\sigma^2 g} = 0
+\end{equation}
+
+For clarity, define two coefficients $ \beta_{1} = \frac{2 \left(r - q\right)}{\sigma^2} $ and $ \beta_{0} = \frac{2 r}{\sigma^2} $ and rewrite as below.
+\begin{equation}
+    S^2 \frac{\partial^2 h}{\partial S} + S \beta_{1} \frac{\partial h}{\partial S} - \frac{\beta_0}{g} h = 0
+\end{equation}
+
+Assume function $ h $ is in the form of $ \alpha S^{\lambda} $, then the first and the second derivative with respect to $ S $ are $ \alpha \lambda S^{\lambda - 1} $ and $ \alpha \lambda \left(\lambda - 1\right) S^{\lambda - 2} $.
+The above ODE is simplified as below.
+\begin{equation}
+    \alpha S^{\lambda} \left(\lambda^2 + \left(\beta_{1} - 1\right) \lambda - \frac{\beta_{0}}{g} \right) = 0
+\end{equation}
+    
+Two solutions of $ \lambda $ can be found.
+\begin{equation}
+    \lambda_{0, 1} = \frac{-\left(\beta_{1} - 1\right) \mp \sqrt{\left(\beta_{1} - 1\right)^2 + 4 \frac{\beta_{0}}{g}}}{2}
+\end{equation}
+
+Since the ODE is in second order, the general solution must be in the format of the following.
+\begin{equation}
+    h = \alpha_{0} S^{\lambda_{0}} + \alpha_{1} S^{\lambda{1}}
+\end{equation}
+
+The yet to be solved coefficients are $ \alpha_{0} $ and $ \alpha_{1} $ which need to be implied through boundaries analysis.
+Assuming strictly positive risk-free rate, $ \frac{\beta_{0}}{g} > 0 $ thus $ \lambda_{0} < 0 $ and $ \lambda_{1} > 0$.
+These features indicates that at extreme values of $ S $, function $ h $ could grow exponentially as $ \alpha_{0} S^{\lambda_{0}} \to \infty $ when $ S \to 0 $ , or $ \alpha_{1} S^{\lambda_{1}} \to \infty $ when $ S \to \infty $.
+This apparently contradicts to the valuation principal of American option that derivative could not be more expensive than its underlying.
+Therefore, for call option, $ \alpha_{0} $ must equals to zero; and for put option, $ \alpha_{1} $ must equals to zero.
+To reconcile call and put pricing routines, we reintroduce $ \eta $ to define function $ \alpha(\eta) $ and $ \lambda(\eta) $.
+The American option price is organized as below.
+\begin{equation}
+    V_{Ame} = 
+    \begin{cases}
+        V_{Eur} + g \alpha S^{\lambda}, & \mbox{if $ \eta S < \eta S^* $}\\
+        \eta (S - K), & \mbox{if $ \eta S \geq \eta S^* $}
+    \end{cases}
+\end{equation}
+Where $ S^* $ is the tipping point that it just turns economical to exercised the option as of valuation time.
+At the optimum exercising point, pricing equality must hold so as to the slops of prices.
+\begin{align}
+    \eta (S^* - K) &= V_{Eur}(S^*) + g \alpha {S^*}^{\lambda} \\
+    \eta &= \Delta_{Eur}(S^*) + g \alpha \lambda {S^*}^{\lambda - 1}
+\end{align}
+
+Then the $ \alpha $ term is implied as $ \alpha = \frac{\eta - \Delta_{Eur}(S^*)}{g \lambda {S^*}^{\lambda - 1}} $ and the final task is to find the optimum exercise spot $ S^* $.
+A closed-form solution of $ S^* $ may not be easily worked out, but straightforward solvers such as Newton-Rahpson method can find the proper value with high precision and efficiency.
+Let us define a function $ f(S) $ with minimization target of zero.
+\begin{equation}
+    f(S) = \eta (S - K) - V_{Eur}(S) - \frac{\left(\eta - \Delta_{Eur}(S)\right)  S}{\lambda}
+\end{equation}
+
+The first derivative against $ S $ is as below.
+\begin{equation}
+    f'(S) = \left(\eta - \Delta_{Eur}(S)\right) \left(1 - \frac{1}{\lambda}\right) + \frac{\Gamma_{Eur}(S) S}{\lambda}
+\end{equation}
+
+Given a reasonable initial guess of $ S^0 $, a closer value to $ S^{*} $ is implied through Newton-Raphson method which progresses recursively until $ \left|f(S)\right| $ is within desired tolerance level.
+\begin{equation}
+    S^{i + 1} = S^i - \frac{f(S^i)}{f'(S^i)}
+\end{equation}
+
+With the last piece estimating optimum exercise edge full-filled, American style option price is approximated as the following.
+\begin{equation}
+    V_{Ame} = 
+    \begin{cases} 
+        V_{Eur}\left(S\right) + \frac{\left(\eta - \Delta_{Eur}(S^*)\right)}{\lambda} S^*  {\left(\frac{S}{S^*}\right)}^{\lambda}, & \mbox{if $ \eta S < \eta S^* $} \\
+        \eta \left(S - K\right), & \mbox{if $ \eta S \geq \eta S^* $}
+    \end{cases}
+\end{equation}
+Where $ \lambda = \frac{-\left(\beta_{1} - 1\right) + \eta \sqrt{\left(\beta_{1} - 1\right)^2 + 4 \frac{\beta_{0}}{g}}}{2} $, $ g = 1 - e^{-r \tau} $, $ \beta_{0} = \frac{2 r}{\sigma^2} $, and $ \beta_{1} = \frac{2 \left(r - q\right)}{\sigma^2} $.
+
+
+\section{Greeks}
+
+Compared to BSM model, BAW model is a semi-analytic formula which introduces a  complexity on implying closed form formulas for Greek calculation.
+The optimum exercising spot $ S^* $ is not a function of underlying $ S $, therefore Delta and Gamma should be relatively straightforward to work out.
+
+\subsection{Delta}
+Delta $ \frac{\partial V}{\partial S} $ is the first order sensitivity of option price against the movement of underlying.
+Straightforward derivation of the pricing function leads to the following.
+\begin{equation}
+    \Delta_{Ame} =
+    \begin{cases}
+        \Delta_{Eur} + \left(\eta - \Delta\left(S^*\right)\right) \left(\frac{S}{S^*}\right)^{\lambda - 1} , & \mbox{if $ \eta S < \eta S^* $} \\
+        \eta, & \mbox{if $ \eta S \geq \eta S^* $} 
+    \end{cases}
+\end{equation}
+
+\subsection{Gamma}
+Delta $ \frac{\partial^2 V}{\partial S^2} $ defines the second order sensitivity against underlying $ S $, or the first order sensitivity against the $ \Delta $ term.
+A further step derivative of Delta against underlying finds formula in below.
+\begin{equation}
+    \Gamma_{Ame} = 
+    \begin{cases}
+        \Gamma_{Eur} + \left(\eta - \Delta\left(S^*\right)\right) \frac{\lambda - 1}{S^*} \left(\frac{S}{S^*}\right)^{\lambda - 2}, & \mbox{if $ \eta S < \eta S^* $} \\
+        0, & \mbox{if $ \eta S \geq \eta S^* $} 
+    \end{cases}
+\end{equation}
+
+\subsection{Theta}
+Theta $ \frac{\partial V}{\partial t} $ measures the first order sensitivity of option price with respect to the time decay.
+In the pricing formula, multiple components $ g, \lambda, S^*, \text{and } \Delta $ are a function of time.
+This makes the analytical formula too complex to be useful.
+Indirect approach is adopt since the general BSM PDE must hold under all circumstances.
+\begin{equation}
+    \Theta = r V - \left(r - q\right) S \Delta - \frac{1}{2} \sigma^2 S^2 \Gamma
+\end{equation}
+
+
+\section{Extensions}
+
+Barone-Adesi and Whaley reduced the PDE by ignoring the term $ g r \left(1 - g\right) \frac{\partial h}{\partial g} $.
+This assumption is only appropriate for short and long terms as numerical studies indicate the term structure of this term is actually none-zero with a peak at mid-term.
+
+Endeavours are made to overcome the inaccuracy of BAW model in mid-term expiries.
+Ju and Zhong (1999) introduced a correction term to the $ h $ function as $ h = h_1 + h_2 $ with $ h_2 = \varepsilon h_1 $.
+
+
+\begin{thebibliography}{9}
+    \bibitem{Efficient Analytic Approximation of American Option Values}
+    Barone-Adesi G., Whaley R.
+    \textit{Efficient Analytic Approximation of American Option Values}
+    The Journal of Finance, June, 1987.
+    
+    \bibitem{An Approximated Formula for Pricing American Options}
+    Ju N., Zhong R.
+    \textit{An Approximated Formula for Pricing American Options}
+    Journal of Derivatives, Winter, 1999.
+\end{thebibliography}
+
+\end{document}
