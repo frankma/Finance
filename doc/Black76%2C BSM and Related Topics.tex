@@ -1,0 +1,276 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+
+\title{Black76, BSM and Related Topics}
+\author{Frank Ma}
+\date{March 2015}
+
+
+\begin{document}
+
+\maketitle
+%  \delimitershortfall=-1pt  % this is for the parentheses size adjustments
+ 
+\begin{abstract}
+This document describes Black 76 model with derivation of pricing formula and basic Greeks.
+\end{abstract}
+
+
+\section{Introduction}
+
+As a variant of Black-Scholes-Merton model, Black76 models on forward $ F_t^T $ instead of spot $ S_t $.
+The underlying forward has the same expiry as the option; therefore benefits us to focus on the forward only and to bypass the drift term.
+The apparent economic implication is no exchange of assets during the delta hedging process.
+The dynamics of forward with expiry $ T $ is governed by the following SDE.
+\begin{equation}\label{Black76 SDE}
+    \frac{1}{F_t^T}  dF_t^T = \sigma dW_t
+\end{equation}
+
+Like Black-Scholes-Merton, Black76 provides a theoretical estimation of European option price.
+Noticed that the forward at expiry $ F_T^T $ converges to $ S_T $, we formulate the European options payoff as the following.
+\begin{equation}\label{Option Payoff}
+    \left(\eta \cdot (F_T^T - K) \right)^+, \quad
+    \eta =
+    \begin{cases} 
+        1, & \mbox{if call} \\
+        -1, & \mbox{if put}
+    \end{cases}
+\end{equation}
+
+
+\section{Valuation}
+
+To price an European option through no-arbitrage theory, we set up a portfolio of option and forwards.
+During the life of the option, we apply dynamic delta hedging to re-balance the portfolio.
+At expiry $ T $, we end up with a portfolio of option and terminal delta shares of forward.
+The overall portfolio value is a deterministic amount.
+Equivalently, the hedged portfolio has no differences from a risk less bond.
+Additionally, no cash flows is expected during the life of the option, the mix of option and forward is considered as self-financing.
+Apply change of variable from $ F_t^T $ to $ \ln{F_t^T} $ and Ito's Lemma finds the new governing SDE of $ \ln{F_t^T} $ as below.
+\begin{equation}\label{Black76 ln F SDE}
+    d\ln{F_t^T} = -\frac{1}{2} \sigma^2 dt + \sigma dW_t
+\end{equation}
+
+Define the time to expiry $ \tau = T - t$ and integrate from current state $ t $ to terminal state $ T $.
+\begin{align}\label{Black76 ln F integral}
+    \int_{t}^{T} d\ln{F_s^T} &= \int_{t}^{T} -\frac{1}{2} \sigma^2 ds + \int_{t}^{T} \sigma \varepsilon \sqrt{ds} \nonumber\\
+    \ln{F_T^T} - \ln{F_t^T} &= -\frac{1}{2} \sigma^2 \tau + \sigma \varepsilon \sqrt{\tau} \nonumber\\
+    F_T^T &= F_t^T e^{-\frac{1}{2} \sigma^2 \tau + \sigma  \varepsilon \sqrt{\tau}}
+\end{align}
+
+In equation \ref{Black76 ln F integral}, we find the expression of a stock price at option expiry $ T $.
+Noticed the only randomness is $ \varepsilon $ which follows a standard normal distribution $ \phi $, we apply change of variable from underlying forward to the standard normal randomness $ \varepsilon $.
+\begin{align}\label{Black76 epsilon interval}
+    \varepsilon &= \frac{\ln{\frac{F_T^T}{F_t^T}} + \frac{1}{2} \sigma^2}{\sigma \sqrt{\tau}} \nonumber \\
+    \varepsilon &\in
+    \begin{cases}
+        [d, \infty), & \mbox{if call} \\
+        (-\infty, d], & \mbox{if put}
+    \end{cases}, \quad
+    d = \frac{\ln{\frac{K}{F_t^T}} + \frac{1}{2} \sigma^2 \tau}{\sigma \sqrt{\tau}}
+\end{align}
+
+Define $ \mathcal{P} (F_T^T) $ as the probability density function of the terminal forward price.
+Also by definition, a standard normal distribution has probability density function as $ \phi(x) = \frac{1}{\sqrt{2 \pi}} e^{-\frac{1}{2} x^2} $.
+For a call option, the expected option price at expiry $ T $ can be written as the following. 
+\begin{align}\label{Call option price derivation}
+    \mathrm{E} \left[c_T^T \right] &= \int_{K}^{\infty} (F_T^T - K) \mathcal{P} (F_T^T) d F_T^T \nonumber \\
+    &= \int_{d}^{\infty} (F_t^T e^{-\frac{1}{2} \sigma^2 \tau + \sigma \varepsilon \sqrt{\tau}} - K) \frac{1}{\sqrt{2 \pi}} e^{-\frac{1}{2} \varepsilon^2} d \varepsilon \nonumber \\
+    &= F_t^T \int_{d}^{\infty} \frac{1}{\sqrt{2 \pi}} e^{-\frac{1}{2} (\varepsilon^2 - 2 \varepsilon \sigma \sqrt{\tau} + \sigma^2 \tau)} d \varepsilon - K \int_{d}^{\infty} \frac{1}{\sqrt{2 \pi}} e^{-\frac{1}{2} \varepsilon^2} d \varepsilon \nonumber \\
+    &= F_t^T \int_{d}^{\infty} \frac{1}{\sqrt{2 \pi}} e^{-\frac{1}{2} (\varepsilon - \sigma \sqrt{\tau})^2} d \varepsilon - K (\Phi(\infty) - \Phi(d)) \nonumber \\
+    &= F_t^T \int_{d - \sigma \sqrt{\tau}}^{\infty} \frac{1}{\sqrt{2 \pi}} e^{-\frac{1}{2} \hat{\varepsilon}} d \hat{\varepsilon} - K \Phi (-d) \nonumber \\
+    &= F_t^T \Phi(-d + \sigma \sqrt{\tau}) - K \Phi(-d)
+\end{align}
+
+Similarly, we can find the future value of put option as the following.
+\begin{align}\label{Put option price derivation}
+    \mathrm{E} \left[p_T^T \right] &= \int_{0}^{K} (K - F_T^T) * \mathcal{P}(F_T^T) d F_T^T \nonumber \\
+    &= \int_{-\infty}^{d} (K - F_t^T e^{-\frac{1}{2} \sigma^2 \tau + \sigma \varepsilon \sqrt{\tau}}) \frac{1}{\sqrt{2 \pi}} e^{-\frac{1}{2} \varepsilon^2} d\varepsilon \nonumber \\
+    &= K \int_{-\infty}^{d} \frac{1}{\sqrt{2 \pi}} e^{-\frac{1}{2} \varepsilon^2} d\varepsilon - F_t^T \int_{-\infty}^{d} \frac{1}{\sqrt{2 \pi}} e^{-\frac{1}{2} (\varepsilon^2 - 2 \varepsilon \sigma \sqrt{\tau} + \sigma^2 \tau)} d\varepsilon \nonumber \\
+    &= K \int_{-\infty}^{d} \frac{1}{\sqrt{2 \pi}} e^{-\frac{1}{2} \varepsilon^2} d\varepsilon - F_t^T \int_{-\infty}^{d - \sigma \sqrt{\tau}} \frac{1}{\sqrt{2 \pi}} e^{-\frac{1}{2} \hat{\varepsilon}^2} d\hat{\varepsilon} \nonumber \\
+    &= K (\Phi(d) - \Phi(-\infty)) - F_t^T (\Phi(d - \sigma \sqrt{\tau}) - \Phi(-\infty)) \nonumber \\
+    &= K \Phi(d) - F_t^T \Phi(d - \sigma \sqrt{\tau})
+\end{align}
+
+The risk-free zero bond with maturity of $ T $ at current state $ t $ price is $ B_t^T $.
+We can get the present value of the options by discounting the forward expected option price.
+\begin{align}
+    \mathrm{E} \left[c_t^T \right] &= B_t^T \left(F_t^T \Phi \left (\frac{\ln{\frac{F_t^T}{K}} + \frac{1}{2} \sigma^2 \tau}{\sigma \sqrt{\tau}} \right) - K \Phi \left (\frac{\ln{\frac{F_t^T}{K}} - \frac{1}{2} \sigma^2 \tau}{\sigma \sqrt{\tau}} \right)\right) \label{Black76 call price function} \\
+    \mathrm{E} \left[p_t^T \right] &= B_t^T \left(K \Phi \left (-\frac{\ln{\frac{F_t^T}{K}} - \frac{1}{2} \sigma^2 \tau}{\sigma \sqrt{\tau}} \right) - F_t^T \Phi \left (-\frac{\ln{\frac{F_t^T}{K}} + \frac{1}{2} \sigma^2 \tau}{\sigma \sqrt{\tau}} \right) \right)\label{Black76 put price function}
+\end{align}
+
+Reintroduce $ \eta $ reconcile option pricing formula \ref{Black76 call price function} and \ref{Black76 put price function} into a generic one.
+$ V_t^T $ defines the present option price at time $ t $.
+\begin{align}\label{Black76 generic price function}
+    V_t^T &= B_t^T \eta \left(F_t^T \Phi \left(\eta d_1 \right) - K \Phi \left(\eta d_2 \right) \right) \nonumber \\
+    &\text{where, } d_1 = \frac{\ln{\frac{F_t^T}{K}} + \frac{1}{2} \sigma^2 \tau}{\sigma \sqrt{\tau}}; d_2 = d_1 - \sigma \sqrt{\tau}
+\end{align}
+
+
+\section{Greeks}
+
+Greeks are measurements of the instantaneous sensitivity of option prices to the changes of underlying parameters such as forward price, time decay, and volatility.
+
+Several common derivations save later efforts.
+\begin{align} \label{relationship between phi(d_1) and phi(d_2)}
+    \phi(\eta \cdot x) &= \phi(x) \\
+    \phi(d_2) &= \frac{1}{\sqrt{2 \pi}} e^{-\frac{1}{2} (d_1 - \sigma \sqrt{\tau})^2} \nonumber \\
+    &= \frac{1}{\sqrt{2 \tau}} e^{-\frac{1}{2} d_1^2} e^{d_1 \sigma \sqrt{\tau} - \frac{1}{2} \sigma \sqrt{\tau}} \nonumber \\
+    &= \phi(d_1) e^{\ln{\frac{F}{K}}} \nonumber \\
+    &= \phi(d_1) \frac{F}{K} \\
+    \eta^2 &= 1
+\end{align}
+
+\subsection{Delta} \label{Delta_f derivation}
+Delta $ \Delta $ defines the first order derivative of option value against underlying forward.
+$ \Delta = \frac{\partial v}{\partial F} $.
+\begin{align}
+    \frac{\partial d_2}{\partial F_t^T} &= \frac{\partial d_1}{\partial F_t^T} \nonumber \\
+    \frac{\partial V_t^T}{\partial F_t^T} &= B_t^T \eta \left( \Phi(\eta d_1) + F_t^T \phi(d_1) \eta \frac{\partial d_1}{\partial F_t^T} - K \phi(d_2) \eta \frac{\partial d_2}{\partial F_t^T} \right) \nonumber \\
+    &= B_t^T \eta \Phi(\eta d_1) + B_t^T \eta^2 \left(F_t^T \phi(d_1) \frac{\partial d_1}{\partial F_t^T} - K \phi(d_1) \frac{F_t^T}{K} \frac{\partial d_1}{\partial F_t^T} \right) \nonumber \\
+    &= B_t^T \eta \Phi(\eta d_1)
+\end{align}
+
+The first derivative of option value against strike $ \Delta_K = \frac{\partial v}{\partial K} $.
+\begin{align} \label{Delta_k derivation}
+    \frac{\partial d_2}{\partial K} &= \frac{\partial d_1}{\partial K} \nonumber \\
+    \frac{\partial V_t^T}{\partial K} &= B_t^T \eta \left (F_t^T \phi(d_1) \eta \frac{\partial d_1}{\partial K} - \Phi(\eta d_2) - K \phi(d_2) \eta \frac{\partial d_2}{K}\right) \nonumber \\
+    &= -B_t^T \eta \Phi(\eta d_2) + B_t^T \eta^2 \left(F_t^T \phi(d_1) \frac{\partial d_1}{\partial K} - K \phi(d_1) \frac{F_t^T}{K} \eta \frac{\partial d_1}{\partial K} \right) \nonumber \\
+    &= -B_t^T \eta \Phi(\eta d_2)
+\end{align}
+
+\subsection{Vega}
+
+Vega $ \nu $ is the first order derivative of option value against the volatility.
+$ \nu = \frac{\partial V_t^T}{\partial \sigma} $.
+\begin{align} \label{Vega derivation}
+    \frac{\partial d_2}{\partial \sigma} &= \frac{\partial d_1}{\partial \sigma} - \sqrt{\tau} \nonumber \\
+    \frac{\partial V_t^T}{\partial \sigma} &= B_t^T \eta \left(F_t^T \phi(d_1) \eta \frac{\partial d_1}{\partial \sigma} - K \phi(d_2) \eta \frac{\partial d_2}{\partial \sigma} \right) \nonumber \\
+    &= B_t^T \eta^2 \left(F_t^T \phi(d_1) \frac{\partial d_1}{\partial \sigma} - K \phi(d_1) \frac{F_t^T}{K} (\frac{\partial d_1}{\partial \sigma} - \sqrt{\tau}) \right) \nonumber \\
+    &= B_t^T F_t^T \phi(d_1) \sqrt{\tau}
+\end{align}
+
+\subsection{Theta}
+
+Theta $ \Theta $ defines the first order derivative of option value against the current time $ t $.
+$ \Theta = \frac{\partial V_t^T}{\partial t} = -\frac{\partial V_t^T}{\partial \tau}$.
+We do not break forward $ F_t^T $ as a function of time to get $ \Theta_f $.
+\begin{align} \label{Theta_f derivation}
+    \frac{\partial B_t^T}{\partial \tau} &= -r B_t^T \nonumber \\
+    \frac{\partial d_2}{\partial \tau} &= \frac{\partial d_1}{\partial \tau} - \frac{\sigma}{2 \sqrt{\tau}} \nonumber \\
+    \frac{\partial V_t^T}{\partial \tau} &= -r B_t^T \eta \left(F_t^T \Phi(\eta d_1) - K \Phi(\eta d_2) \right) \nonumber \\
+    &\quad \quad + B_t^T \eta \left(F_t^T \phi(d_1) \eta \frac{\partial d_1}{\partial \tau} - K \phi(d_2) \eta \frac{\partial d_2}{\partial \tau}\right) \nonumber \\
+    &= -r B_t^T \eta \left(F_t^T \Phi(\eta d_1) - K \Phi(\eta d_2) \right) \nonumber \\
+    &\quad \quad + B_t^T \eta^2 \left(F_t^T \phi(d_1) \frac{\partial d_1}{\partial \tau} - K \phi(d_1) \frac{F_t^T}{K} \left(\frac{\partial d_1}{\partial \tau} - \frac{\sigma}{2 \sqrt{\tau}}\right)\right) \nonumber \\
+    &= B_t^T F_t^T \phi(d_1) \frac{\sigma}{2 \sqrt{\tau}} - r B_t^T \eta \left(F_t^T \Phi(\eta d_1) - K \Phi(\eta d_2) \right) \nonumber \\
+    \frac{\partial V_t^T}{\partial t} &= -B_t^T F_t^T \phi(d_1) \frac{\sigma}{2 \sqrt{\tau}} + r B_t^T \eta \left(F_t^T \Phi(\eta d_1) - K \Phi(\eta d_2) \right)
+\end{align}
+
+Another view of the forward based on spot is modeled as $ F_t^T = S_t e^{(r - q) \tau} $ hence $ \Theta_s $ can be derived slightly different from above \ref{Theta_f derivation}.
+\begin{align} \label{Theta_s derivation}
+    \frac{\partial F_t^T}{\partial \tau} &= (r - q) F_t^T \nonumber \\
+    \Theta_s &= -B_t^T F_t^T \phi(d_1) \frac{\sigma}{2 \sqrt{\tau}} + B_t^T \eta \left(q F_t^T \Phi(\eta d_1) - r K \Phi(\eta d_2) \right)
+\end{align}
+
+\subsection{Rho}
+
+Rho $ \rho $ defines the first order derivative of option value against the risk free rate $ r $.
+$ \rho = \frac{\partial V_t^T}{\partial r} $.
+Initially we do not break the forward $ F_t^T $ as a function of $ r $ to get  to get $ \rho_f $
+\begin{align} \label{rho_f derivation}
+    \frac{\partial B_t^T}{r} &= -\tau B_t^T \nonumber \\
+    \frac{\partial d_2}{\partial r} &= \frac{\partial d_1}{\partial r} \nonumber \\
+    \frac{\partial V_t^T}{\partial r} &= -\tau B_t^T \eta \left(F_t^T \Phi(\eta d_1) - K \Phi(\eta d_2)\right) \nonumber \\
+    &\quad \quad + B_t^T \eta \left(F_t^T \phi(d_1) \eta \frac{\partial d_1}{\partial r} - K \phi(d_2) \eta \frac{\partial d_2}{\partial r}\right) \nonumber \\
+    &= -\tau B_t^T \eta \left(F_t^T \Phi(\eta d_1) - K \Phi(\eta d_2)\right) \nonumber \\
+    &\quad \quad + B_t^T \eta^2 \left(F_t^T \phi(d_1) \frac{\partial d_1}{\partial r} - K \phi(d_1) \frac{F_t^T}{K} \frac{\partial d_1}{\partial r}\right) \nonumber \\
+    &= -\tau B_t^T \eta \left(F_t^T \Phi(\eta d_1) - K \Phi(\eta d_2)\right)
+\end{align}
+
+From the spot market of view, forward $ F_t^T $ is also a function of risk free rate $ r $ such that $ F_t^T = S_t e^{(r - q) \tau} $.
+Accordingly, the $ \rho_s $ is derived as the following.
+\begin{align} \label{rho_s derivation}
+    \frac{\partial F_t^T}{\partial r} &= \tau F_t^T \nonumber \\
+    \rho_s &= -\tau B_t^T \eta \left(F_t^T \Phi(\eta d_1) - K \Phi(\eta d_2) \right) \nonumber \\
+    &\quad \quad + B_t^T \eta \left(\tau F_t^T \Phi(\eta d_2) + F_t^T \phi(d_1) \eta \frac{\partial d_1}{\partial r} - K \phi(d_2) \eta \frac{\partial d_2}{\partial r} \right) \nonumber \\
+    &= \tau B_t^T \eta K \Phi(\eta d_2) + B_t^T \eta^2 \left(F_t^T \phi(d_1) \frac{\partial d_1}{\partial r} - K \phi(d_1) \frac{F_t^T}{K} \frac{\partial d_1}{\partial r} \right) \nonumber \\
+    &= \tau B_t^T \eta K \Phi(\eta d_2)
+\end{align}
+
+\subsection{Gamma}
+
+Gamma $ \Gamma $ is the second order derivative of option price against underlying forward $ F_t^T $.
+Equivalently, Gamma is the first order derivative of Delta against forward. 
+\begin{align} \label{Gamma_F derivation}
+    \frac{\partial d_1}{\partial F_t^T} &= \frac{1}{\sigma \sqrt{\tau}} \frac{K}{F_t^T} \frac{1}{K} \nonumber \\
+    &= \frac{1}{F_t^T \sigma \sqrt{\tau}} \nonumber \\
+    \frac{\partial^2 V_t^T}{{\partial F_t^T}^2} &= \frac{\partial \Delta}{\partial F_t^T} \nonumber \\
+    &= B_t^T \eta^2 \phi(d_1) \frac{\partial d_1}{\partial F_t^T} \nonumber \\
+    &= \frac{B_t^T \phi(d_1)}{F_t^T \sigma \sqrt{\tau}}
+\end{align}
+
+The second order derivative of option price against strike is $ \Gamma_K $.
+Furthermore from the model point of view, $ \Gamma_K $ is actually the expected probability density function of the $ F_T^T $.
+\begin{align} \label{Gamma_K derivation}
+    \frac{\partial d_2}{\partial K} &= \frac{K}{F_t^T} \left(-\frac{K}{F_t^T} \frac{F_t^T}{K^2} \right) \nonumber \\
+    &= \frac{1}{K \sigma \sqrt{\tau}} \nonumber \\
+    \frac{\partial^2 V_t^T}{{\partial K}^2} &= \frac{\partial \Delta_K}{\partial K} \nonumber \\
+    &= B_t^T \eta^2 \phi(d_2) \frac{\partial d_2}{\partial K} \nonumber \\
+    &= \frac{B_t^T \phi(d_2)}{K \sigma \sqrt{\tau}}
+\end{align}
+
+\subsection{Vomma}
+
+Vomma $ \frac{\partial^2 V_t^T}{\partial \sigma^2} $ is the second derivative of option price against the volatility $ \sigma $ or the first derivative of vega against volatility $ \frac{\partial \nu}{\partial \sigma} $.
+\begin{align}
+    \frac{\partial^2 V_t^T}{\partial \sigma^2} &= B_t^T F \phi(d_1) (-d_1) \frac{\partial d_1}{\partial \sigma} \sqrt{\tau} \nonumber \\
+    &= -\frac{\partial V_t^T}{\partial \sigma} d_1 \left(-\frac{\ln{\frac{F}{K}}}{\sigma^2 \sqrt{\tau}} + \frac{1}{2} \sigma \sqrt{\tau}\right) \nonumber \\
+    &= \frac{\partial V_t^T}{\partial \sigma} \frac{d_1 d_2}{\sigma}
+\end{align}
+
+\subsection{Vanna}
+
+Vanna $ \frac{\partial^2 V_t^T}{\partial F \partial \sigma} $ is the second order derivative of option price once with respect to underlying $ F $ and once against volatility $ \sigma $.
+It can reached as a nested first derivative through either Delta with respect to sigma $ \frac{\partial \Delta}{\partial \sigma} $ or Vega against forward $ \frac{\partial \nu}{\partial F} $.
+\begin{align}
+    \frac{\partial^2 V_t^T}{\partial F \partial \sigma} &= \eta B_t^T \phi(d_1) \eta \frac{\partial d_1}{\partial \sigma} \nonumber \\
+    &= B_t^T \phi(d_1) \left(-\frac{\ln{\frac{F}{K}}}{\sigma^2 \sqrt{\tau}} + \frac{1}{2} \sqrt{\tau}\right) \nonumber \\
+    &= -B_t^T \phi(d_1) \frac{d_2}{\sigma} \nonumber \\
+    &= -\frac{\partial V_t^T}{\partial \sigma} \frac{d_2}{F \sigma \sqrt{\tau}}
+\end{align}
+
+Similarly, Vanna with respect to strike $ \frac{\partial^2 V_t^T}{\partial K \partial \sigma} $ is applied the follows.
+\begin{align}
+    \frac{\partial^2 V_t^T}{\partial K \partial \sigma} &= -\eta B_t^T \eta \phi(d_2) \frac{\partial d_2}{\partial \sigma} \nonumber \\
+    &= -B_t^T \phi(d_2) \left(-\frac{\ln{\frac{F}{K}}}{\sigma^2 \sqrt{\tau}} - \frac{1}{2} \sqrt{\tau} \right) \nonumber \\
+    &= B_t^T \phi(d_1) \frac{F}{K} \frac{d_1}{\sigma} \nonumber \\
+    &= \frac{\partial V_t^T}{\partial \sigma} \frac{d_1}{K \sigma \sqrt{\tau}}
+\end{align}
+
+
+\section{Partial Differential Equations}
+
+\subsection{Backward PDE}
+As mention previously, Black76 model bypasses the drift term and benefits us to reach a cleaner PDE.
+\begin{equation} \label{Black76 Backward PDE}
+    \frac{\partial V_t^T}{\partial t} + \frac{1}{2} {\left(F_t^T \right)}^2 \sigma^2 \frac{\partial^2 V_t^T}{{\partial F_t^T}^2} - r V_t^T = 0
+\end{equation}
+
+A few approaches exists to derive formula \ref{Black76 Backward PDE}.
+We provide an relatively intuitive way to derive through delta hedging method as the following.
+
+\subsection{Forward PDE}
+Duprie (94) 
+\begin{equation} \label{Black76 Forward PDE}
+    \frac{\partial V_t^T}{\partial T} - \frac{1}{2} K^2 \sigma^2 \frac{\partial^2 V_t^T}{\partial K} + q V_t^T = 0
+\end{equation}
+
+
+
+\section{Relationship with Black-Scholes-Merton}
+
+In risk-neutral world, the no-arbitrage price of a forward at current state $ t $ mush equals to $ S_t e^{(r - q) \tau} $ where $ r $ is the risk-free rate and $ q $ is the carry rate of the underlying stock. 
+
+
+\end{document} 
