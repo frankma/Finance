@@ -1,0 +1,53 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+
+\title{Bounded Transformation}
+\author{Frank Ma}
+\date{September 2015}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+
+When numerically solving optimization problems, bounded variables are usually expected while most optimization process assumes unbounded independent variables.
+Variable projection become quite important for such situations.
+The key point is to create a bijective function with one end bounded while the other is unbounded.
+
+
+\section{Absolute Function}
+
+\begin{subequations}
+\begin{align}
+    y &= l + \frac{u - l}{2} \left(1 + \frac{x}{1 + \left|x\right|}\right) \\
+    x &= \begin{cases}
+            1 - \frac{1}{2} \frac{u - l}{y - l}, \quad & y < \frac{l + u}{2} \\
+            -1 - \frac{1}{2} \frac{u - l}{y - u}, \quad & y \geq \frac{l + u}{2}
+        \end{cases}
+\end{align}
+\end{subequations}
+
+
+\section{Arc-tangent Function}
+
+\begin{subequations}
+\begin{align}
+    y &= l + \left(\frac{\arctan(x)}{\pi} + \frac{1}{2}\right) \left(u - l \right) \\
+    x &= \tan\left(\frac{y - l}{u - l}\pi - \frac{\pi}{2}\right)
+\end{align}
+\end{subequations}
+
+
+\section{Normal Function}
+
+\begin{subequations}
+\begin{align}
+    y &= l + \left(u - l\right) \Phi(x) \\
+    x &= \frac{\Phi^{-1}(y - l)}{u - l}
+\end{align}
+\end{subequations}
+
+
+\end{document}
