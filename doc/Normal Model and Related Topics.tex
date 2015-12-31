@@ -1,0 +1,184 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+
+\title{Normal Model and Related Topics}
+\author{Frank Ma}
+\date{September 2015}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+    This document describes European Option valuation under the assumption that underlying follows Gaussian process.
+    Derivation of pricing formula and Greeks are provided as well.
+\end{abstract}
+
+
+\section{Introduction}
+
+Much earlier than the savvy Black-Scholes-Merton formula which models the underlying as log-normal process.
+Bachelier derived an option pricing formula based on a normal model on the underlying.
+Practitioners find usage in multiple situations that a normal process defines the underlying movement better than the log-normal process.
+To start with a normal process of the underlying, we define the forward with exercise of $ T $ observed at $ t $ as the following stochastic deferential equation. 
+
+\begin{equation} \label{Bachelier SDE}
+    dF_t^T = \sigma dW
+\end{equation}
+
+With this modeling set-up, the terminal price distribution has mean of $ F_t^T $ and variance of $ \sigma^2 \left(T - t\right) $.
+This differs a bit from Bachelier's original work that variance term is leveled by the the spot underlying price $ S_0 $.
+Since this base is deterministic, Minimum effort to transform the normal volatility to leveled Bachelier Volatility is required.
+The standard European option payoff at expiry is formulated as below.
+
+\begin{equation} \label{Option Payoff}
+    \left(\eta \cdot \left(F_T^T - K\right) \right)^+, \quad
+    \eta =
+    \begin{cases} 
+        1, & \mbox{if call} \\
+        -1, & \mbox{if put}
+    \end{cases}
+\end{equation}
+
+
+\section{Pricing}
+
+Similar to the derivation of Black 76 pricing formula, the risk-neutral expectation of the option is the no-arbitrage valuation of the option price under the normal model of the underlying price.
+To get this expectation, we first integrate the $ dF_t^T $ term from observation spot time $ t $ to the option expiry time $ T $.
+Note, $ F_T^T $ is equivalent to $ S_T $.
+
+\begin{align} \label{Forward Spot}
+    \int_t^T dF_s^T &= \int_t^T \sigma dW \nonumber \\
+    F_T^T - F_t^T &=  \sigma \varepsilon \sqrt{T - t} \nonumber \\
+    F_T^T &= F_t^T +  \sigma \varepsilon \sqrt{\tau}
+\end{align}
+
+European call option payoff function is given as $ \max(S_T - K, 0) $.
+To get the expectation, we define $ \mathcal{P} (S_T) $ as the probability density function of underlying at option expiry.
+The no-arbitrage valuation of the European call option can be written as the following.
+
+\begin{align} \label{European Call Option Expectation}
+    \mathrm{E}\left[C_t^T\right] &= B_t^T \mathrm{E}\left[C_t^T\right] \nonumber \\
+    &= B_t^T \int_{K}^{\infty}{(S_T - K) \mathcal{P}(S_T) dS_T}
+\end{align}
+
+Note, from the formula \ref{Forward Spot}, we find the only randomness from forward is $ \varepsilon $ and the behaviour of $ \varepsilon $ is well defined as normal distribution with density function as $ \phi(x) = \frac{1}{\sqrt{2 \pi}} e^{-\frac{1}{2} x^2} $.
+We would like to apply a change of variable from $ S_T $ to $ \varepsilon $ in the formula \ref{European Call Option Expectation} and find the equivalence as $ \varepsilon = \frac{F_T^T - F_0^T}{\sigma \sqrt{\tau}}$.
+
+\begin{align} \label{European Call Option Price}
+    \mathrm{E}\left[C_t^T\right] &= B_t^T \int_{K}^{\infty}{(F_T^T - K) \mathcal{P}(F_T^T) dF_T^T} \nonumber \\
+    &= B_t^T \int_{\frac{K - F_t^T}{\sigma \sqrt{\tau}}}^{\infty}{\left(F_t^T + \sigma \varepsilon \sqrt{\tau} - K\right) \phi(\varepsilon) d\varepsilon} \nonumber \\
+    &= B_t^T \left(\left(F_t^T - K\right) \int_{\frac{K - F_t^T}{\sigma \sqrt{\tau}}}^{\infty}{\phi(\varepsilon) d\varepsilon} + \sigma \sqrt{\tau} \int_{\frac{K - F_t^T}{\sigma \sqrt{\tau}}}^{\infty}{\varepsilon \phi(\varepsilon) d\varepsilon} \right) \nonumber \\
+    &= B_t^T \left(\left(F_t^T - K\right) \Phi\left(\frac{F_t^T - K}{\sigma \sqrt{\tau}}\right) + \sigma \sqrt{\tau} \phi\left(\frac{F_t^T - K}{\sigma \sqrt{\tau}}\right) \right)
+\end{align}
+
+Similarly, we can find European put option price formula as the following.
+
+\begin{align} \label{European Put Option Price}
+    \mathrm{E}\left[P_t^T\right] &= B_t^T \left(\left(K - F_t^T\right) \Phi\left(\frac{K - F_t^T}{\sigma \sqrt{\tau}}\right) + \sigma \sqrt{\tau} \phi\left(\frac{K - F_t^T}{\sigma \sqrt{\tau}}\right) \right)
+\end{align}
+
+Reuse the binary operation $ \eta $ in the formula \ref{Option Payoff} to unify the above European Call and Put option pricing formula to the following.
+
+\begin{align} \label{European Option Price Formula}
+    \mathrm{E}\left[v_t^T\right] &= B_t^T \left(\eta \left(F_t^T - K\right) \Phi\left(\eta d \right) + \sigma \sqrt{\tau} \phi\left(d\right)\right) \nonumber \\ 
+    &\text{where,} \quad d = \frac{F_t^T - K}{\sigma \sqrt{\tau}} \quad \text{and} \quad \eta =
+    \begin{cases} 
+        1, & \mbox{if call} \\
+        -1, & \mbox{if put}
+    \end{cases}
+\end{align}
+
+
+\section{Greeks}
+
+Greeks are the sensitivity measures of the option prices against the parameter changes.
+Standard sensitivity measures against forward, volatility, time are provided as the following.
+
+\subsection{Delta}
+
+Delta $ \Delta $ defines the first order derivative of the option as $ \frac{\partial v}{\partial F} $.
+
+
+\begin{align} \label{Delta Formula}
+    \frac{\partial v}{\partial F_t^T} &= B_t^T \left(\eta \Phi(\eta d) + \eta F_t^T \phi(d) \eta \frac{\partial d}{\partial F_t^T} - K \phi(d) \frac{\partial d}{\partial F_t^T} - \sigma \sqrt{\tau} \phi(d) d \frac{\partial d}{\partial F_t^T} \right) \nonumber \\
+    &= B_t^T \eta \Phi\left(\eta d\right) + B_t^T \phi(d) \frac{\partial d}{\partial F_t^T} \left(F_t^T - K - \sigma \sqrt{\tau} \frac{F_t^T - K}{\sigma \sqrt{\tau}} \right) \nonumber \\
+    &= B_t^T \eta \Phi\left(\eta d\right)
+\end{align}
+
+Delta Strike $ \Delta_K $ is the first order derivation of option price against strike.
+
+\begin{align} \label{Delta_K Formula}
+    \frac{\partial v}{\partial K} &= B_t^T \left(\eta F_t^T \phi(d) \eta \frac{\partial d}{\partial K} - \eta K \Phi(\eta d) - \eta \phi(d) \eta \frac{\partial d}{\partial K} + \sigma \sqrt{\tau} \phi(d) \left(-d\right) \frac{\partial d}{\partial K} \right) \nonumber \\
+    &= -B_t^T \eta \Phi(\eta d) + B_t^T \phi(d) \frac{\partial d}{\partial K} \left(F_t^T - K - \sigma \sqrt{\tau} \frac{F_t^T - K}{\sigma \sqrt{\tau}} \right) \nonumber \\
+    &= -B_t^T \eta \Phi(\eta d)
+\end{align}
+
+\subsection{Vega}
+
+Vega $ \mathrm{V} $ is the first order derivative of the option against volatility as $ \frac{\partial v}{\partial \sigma} $.
+
+\begin{align} \label{Vega Formula}
+    \frac{\partial v}{\partial \sigma} &= B_t^T \left(\eta \left(F_t^T - K\right) \phi(d) \eta \frac{\partial d}{\partial \sigma} + \sqrt{\tau} \phi(d) - \sigma \sqrt{\tau} \phi(d) d \frac{\partial d}{\partial \sigma}\right) \nonumber \\
+    &= B_t^T \sqrt{\tau} \phi(d) + B_t^T \phi(d) \frac{\partial d}{\partial \sigma}\left(F_t^T - K - \sigma \sqrt{\tau} \frac{F_t^T - K}{\sigma \sqrt{\tau}}\right) \nonumber \\
+    &= B_t^T \sqrt{\tau} \phi(d)
+\end{align}
+
+\subsection{Theta}
+
+Theta $ \Theta $ is the first order derivative of the option against spot time $ \frac{\partial v}{\partial t} $.
+
+\begin{align} \label{Theta Formula} 
+    \frac{\partial v}{\partial t} &= -\frac{\partial v}{\partial \tau} \nonumber \\
+    &= -r B_t^T v + B_t^T \left(\eta \left(F_t^T - K\right) \phi(d) \eta \frac{\partial d}{\partial \tau} + \frac{1}{2} \sigma \frac{1}{\sqrt{\tau}} \phi(d) - \sigma \sqrt{\tau} \phi(d) d \frac{\partial d}{\partial \tau}\right) \nonumber \\
+    &= -r B_t^T v + \frac{1}{2} B_t^T \frac{\sigma}{\sqrt{\tau}} \phi(d) + B_t^T \left(F_t^T - K - \sigma \sqrt{\tau} \frac{F_t^T - K}{\sigma \sqrt{\tau}}\right) \nonumber \\
+    &= -r B_t^T v + \frac{1}{2} B_t^T \frac{\sigma}{\sqrt{\tau}} \phi(d)
+\end{align}
+
+\subsection{Gamma}
+
+Gamma $ \Gamma $ is the second order derivative of the option price against its underlying forward $ \frac{\partial^2 v}{\partial {F_t^T}^2} $.
+
+\begin{align} \label{Gamma Formula}
+    \frac{\partial^2 v}{\partial {F_t^T}^2} &= B_t^T \eta \phi(d) \eta d \frac{\partial d}{\partial F_t^T} \nonumber \\
+    &= B_t^T \frac{\phi(d)}{\sigma \sqrt{\tau}} 
+\end{align}
+
+Gamma Strike $ \Gamma_K $ defines the second order derivative of option price against the strike $ \frac{\partial^2 v}{\partial {F_t^T}^2} $. 
+
+\begin{align} \label{Gamma_K Formula}
+    \frac{\partial^2 v}{\partial {F_t^T}^2} &= -B_t^T \eta \phi(d) \eta \frac{\partial d}{\partial F_t^T} \nonumber \\
+    &= -B_t^T \frac{\phi(d)}{\sigma \sqrt{\tau}}
+\end{align}
+
+
+\section{Partial Differential Equation}
+
+\begin{align} \label{Normal Model PDE}
+    \Theta + \frac{1}{2} \Gamma \sigma^2 - r v &= 0
+\end{align}
+
+
+\section{Projection from Log-Normal volatility}
+
+Under certain conditions where neither underlying spot nor strike is negative, direct projection exists from log-normal volatility to normal volatility.
+
+\begin{equation} \label{Projection from Log-Normal Vol}
+    \sigma_N \approx \frac{F_t^T - K}{\ln{\left(\frac{F_t^T}{K}\right)}} \frac{\sigma_B}{1 + \frac{\sigma_B^2 \tau}{24}}
+\end{equation}
+
+Knowing that the At-The-Money strike will result in an undefined value where $ \frac{F_t^T - F_t^T}{\ln\frac{F_t^T}{F_t^T}} = \frac{0}{0}$, we apply L'Hôpital's rule to find the limits as below.
+
+\begin{align} \label{Transformation Limits Solution}
+    \lim_{K \to F_t^T}{\frac{F_t^T - K}{\ln\frac{F_t^T}{K}}} &= \frac{1}{\frac{K}{F_t^T} \frac{F_t^T}{K^2}} \nonumber \\
+    &= K
+\end{align}
+
+The At-The-Money case will be reduced to the following.
+
+\begin{align}
+    \sigma_N^{ATM} &\approx \frac{K \sigma_B^{ATM}}{1 +\frac{1}{24} \left(\sigma_B^{ATM}\right)^2 \tau}
+\end{align}
+
+\end{document}
