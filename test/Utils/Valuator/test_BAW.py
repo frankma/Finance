@@ -10,7 +10,7 @@ from src.Utils.Valuator.BSM import BSM
 __author__ = 'frank.ma'
 
 
-class MyTestCase(unittest.TestCase):
+class TestBAW(unittest.TestCase):
     def test_error_term(self):
         taus = np.linspace(1.0 / 365.0, 10.0, num=101)
         call_d_h_d_tau_s = np.zeros(np.shape(taus))
