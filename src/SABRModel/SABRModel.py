@@ -108,9 +108,11 @@ class SABRModelLognormalApprox(SABRModel):
             return black_vol
         elif vol_type == VolType.normal:
             # TODO: develop this method -- SABR refactor
-            raise ValueError('method not developed yet')
+            raise NotImplementedError('method not developed yet')
         else:
-            raise ValueError('unrecognized volatility type %s' % vol_type.value)
+            msg = 'unrecognized volatility type %s' % vol_type.value
+            logger.error(msg)
+            raise ValueError(msg)
 
     def calc_vol_vec(self, forward: float or np.array, strike: np.array or float,
                      vol_type: VolType = VolType.black) -> np.array:
@@ -123,8 +125,9 @@ class SABRModelLognormalApprox(SABRModel):
             n = np.size(forward)
             strike = np.full(n, strike)
         else:
-            raise ValueError('only one vectorization is allowed for either forward (%i) or strike (%i)'
-                             % (n_forward, n_strike))
+            msg = 'only one vectorization is allowed for either forward (%i) or strike (%i)' % (n_forward, n_strike)
+            logger.error(msg)
+            raise ValueError(msg)
         f_min_k = forward - strike
         f_mul_k = forward * strike
         ln_f_per_k = np.log(forward / strike)
@@ -154,7 +157,7 @@ class SABRModelLognormalApprox(SABRModel):
             return black_vol
         elif vol_type == VolType.normal:
             # TODO: develop this method -- SABR refactor
-            raise ValueError('method not developed yet')
+            raise NotImplementedError('method not developed yet')
         else:
             raise ValueError('unrecognized volatility type %s' % vol_type.value)
 
@@ -317,7 +320,7 @@ class SABRModelNormalApprox(SABRModel):
 
         if vol_type == VolType.black:
             # TODO: develop this method -- SABR refactor
-            raise ValueError('method not developed yet')
+            raise NotImplementedError('method not developed yet')
         elif vol_type == VolType.normal:
             return normal_vol
         else:

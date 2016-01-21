@@ -32,7 +32,9 @@ class FXQuotesConverter(object):
         deltas = [-0.1, -0.25, 0.5, 0.25, 0.1]
         is_atm = [False, False, True, False, False]
         if not all(key in self.quotes for key in keys):
-            raise ValueError('all keys of quote set %s are required' % keys.__str__())
+            msg = 'all keys of quote set %s are required' % keys.__str__()
+            logger.error(msg)
+            raise ValueError(msg)
 
         vols = self.read_quotes(self.quotes)
         ks = np.zeros(np.shape(vols), dtype=float)
@@ -120,7 +122,9 @@ class FXQuotesConverter(object):
                 nr = NewtonRaphson(zeroth, first, spot)
                 strike = nr.solve()
             else:
-                raise ValueError('Unrecognized optimization method %s.' % method)
+                msg = 'unrecognized optimization method %s.' % method
+                logger.error(msg)
+                raise ValueError(msg)
 
         else:
             if is_forward_delta:

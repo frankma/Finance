@@ -34,7 +34,9 @@ class RealNumberTransformer(object):
             elif self.method == 'norm':
                 constraint = self.lb + self.distance * norm.cdf(unconstraint)
             else:
-                raise ValueError('Unrecognized transformation method %s' % self.method)
+                msg = 'Unrecognized transformation method %s' % self.method
+                logger.error(msg)
+                raise ValueError(msg)
 
         return constraint
 
@@ -60,6 +62,8 @@ class RealNumberTransformer(object):
             elif self.method == 'norm':
                 unconstraint = norm.ppf(constraint - self.lb) / self.distance
             else:
-                raise ValueError("Unrecognized transformation method %s" % self.method)
+                msg = 'Unrecognized transformation method %s' % self.method
+                logger.error(msg)
+                raise ValueError(msg)
 
         return unconstraint

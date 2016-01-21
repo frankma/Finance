@@ -15,7 +15,9 @@ class Brent(ISolver):
         v_lb = f.evaluate(a)
         v_ub = f.evaluate(b)
         if v_lb * v_ub > 0.0:
-            raise ValueError('Initial initial bucket: function evaluation yield same sign.')
+            msg = 'Initial initial bucket: function evaluation yield same sign.'
+            logger.error(msg)
+            raise ValueError(msg)
         self.f = f
         self.a = a
         self.b = b
