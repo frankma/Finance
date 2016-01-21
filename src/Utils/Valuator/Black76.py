@@ -1,3 +1,4 @@
+import logging
 from math import log, sqrt
 
 import numpy as np
@@ -9,6 +10,8 @@ from src.Utils.Solver.IVariateFunction import IUnivariateFunction
 from src.Utils.Solver.NewtonRaphson import NewtonRaphson
 
 __author__ = 'frank.ma'
+
+logger = logging.getLogger(__name__)
 
 
 class Black76(object):

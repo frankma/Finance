@@ -1,6 +1,9 @@
 import datetime
+import logging
 
 __author__ = 'frank.ma'
+
+logger = logging.getLogger(__name__)
 
 
 class IVolatilitySurface(object):

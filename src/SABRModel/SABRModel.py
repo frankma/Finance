@@ -1,3 +1,4 @@
+import logging
 from math import log
 
 import numpy as np
@@ -9,6 +10,8 @@ from src.Utils.Valuator.NormalModel import NormalModelVec
 from src.Utils.VolType import VolType
 
 __author__ = 'frank.ma'
+
+logger = logging.getLogger(__name__)
 
 
 class SABRModel(object):

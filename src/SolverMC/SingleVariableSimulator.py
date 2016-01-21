@@ -1,7 +1,11 @@
+import logging
+
 import numpy as np
 from scipy.stats import norm
 
 __author__ = 'frank.ma'
+
+logger = logging.getLogger(__name__)
 
 
 class SingleVariableSimulator(object):
@@ -16,14 +20,14 @@ class SingleVariableSimulator(object):
         elif model.lower() == 'normal':
             self.model = 'normal'
         else:
-            raise ValueError('Unrecognized model %s, expect either Normal or LogNormal.')
+            raise ValueError('unrecognized model %s, expect either Normal or LogNormal.')
         self.curr = np.full(n_scenarios, init)
         self.t = 0.0
 
     def evolve(self, dt: float):
 
         if dt < 0.0:
-            raise ValueError('Time incremental %r should be strictly positive.' % dt)
+            raise ValueError('time incremental %r should be strictly positive.' % dt)
 
         self.t += dt
 

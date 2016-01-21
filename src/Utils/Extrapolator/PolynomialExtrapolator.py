@@ -1,9 +1,13 @@
+import logging
+
 import numpy as np
 from numpy.polynomial.polynomial import polyval
 
 from src.Utils.OptionType import OptionType
 
 __author__ = 'frank.ma'
+
+logger = logging.getLogger(__name__)
 
 
 class PolynomialExtrapolator(object):

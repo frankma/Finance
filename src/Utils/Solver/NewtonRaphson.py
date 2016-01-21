@@ -1,9 +1,13 @@
+import logging
+
 from scipy.optimize import newton
 
 from src.Utils.Solver.ISolver import ISolver
 from src.Utils.Solver.IVariateFunction import IUnivariateFunction
 
 __author__ = 'frank.ma'
+
+logger = logging.getLogger(__name__)
 
 
 class NewtonRaphson(ISolver):
@@ -25,8 +29,8 @@ class NewtonRaphson(ISolver):
             d = self.d.evaluate(x)
 
         if count >= self.ITR_TOL:
-            print("WARNING: Newton-Raphson method iteration maxed out %i steps, return best guess with error %r"
-                  % (self.ITR_TOL, y))
+            logger.warning('Newton-Raphson method iteration maxed out %i steps, return best guess with error %r'
+                           % (self.ITR_TOL, y))
         return x
 
     def solve(self):

@@ -1,6 +1,10 @@
+import logging
+
 import numpy as np
 
 __author__ = 'frank.ma'
+
+logger = logging.getLogger(__name__)
 
 
 class HestonModel(object):

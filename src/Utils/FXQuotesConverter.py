@@ -1,3 +1,5 @@
+import logging
+
 import numpy as np
 from scipy.stats import norm
 
@@ -8,6 +10,8 @@ from src.Utils.Solver.NewtonRaphson import NewtonRaphson
 from src.Utils.Valuator.BSM import BSM
 
 __author__ = 'frank.ma'
+
+logger = logging.getLogger(__name__)
 
 
 class FXQuotesConverter(object):

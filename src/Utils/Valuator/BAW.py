@@ -1,3 +1,5 @@
+import logging
+
 import numpy as np
 
 from src.Utils.OptionType import OptionType
@@ -6,6 +8,8 @@ from src.Utils.Solver.NewtonRaphson import NewtonRaphson
 from src.Utils.Valuator.BSM import BSM
 
 __author__ = 'frank.ma'
+
+logger = logging.getLogger(__name__)
 
 
 class BAW(object):

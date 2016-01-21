@@ -1,10 +1,14 @@
+import logging
+
 import numpy as np
 import pandas as pd
 
-from src.SolverFD.InitialCondition1D import InitialCondition1D
 from src.SolverFD.BoundaryCondition1D import BoundaryCondition1D
+from src.SolverFD.InitialCondition1D import InitialCondition1D
 
 __author__ = 'frank.ma'
+
+logger = logging.getLogger(__name__)
 
 
 class FDSolver1D(object):
@@ -20,7 +24,7 @@ class FDSolver1D(object):
         self.diagnostic = pd.DataFrame(columns=self.spaces)
 
     def evolve(self, dt: float):
-        
+
         pass
 
     def solve(self):

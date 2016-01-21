@@ -1,8 +1,11 @@
+import logging
 from math import tan, atan, pi, exp, log
 
 from scipy.stats import norm
 
 __author__ = 'frank.ma'
+
+logger = logging.getLogger(__name__)
 
 
 class RealNumberTransformer(object):
@@ -18,7 +21,7 @@ class RealNumberTransformer(object):
         constraint = unconstraint
 
         if self.lb is None and self.ub is None:
-            print('WARNING: neither lower nor upper bound is provided, no transform will be performed.')
+            logger.warning('neither lower nor upper bound is provided, no transform will be performed.')
         elif self.lb is None:
             constraint = self.ub - exp(unconstraint)
         elif self.ub is None:
@@ -40,7 +43,7 @@ class RealNumberTransformer(object):
         unconstraint = constraint
 
         if self.lb is None and self.ub is None:
-            print('WARNING: neither lower nor upper bound is provided, no transform will be performed.')
+            logger.warning('neither lower nor upper bound is provided, no transform will be performed.')
         elif self.lb is None:
             unconstraint = log(self.ub - constraint)
         elif self.ub is None:

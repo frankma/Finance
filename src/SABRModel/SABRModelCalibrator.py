@@ -1,3 +1,5 @@
+import logging
+
 import numpy as np
 import scipy.optimize as opt
 
@@ -5,6 +7,8 @@ from src.SABRModel.SABRModel import SABRModel, SABRModelLognormalApprox, SABRMod
 from src.Utils.VolType import VolType
 
 __author__ = 'frank.ma'
+
+logger = logging.getLogger(__name__)
 
 
 class SABRModelCalibrator(object):

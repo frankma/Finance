@@ -1,9 +1,13 @@
+import logging
+
 from scipy.optimize import brentq
 
 from src.Utils.Solver.ISolver import ISolver
 from src.Utils.Solver.IVariateFunction import IUnivariateFunction
 
 __author__ = 'frank.ma'
+
+logger = logging.getLogger(__name__)
 
 
 class Brent(ISolver):
@@ -66,7 +70,7 @@ class Brent(ISolver):
                 a, b = b, a
 
             if iterator_count > self.ITR_TOL:
-                print('WARNING: maximum iteration count (%i) reached' % self.ITR_TOL)
+                logger.warning('maximum iteration count (%i) reached' % self.ITR_TOL)
                 break
 
         return b

@@ -1,3 +1,4 @@
+import logging
 from math import log, exp, sqrt
 
 import numpy as np
@@ -9,6 +10,8 @@ from src.Utils.Solver.IVariateFunction import IUnivariateFunction
 from src.Utils.Solver.NewtonRaphson import NewtonRaphson
 
 __author__ = 'frank.ma'
+
+logger = logging.getLogger(__name__)
 
 
 class BSM(object):
@@ -111,7 +114,7 @@ class BSMVec(BSM):
     def price(s: np.array, k: np.array, tau: float, r: float, q: float, sig: np.array, opt_type: OptionType):
         if tau < 1e-6:
             if tau < 0.0:
-                print('WARNING: negative tau %r is provided in pricing function, return payoff.' % tau)
+                logger.warning('negative tau %r is provided in pricing function, return payoff.' % tau)
             return BSMVec.payoff(s, k, opt_type)
         else:
             eta = opt_type.value
@@ -128,7 +131,7 @@ class BSMVec(BSM):
     def delta(s: np.array, k: np.array, tau: float, r: float, q: float, sig: np.array, opt_type: OptionType):
         if tau < 1e-6:
             if tau < 0.0:
-                print('WARNING: negative tau %r is provided in delta function, return zeros.' % tau)
+                logger.warning('negative tau %r is provided in delta function, return zeros.' % tau)
             return np.zeros(s.__len__())
         else:
             eta = opt_type.value
