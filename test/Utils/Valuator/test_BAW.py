@@ -1,3 +1,5 @@
+import logging
+import sys
 import unittest
 
 import matplotlib.pyplot as plt
@@ -9,9 +11,20 @@ from src.Utils.Valuator.BSM import BSM
 
 __author__ = 'frank.ma'
 
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+
+sh = logging.StreamHandler()
+sh.setLevel(logging.DEBUG)
+sh.setFormatter(formatter)
+logger.addHandler(sh)
+
 
 class TestBAW(unittest.TestCase):
     def test_error_term(self):
+        logger.info('%s starts' % sys._getframe().f_code.co_name)
         taus = np.linspace(1.0 / 365.0, 10.0, num=101)
         call_d_h_d_tau_s = np.zeros(np.shape(taus))
         put_d_h_d_tau_s = np.zeros(np.shape(taus))
@@ -38,14 +51,16 @@ class TestBAW(unittest.TestCase):
         # plt.plot(taus, put_d_h_d_tau_s, 'x-')
         # plt.legend(['call', 'put'])
         plt.show()
+        logger.info('%s passes' % sys._getframe().f_code.co_name)
         pass
 
     # recover the cases described in Barone-Adesi and Whaley (1987)
     def test_baw_87_regression(self):
+        logger.info('%s starts' % sys._getframe().f_code.co_name)
         spots = np.linspace(80, 120, num=5)
         strike = 100
 
-        print('r = 0.08, sig = 0.2, tau = 0.25\ns =', spots)
+        # print('r = 0.08, sig = 0.2, tau = 0.25\ns =', spots)
         rate = 0.08
         div = 0.12
         sigma = 0.2
@@ -60,14 +75,14 @@ class TestBAW(unittest.TestCase):
             call_price_eur = BSM.price(spot, strike, tau, rate, div, sigma, OptionType.call)
             put_price_ame = BAW.price(spot, strike, tau, rate, div, sigma, OptionType.put)
             put_price_eur = BSM.price(spot, strike, tau, rate, div, sigma, OptionType.put)
-            print('[%r, %r, %r, %r],'
-                  % (call_price_eur, call_price_ame, put_price_eur, put_price_ame))
+            # print('[%r, %r, %r, %r],'
+            #       % (call_price_eur, call_price_ame, put_price_eur, put_price_ame))
             benchmarks = tgt[idx]
             res = [call_price_eur, call_price_ame, put_price_eur, put_price_ame]
             for jdx in range(4):
                 self.assertAlmostEqual(benchmarks[jdx], res[jdx], places=8)
 
-        print('\nr = 0.12, sig = 0.2, tau = 0.25\ns =', spots)
+        # print('\nr = 0.12, sig = 0.2, tau = 0.25\ns =', spots)
         rate = 0.12
         div = 0.16
         sigma = 0.2
@@ -82,14 +97,14 @@ class TestBAW(unittest.TestCase):
             call_price_eur = BSM.price(spot, strike, tau, rate, div, sigma, OptionType.call)
             put_price_ame = BAW.price(spot, strike, tau, rate, div, sigma, OptionType.put)
             put_price_eur = BSM.price(spot, strike, tau, rate, div, sigma, OptionType.put)
-            print('[%r, %r, %r, %r],'
-                  % (call_price_eur, call_price_ame, put_price_eur, put_price_ame))
+            # print('[%r, %r, %r, %r],'
+            #       % (call_price_eur, call_price_ame, put_price_eur, put_price_ame))
             benchmarks = tgt[idx]
             res = [call_price_eur, call_price_ame, put_price_eur, put_price_ame]
             for jdx in range(4):
                 self.assertAlmostEqual(benchmarks[jdx], res[jdx], places=8)
 
-        print('\nr = 0.08, sig = 0.40, tau = 0.25\ns =', spots)
+        # print('\nr = 0.08, sig = 0.40, tau = 0.25\ns =', spots)
         rate = 0.08
         div = 0.12
         sigma = 0.4
@@ -104,14 +119,14 @@ class TestBAW(unittest.TestCase):
             call_price_eur = BSM.price(spot, strike, tau, rate, div, sigma, OptionType.call)
             put_price_ame = BAW.price(spot, strike, tau, rate, div, sigma, OptionType.put)
             put_price_eur = BSM.price(spot, strike, tau, rate, div, sigma, OptionType.put)
-            print('[%r, %r, %r, %r],'
-                  % (call_price_eur, call_price_ame, put_price_eur, put_price_ame))
+            # print('[%r, %r, %r, %r],'
+            #       % (call_price_eur, call_price_ame, put_price_eur, put_price_ame))
             benchmarks = tgt[idx]
             res = [call_price_eur, call_price_ame, put_price_eur, put_price_ame]
             for jdx in range(4):
                 self.assertAlmostEqual(benchmarks[jdx], res[jdx], places=8)
 
-        print('\nr = 0.08, sig = 0.20, tau = 0.50\ns =', spots)
+        # print('\nr = 0.08, sig = 0.20, tau = 0.50\ns =', spots)
         rate = 0.08
         div = 0.12
         sigma = 0.2
@@ -126,14 +141,14 @@ class TestBAW(unittest.TestCase):
             call_price_eur = BSM.price(spot, strike, tau, rate, div, sigma, OptionType.call)
             put_price_ame = BAW.price(spot, strike, tau, rate, div, sigma, OptionType.put)
             put_price_eur = BSM.price(spot, strike, tau, rate, div, sigma, OptionType.put)
-            print('[%r, %r, %r, %r],'
-                  % (call_price_eur, call_price_ame, put_price_eur, put_price_ame))
+            # print('[%r, %r, %r, %r],'
+            #       % (call_price_eur, call_price_ame, put_price_eur, put_price_ame))
             benchmarks = tgt[idx]
             res = [call_price_eur, call_price_ame, put_price_eur, put_price_ame]
             for jdx in range(4):
                 self.assertAlmostEqual(benchmarks[jdx], res[jdx], places=8)
 
-        print('\nr = 0.08, sig = 0.2, tau = 0.25\ns =', spots)
+        # print('\nr = 0.08, sig = 0.2, tau = 0.25\ns =', spots)
         rate = 0.08
         div = 0.04
         sigma = 0.2
@@ -148,14 +163,14 @@ class TestBAW(unittest.TestCase):
             call_price_eur = BSM.price(spot, strike, tau, rate, div, sigma, OptionType.call)
             put_price_ame = BAW.price(spot, strike, tau, rate, div, sigma, OptionType.put)
             put_price_eur = BSM.price(spot, strike, tau, rate, div, sigma, OptionType.put)
-            print('[%r, %r, %r, %r],'
-                  % (call_price_eur, call_price_ame, put_price_eur, put_price_ame))
+            # print('[%r, %r, %r, %r],'
+            #       % (call_price_eur, call_price_ame, put_price_eur, put_price_ame))
             benchmarks = tgt[idx]
             res = [call_price_eur, call_price_ame, put_price_eur, put_price_ame]
             for jdx in range(4):
                 self.assertAlmostEqual(benchmarks[jdx], res[jdx], places=8)
 
-        print('\nr = 0.12, sig = 0.2, tau = 0.25\ns =', spots)
+        # print('\nr = 0.12, sig = 0.2, tau = 0.25\ns =', spots)
         rate = 0.12
         div = 0.08
         sigma = 0.2
@@ -170,14 +185,14 @@ class TestBAW(unittest.TestCase):
             call_price_eur = BSM.price(spot, strike, tau, rate, div, sigma, OptionType.call)
             put_price_ame = BAW.price(spot, strike, tau, rate, div, sigma, OptionType.put)
             put_price_eur = BSM.price(spot, strike, tau, rate, div, sigma, OptionType.put)
-            print('[%r, %r, %r, %r],'
-                  % (call_price_eur, call_price_ame, put_price_eur, put_price_ame))
+            # print('[%r, %r, %r, %r],'
+            #       % (call_price_eur, call_price_ame, put_price_eur, put_price_ame))
             benchmarks = tgt[idx]
             res = [call_price_eur, call_price_ame, put_price_eur, put_price_ame]
             for jdx in range(4):
                 self.assertAlmostEqual(benchmarks[jdx], res[jdx], places=8)
 
-        print('\nr = 0.08, sig = 0.40, tau = 0.25\ns =', spots)
+        # print('\nr = 0.08, sig = 0.40, tau = 0.25\ns =', spots)
         rate = 0.08
         div = 0.04
         sigma = 0.4
@@ -192,14 +207,14 @@ class TestBAW(unittest.TestCase):
             call_price_eur = BSM.price(spot, strike, tau, rate, div, sigma, OptionType.call)
             put_price_ame = BAW.price(spot, strike, tau, rate, div, sigma, OptionType.put)
             put_price_eur = BSM.price(spot, strike, tau, rate, div, sigma, OptionType.put)
-            print('[%r, %r, %r, %r],'
-                  % (call_price_eur, call_price_ame, put_price_eur, put_price_ame))
+            # print('[%r, %r, %r, %r],'
+            #       % (call_price_eur, call_price_ame, put_price_eur, put_price_ame))
             benchmarks = tgt[idx]
             res = [call_price_eur, call_price_ame, put_price_eur, put_price_ame]
             for jdx in range(4):
                 self.assertAlmostEqual(benchmarks[jdx], res[jdx], places=8)
 
-        print('\nr = 0.08, sig = 0.20, tau = 0.50\ns =', spots)
+        # print('\nr = 0.08, sig = 0.20, tau = 0.50\ns =', spots)
         rate = 0.08
         div = 0.04
         sigma = 0.2
@@ -214,14 +229,17 @@ class TestBAW(unittest.TestCase):
             call_price_eur = BSM.price(spot, strike, tau, rate, div, sigma, OptionType.call)
             put_price_ame = BAW.price(spot, strike, tau, rate, div, sigma, OptionType.put)
             put_price_eur = BSM.price(spot, strike, tau, rate, div, sigma, OptionType.put)
-            print('[%r, %r, %r, %r],'
-                  % (call_price_eur, call_price_ame, put_price_eur, put_price_ame))
+            # print('[%r, %r, %r, %r],'
+            #       % (call_price_eur, call_price_ame, put_price_eur, put_price_ame))
             benchmarks = tgt[idx]
             res = [call_price_eur, call_price_ame, put_price_eur, put_price_ame]
             for jdx in range(4):
-                self.assertAlmostEqual(benchmarks[jdx], res[jdx], places=8)
+                self.assertAlmostEqual(benchmarks[jdx], res[jdx], places=9)
+        logger.info('%s passes' % sys._getframe().f_code.co_name)
+        pass
 
     def test_delta(self):
+        logger.info('%s starts' % sys._getframe().f_code.co_name)
         k, tau, r, q, sig = 100.0, 0.5, 0.02, 0.04, 0.4
         ds = 1e-6
         spots = list(np.linspace(80.0, 120.0, num=9))
@@ -232,11 +250,13 @@ class TestBAW(unittest.TestCase):
                 v_u = BAW.price(s * (1.0 + ds), k, tau, r, q, sig, opt_type)
                 delta_n = (v_u - v_d) / (2.0 * s * ds)
                 diff = delta / delta_n - 1.0
-                print('%r\t%s\t%.12f\t%.12f\t%.6e' % (s, opt_type.name, delta, delta_n, diff))
+                # print('%r\t%s\t%.12f\t%.12f\t%.6e' % (s, opt_type.name, delta, delta_n, diff))
                 self.assertAlmostEqual(0.0, diff, places=8)
+        logger.info('%s passes' % sys._getframe().f_code.co_name)
         pass
 
     def test_gamma(self):
+        logger.info('%s starts' % sys._getframe().f_code.co_name)
         k, tau, r, q, sig = 110.0, 0.5, 0.02, 0.04, 0.4
         ds = 1e-4
         spots = list(np.linspace(80.0, 120.0, num=9))
@@ -248,11 +268,13 @@ class TestBAW(unittest.TestCase):
                 v_u = BAW.price(s * (1.0 + ds), k, tau, r, q, sig, opt_type)
                 gamma_n = (v_u - 2.0 * v + v_d) / ((s * ds) ** 2)
                 diff = gamma / gamma_n - 1.0
-                print('%r\t%s\t%.12f\t%.12f\t%.6e' % (s, opt_type.name, gamma, gamma_n, diff))
+                # print('%r\t%s\t%.12f\t%.12f\t%.6e' % (s, opt_type.name, gamma, gamma_n, diff))
                 self.assertAlmostEqual(0.0, diff, places=6)
+        logger.info('%s passes' % sys._getframe().f_code.co_name)
         pass
 
     def test_theta(self):
+        logger.info('%s starts' % sys._getframe().f_code.co_name)
         s, k, r, q, sig = 100.0, 110.0, 0.02, 0.04, 0.4
         dt = 1e-6
         ts = list(np.linspace(0.25, 4.25, num=9))
@@ -263,6 +285,7 @@ class TestBAW(unittest.TestCase):
                 v_u = BAW.price(s, k, tau * (1.0 - dt), r, q, sig, opt_type)
                 theta_n = (v_u - v_d) / (2.0 * tau * dt)
                 diff = theta / theta_n - 1.0
-                print('%r\t%s\t%.12f\t%.12f\t%.6e' % (tau, opt_type.name, theta, theta_n, diff))
+                # print('%r\t%s\t%.12f\t%.12f\t%.6e' % (tau, opt_type.name, theta, theta_n, diff))
                 self.assertAlmostEqual(0.0, diff / 10.0, places=1)  # up to 10% allowance for long maturities
+        logger.info('%s passes' % sys._getframe().f_code.co_name)
         pass
