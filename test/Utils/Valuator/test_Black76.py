@@ -1,3 +1,5 @@
+import logging
+import sys
 from math import log
 from unittest import TestCase
 
@@ -8,9 +10,19 @@ from src.Utils.Valuator.Black76 import Black76, Black76Vec
 
 __author__ = 'frank.ma'
 
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+sh = logging.StreamHandler()
+sh.setLevel(logging.DEBUG)
+sh.setFormatter(formatter)
+logger.addHandler(sh)
+
 
 class TestBlack76(TestCase):
     def test_price(self):
+        logger.info('%s starts' % sys._getframe().f_code.co_name)
         forward = 110.
         strike = 123.
         ttm = 0.75
@@ -24,8 +36,11 @@ class TestBlack76(TestCase):
         rhs = bond * (forward - strike)
 
         self.assertAlmostEqual(lhs, rhs, places=12, msg='call put parity check failed')
+        logger.info('%s passes' % sys._getframe().f_code.co_name)
+        pass
 
     def test_imp_vol(self):
+        logger.info('%s starts' % sys._getframe().f_code.co_name)
         forward = 110.
         strike = 123.
         ttm = 0.75
@@ -40,8 +55,11 @@ class TestBlack76(TestCase):
 
         self.assertAlmostEqual(sigma, call_imp_vol, places=6, msg='call implied vol search failed')
         self.assertAlmostEqual(sigma, put_imp_vol, places=6, msg='put implied vol search failed')
+        logger.info('%s passes' % sys._getframe().f_code.co_name)
+        pass
 
     def test_pde(self):
+        logger.info('%s starts' % sys._getframe().f_code.co_name)
         forward = 110.
         strike = 123.
         ttm = 0.75
@@ -67,10 +85,13 @@ class TestBlack76(TestCase):
 
         self.assertAlmostEqual(call_lhs, call_rhs, places=6, msg='call PDE check failed')
         self.assertAlmostEqual(put_lhs, put_rhs, places=6, msg='put PDE check failed')
+        logger.info('%s passes' % sys._getframe().f_code.co_name)
+        pass
 
 
 class TestBlack76Vec(TestCase):
     def test_price_vec(self):
+        logger.info('%s starts' % sys._getframe().f_code.co_name)
         # test vectorization correctness against none-vectorized method
         # expect high precision reconciliation
         forward = 150.0
@@ -87,9 +108,11 @@ class TestBlack76Vec(TestCase):
             put_price = Black76.price(forward, strike, ttm, sigmas[idx], bond, OptionType.put)
             self.assertAlmostEqual(call_price, call_prices[idx], places=12, msg='call vectorization differs')
             self.assertAlmostEqual(put_price, put_prices[idx], places=12, msg='put vectorization differs')
+        logger.info('%s passes' % sys._getframe().f_code.co_name)
         pass
 
     def test_imp_vol_vec(self):
+        logger.info('%s starts' % sys._getframe().f_code.co_name)
         # test recovery of implied vol searching function
         # expect medium to high precision of recovered implied volatility
         forward = 150.0
@@ -107,9 +130,11 @@ class TestBlack76Vec(TestCase):
         for idx, sigma in enumerate(sigmas):
             self.assertAlmostEqual(sigma, call_vols[idx], places=6, msg='call vol regression failed')
             self.assertAlmostEqual(sigma, put_vols[idx], places=6, msg='call vol regression failed')
+        logger.info('%s passes' % sys._getframe().f_code.co_name)
         pass
 
     def test_backward_pde(self):
+        logger.info('%s starts' % sys._getframe().f_code.co_name)
         # test parity of the backward pde where theta + 1/2 F^2 sigma^2 Gamma = r V
         # expect high precision of parity
         forward = 150.0
@@ -138,9 +163,11 @@ class TestBlack76Vec(TestCase):
                                    msg='backward pde parity failed for call with strike %f' % k)
             self.assertAlmostEqual(put_lhs[idx], put_rhs[idx], places=12,
                                    msg='backward pde parity failed for put with strike %f' % k)
+        logger.info('%s passes' % sys._getframe().f_code.co_name)
         pass
 
     def test_forward_pde(self):
+        logger.info('%s starts' % sys._getframe().f_code.co_name)
         # test parity of the forward pde where theta + 1/2 K^2 sigma^2 Gamma_K = r V
         # expect high precision of parity
         forward = 150.0
@@ -169,4 +196,5 @@ class TestBlack76Vec(TestCase):
                                    msg='backward pde parity failed for call with strike %f' % k)
             self.assertAlmostEqual(put_lhs[idx], put_rhs[idx], places=12,
                                    msg='backward pde parity failed for put with strike %f' % k)
+        logger.info('%s passes' % sys._getframe().f_code.co_name)
         pass

@@ -1,3 +1,5 @@
+import logging
+import sys
 from unittest import TestCase
 
 import numpy as np
@@ -6,9 +8,19 @@ from src.Utils.Valuator.VarianceReplication import VarianceReplication
 
 __author__ = 'frank.ma'
 
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+sh = logging.StreamHandler()
+sh.setLevel(logging.DEBUG)
+sh.setFormatter(formatter)
+logger.addHandler(sh)
+
 
 class TestVarianceReplication(TestCase):
     def test_calc_variance(self):
+        logger.info('%s starts' % sys._getframe().f_code.co_name)
         # CBOE VIX white paper samples
         k_c = [800, 900, 1000, 1050, 1100, 1125, 1150, 1175, 1200, 1220, 1225, 1240, 1250, 1260, 1270, 1275, 1280, 1290,
                1300, 1305, 1310, 1315, 1320, 1325, 1330, 1335, 1340, 1345, 1350, 1355, 1360, 1365, 1370, 1375, 1380,
@@ -106,4 +118,5 @@ class TestVarianceReplication(TestCase):
         variance = vr.calc_variance()
         self.assertAlmostEqual(0.018837995, variance, places=3)
 
+        logger.info('%s passes' % sys._getframe().f_code.co_name)
         pass

@@ -1,3 +1,5 @@
+import logging
+import sys
 from unittest import TestCase
 
 import numpy as np
@@ -9,9 +11,19 @@ from src.Utils.Valuator.BSM import BSM
 
 __author__ = 'frank.ma'
 
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+sh = logging.StreamHandler()
+sh.setLevel(logging.DEBUG)
+sh.setFormatter(formatter)
+logger.addHandler(sh)
+
 
 class TestFXQuotesConverter(TestCase):
     def test_read_quotes(self):
+        logger.info('%s starts' % sys._getframe().f_code.co_name)
         sig_10, sig_25, sig_50, sig_75, sig_90 = 0.40, 0.35, 0.30, 0.33, 0.34
 
         quotes = {'rr_10': sig_90 - sig_10,
@@ -41,9 +53,11 @@ class TestFXQuotesConverter(TestCase):
         self.assertAlmostEqual(sig_75, res[4], places=12, msg='delta 0.75 conversion failed')
         self.assertAlmostEqual(sig_90, res[5], places=12, msg='delta 0.90 conversion failed')
         self.assertAlmostEqual(sig_95, res[6], places=12, msg='delta 0.95 conversion failed')
+        logger.info('%s passes' % sys._getframe().f_code.co_name)
         pass
 
     def test_vol_to_strike(self):
+        logger.info('%s starts' % sys._getframe().f_code.co_name)
         spot = 150.0
         taus = [0.05, 0.1, 0.2, 0.5, 0.75, 1.0]
         rate_dom = 0.04
@@ -87,9 +101,11 @@ class TestFXQuotesConverter(TestCase):
                 self.assertAlmostEqual(strike, strike_rep, places=12,
                                        msg='vol %.4f to strike %.2f at delta %.12f conversion failed at tau %.4f'
                                            % (vol, strike, delta, tau))
+        logger.info('%s passes' % sys._getframe().f_code.co_name)
         pass
 
     def test_convert(self):
+        logger.info('%s starts' % sys._getframe().f_code.co_name)
         deltas_benchmark = [-0.1, -0.25, 0.5, 0.25, 0.1]
         spot = 1.08865
         tau = 0.019164956
@@ -146,6 +162,7 @@ class TestFXQuotesConverter(TestCase):
         for kdx in range(strikes.__len__()):
             self.assertAlmostEqual(deltas_benchmark[kdx], deltas[kdx], places=12)
 
+        logger.info('%s passes' % sys._getframe().f_code.co_name)
         pass
 
     def test_convert_premium_adjusted(self):
