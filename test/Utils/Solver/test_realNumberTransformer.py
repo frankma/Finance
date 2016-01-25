@@ -1,16 +1,27 @@
+import logging
+import sys
 from unittest import TestCase
 
-import numpy as np
 import matplotlib.pylab as plt
+import numpy as np
 
 from src.Utils.Solver.RealNumberTransformer import RealNumberTransformer
 
 __author__ = 'frank.ma'
 
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+sh = logging.StreamHandler()
+sh.setLevel(logging.DEBUG)
+sh.setFormatter(formatter)
+logger.addHandler(sh)
+
 
 class TestRealNumberTransformer(TestCase):
-
     def test_uc_to_c(self):
+        logger.info('%s starts' % sys._getframe().f_code.co_name)
 
         x = np.array(range(-200, 200)) * 0.1
         lower_bound = 0.0
@@ -53,7 +64,11 @@ class TestRealNumberTransformer(TestCase):
             self.assertAlmostEqual(v, x_lb[idx], places=6, msg='lower bound log method check failed.')
             self.assertAlmostEqual(v, x_ub[idx], places=6, msg='upper bound log method check failed.')
 
+        logger.info('%s passes' % sys._getframe().f_code.co_name)
+        pass
+
     def test_c_to_uc(self):
+        logger.info('%s starts' % sys._getframe().f_code.co_name)
 
         y = np.array(range(0, 4)) * 0.01
         lower_bound = -1e-4
@@ -96,7 +111,11 @@ class TestRealNumberTransformer(TestCase):
             self.assertAlmostEqual(v, y_lb[idx], places=6, msg='norm method check failed.')
             self.assertAlmostEqual(v, y_ub[idx], places=6, msg='norm method check failed.')
 
+        logger.info('%s passes' % sys._getframe().f_code.co_name)
+        pass
+
     def test_graphical(self):
+        logger.info('%s starts' % sys._getframe().f_code.co_name)
 
         x = np.arange(-20.0, 20.0, 0.1)
         lower_bound = -1.0
@@ -118,4 +137,6 @@ class TestRealNumberTransformer(TestCase):
         plt.plot(x, y_abs, 'r', x, y_log, 'b', x, y_norm, 'k')
         plt.legend(('absolute', 'arc-tangent', 'normal-inverse'))
         plt.show()
+
+        logger.info('%s passes' % sys._getframe().f_code.co_name)
         pass

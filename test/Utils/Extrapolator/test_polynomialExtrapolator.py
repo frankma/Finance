@@ -1,3 +1,5 @@
+import logging
+import sys
 from unittest import TestCase
 
 import matplotlib.pyplot as plt
@@ -10,9 +12,19 @@ from src.Utils.Valuator.Black76 import Black76, Black76Vec
 
 __author__ = 'frank.ma'
 
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+sh = logging.StreamHandler()
+sh.setLevel(logging.DEBUG)
+sh.setFormatter(formatter)
+logger.addHandler(sh)
+
 
 class TestPolynomialExtrapolator(TestCase):
     def test_first_order(self):
+        logger.info('%s starts' % sys._getframe().f_code.co_name)
         # numerical implication of first derivative against analytical
         # expect to see regression with high precision as central difference is applied
         xs = np.linspace(10.0, 200.0, num=191)
@@ -32,9 +44,11 @@ class TestPolynomialExtrapolator(TestCase):
                 rel_diff = first[idx] / first_n[idx] - 1.0
                 self.assertAlmostEqual(rel_diff, 0.0, places=6)
                 # print('Is reciprocal: ', is_reciprocal, '\nAnalytical', first, '\nNumerical', first_n)
+        logger.info('%s passes' % sys._getframe().f_code.co_name)
         pass
 
     def test_second_order(self):
+        logger.info('%s starts' % sys._getframe().f_code.co_name)
         # numerical implication of second derivative against analytical
         # expect to see regression with moderate precision as this is second derivative
         xs = np.linspace(10.0, 200.0, num=191)
@@ -55,9 +69,11 @@ class TestPolynomialExtrapolator(TestCase):
                 rel_diff = second[idx] / second_n[idx] - 1.0
                 self.assertAlmostEqual(rel_diff, 0.0, places=4)
                 # print('Is reciprocal: ', is_reciprocal, '\nAnalytical', second, '\nNumerical', second_n)
+        logger.info('%s passes' % sys._getframe().f_code.co_name)
         pass
 
     def test_eta(self):
+        logger.info('%s starts' % sys._getframe().f_code.co_name)
         # reciprocal recovery, identical function but one is the reciprocal
         # expect to recover derivatives after chain rule
         xs = np.linspace(10.0, 50.0, num=2)
@@ -82,9 +98,11 @@ class TestPolynomialExtrapolator(TestCase):
             self.assertAlmostEqual(zeroth[idx], zeroth_rec[idx], places=12)
             self.assertAlmostEqual(first[idx], first_rec[idx], places=12)
             self.assertAlmostEqual(second[idx], second_rec[idx], places=12)
+        logger.info('%s passes' % sys._getframe().f_code.co_name)
         pass
 
     def test_quadratic_fit(self):
+        logger.info('%s starts' % sys._getframe().f_code.co_name)
         # fit to the calibration point price, delta_k and gamma_k
         # expect to recover derivatives with high precision
         f = 150.0
@@ -107,9 +125,12 @@ class TestPolynomialExtrapolator(TestCase):
             self.assertAlmostEqual(price, zeroth, places=12)
             self.assertAlmostEqual(delta_k, first, places=12)
             self.assertAlmostEqual(gamma_k, second, places=12)
+        logger.info('%s passes' % sys._getframe().f_code.co_name)
         pass
 
     def test_extrapolate(self):
+        logger.info('%s starts' % sys._getframe().f_code.co_name)
+
         # visualize extrapolation implied vol and density function
         # expect to see density function varies with lambda
 
@@ -173,4 +194,5 @@ class TestPolynomialExtrapolator(TestCase):
         plt.legend(legends)
         plt.plot(ks_full, np.zeros(np.shape(ks_full)), 'k--')
         plt.show()
+        logger.info('%s passes' % sys._getframe().f_code.co_name)
         pass
