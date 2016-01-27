@@ -1,12 +1,26 @@
+import logging
+import sys
 from unittest import TestCase
-from src.HestonModel.HestonModel import HestonModel
+
 import matplotlib.pyplot as plt
 
+from src.HestonModel.HestonModel import HestonModel
+
 __author__ = 'frank.ma'
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+sh = logging.StreamHandler()
+sh.setLevel(logging.DEBUG)
+sh.setFormatter(formatter)
+logger.addHandler(sh)
 
 
 class TestHestonModel(TestCase):
     def test_sim_forward_den(self):
+        logger.info('%s starts' % sys._getframe().f_code.co_name)
         mu = 0.01
         v_0 = 0.4
         kappa = 0.02
@@ -22,4 +36,5 @@ class TestHestonModel(TestCase):
         plt.plot(bins, den)
         plt.show()
 
+        logger.info('%s passes' % sys._getframe().f_code.co_name)
         pass

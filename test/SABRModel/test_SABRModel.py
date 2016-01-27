@@ -1,3 +1,5 @@
+import logging
+import sys
 import time as tm
 from unittest import TestCase
 
@@ -10,9 +12,19 @@ from src.Utils.VolType import VolType
 
 __author__ = 'frank.ma'
 
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+sh = logging.StreamHandler()
+sh.setLevel(logging.DEBUG)
+sh.setFormatter(formatter)
+logger.addHandler(sh)
+
 
 class TestSABRModel(TestCase):
     def test_calc_vol_vec_k_lognormal(self):
+        logger.info('%s starts' % sys._getframe().f_code.co_name)
         # test the vectorization correctness and speed
         # expect to see high precision alliance between none vectorized and vectorized volatility
         tau = 0.25
@@ -38,11 +50,14 @@ class TestSABRModel(TestCase):
             for strike in strikes:
                 model.calc_vol(forward, strike, vol_type=VolType.black)
         toc_sca = tm.time() - tic
-        print('Calculation time. vectorized strike %.6f, scalar %.6f, diff %.6f'
-              % (toc_vec, toc_sca, (toc_vec - toc_sca)))
+        logger.info('Calculation time. vectorized strike %.6f, scalar %.6f, diff %.6f'
+                    % (toc_vec, toc_sca, (toc_vec - toc_sca)))
+
+        logger.info('%s passes' % sys._getframe().f_code.co_name)
         pass
 
     def test_calc_vol_vec_f_lognormal(self):
+        logger.info('%s starts' % sys._getframe().f_code.co_name)
         # test the vectorization correctness and speed
         # expect to see high precision alliance between none vectorized and vectorized volatility
         tau = 0.25
@@ -69,11 +84,14 @@ class TestSABRModel(TestCase):
             for forward in forwards:
                 model.calc_vol(forward, strike, vol_type=VolType.black)
         toc_sca = tm.time() - tic
-        print('Calculation time. vectorized forward %.6f, scalar %.6f, diff %.6f'
-              % (toc_vec, toc_sca, (toc_vec - toc_sca)))
+        logger.info('Calculation time. vectorized forward %.6f, scalar %.6f, diff %.6f'
+                    % (toc_vec, toc_sca, (toc_vec - toc_sca)))
+
+        logger.info('%s passes' % sys._getframe().f_code.co_name)
         pass
 
     def test_calc_vol_vec_k_normal(self):
+        logger.info('%s starts' % sys._getframe().f_code.co_name)
         # test the vectorization correctness and speed
         # expect to see high precision alliance between none vectorized and vectorized volatility
         tau = 0.25
@@ -102,11 +120,14 @@ class TestSABRModel(TestCase):
             for strike in strikes:
                 model.calc_vol(forward, strike, vol_type=VolType.normal)
         toc_sca = tm.time() - tic
-        print('Calculation time, vectorized strike %.6f, scalar %.6f, diff %.6f'
-              % (toc_vec, toc_sca, (toc_vec - toc_sca)))
+        logger.info('Calculation time, vectorized strike %.6f, scalar %.6f, diff %.6f'
+                    % (toc_vec, toc_sca, (toc_vec - toc_sca)))
+
+        logger.info('%s passes' % sys._getframe().f_code.co_name)
         pass
 
     def test_calc_vol_vec_f_normal(self):
+        logger.info('%s starts' % sys._getframe().f_code.co_name)
         # test the vectorization correctness and speed
         # expect to see high precision alliance between none vectorized and vectorized volatility
         tau = 0.25
@@ -135,11 +156,14 @@ class TestSABRModel(TestCase):
             for forward in forwards:
                 model.calc_vol(forward, strike, vol_type=VolType.normal)
         toc_sca = tm.time() - tic
-        print('Calculation time, vectorized forward %.6f, scalar %.6f, diff %.6f'
-              % (toc_vec, toc_sca, (toc_vec - toc_sca)))
+        logger.info('Calculation time, vectorized forward %.6f, scalar %.6f, diff %.6f'
+                    % (toc_vec, toc_sca, (toc_vec - toc_sca)))
+
+        logger.info('%s passes' % sys._getframe().f_code.co_name)
         pass
 
     def test_solve_alpha(self):
+        logger.info('%s starts' % sys._getframe().f_code.co_name)
         # test the alpha solver
         # expect to see high precision alpha reversal
         tau = 0.25
@@ -151,16 +175,16 @@ class TestSABRModel(TestCase):
         black_vol = model_lognormal.calc_vol(forward, forward)
         alpha_solved = SABRModelLognormalApprox.solve_alpha(forward, black_vol, tau, beta, nu, rho)
         rel_diff = alpha_solved / alpha - 1.0
-        print('lognormal model black vol\n input\t solved \t rel diff\n %.6f\t%.6f\t%.4e'
-              % (alpha, alpha_solved, rel_diff))
+        logger.info('lognormal model black vol\n input\t solved \t rel diff\n %.6f\t%.6f\t%.4e'
+                    % (alpha, alpha_solved, rel_diff))
         assert abs(rel_diff) < 1e-12, 'solved alpha differs from input larger than one percent.'
 
         model_normal = SABRModelNormalApprox(tau, alpha, beta, nu, rho)
         norm_vol = model_normal.calc_vol(forward, forward)
         alpha_solved = SABRModelNormalApprox.solve_alpha(forward, norm_vol, tau, beta, nu, rho)
         rel_diff = alpha_solved / alpha - 1.0
-        print('lognormal model normal vol\n input\t solved \t rel diff\n %.6f\t%.6f\t%.4e'
-              % (alpha, alpha_solved, rel_diff))
+        logger.info('lognormal model normal vol\n input\t solved \t rel diff\n %.6f\t%.6f\t%.4e'
+                    % (alpha, alpha_solved, rel_diff))
         assert abs(rel_diff) < 1e-12, 'solved alpha differs from input larger than one percent.'
 
         beta = 0.0
@@ -169,21 +193,23 @@ class TestSABRModel(TestCase):
         black_vol = model_lognormal.calc_vol(forward, forward)
         alpha_solved = SABRModelLognormalApprox.solve_alpha(forward, black_vol, tau, beta, nu, rho)
         rel_diff = alpha_solved / alpha - 1.0
-        print('normal model black vol\n input\t solved \t rel diff\n %.6f\t%.6f\t%.4e'
-              % (alpha, alpha_solved, rel_diff))
+        logger.info('normal model black vol\n input\t solved \t rel diff\n %.6f\t%.6f\t%.4e'
+                    % (alpha, alpha_solved, rel_diff))
         assert abs(rel_diff) < 1e-12, 'solved alpha differs from input larger than one percent.'
 
         model_normal = SABRModelNormalApprox(tau, alpha, beta, nu, rho)
         norm_vol = model_normal.calc_vol(forward, forward)
         alpha_solved = SABRModelNormalApprox.solve_alpha(forward, norm_vol, tau, beta, nu, rho)
         rel_diff = alpha_solved / alpha - 1.0
-        print('normal model normal vol\n input\t solved \t rel diff\n %.6f\t%.6f\t%.4e'
-              % (alpha, alpha_solved, rel_diff))
+        logger.info('normal model normal vol\n input\t solved \t rel diff\n %.6f\t%.6f\t%.4e'
+                    % (alpha, alpha_solved, rel_diff))
         assert abs(rel_diff) < 1e-12, 'solved alpha differs from input larger than one percent.'
 
+        logger.info('%s passes' % sys._getframe().f_code.co_name)
         pass
 
     def test_get_model_lognormal_approx(self):
+        logger.info('%s starts' % sys._getframe().f_code.co_name)
         # model switch from normal to lognormal
         # expect to see high precision between transformed and original
         tau = 0.25
@@ -202,9 +228,11 @@ class TestSABRModel(TestCase):
             vol_lognormal_trans = model_normal_trans_lognormal.calc_vol(forward, strike)
             assert abs(vol_lognormal - vol_lognormal_trans) < 1e-12, 'transformed model mismatch'
 
+        logger.info('%s passes' % sys._getframe().f_code.co_name)
         pass
 
     def test_get_model_normal_approx(self):
+        logger.info('%s starts' % sys._getframe().f_code.co_name)
         # model switch from  lognormal to normal
         # expect to see high precision between transformed and original
         tau = 0.25
@@ -223,9 +251,11 @@ class TestSABRModel(TestCase):
             vol_normal_trans = model_lognormal_trans_normal.calc_vol(forward, strike)
             assert abs(vol_normal - vol_normal_trans) < 1e-12, 'transformed model mismatch'
 
+        logger.info('%s passes' % sys._getframe().f_code.co_name)
         pass
 
     def test_calc_loc_vol_vec(self):
+        logger.info('%s starts' % sys._getframe().f_code.co_name)
         # test the local vol calculation
         # expect to see a working sample
         taus = np.linspace(0.01, 5.01, num=31)
@@ -251,9 +281,11 @@ class TestSABRModel(TestCase):
         ax.legend(['black vol', 'local vol'])
         plt.show()
 
+        logger.info('%s passes' % sys._getframe().f_code.co_name)
         pass
 
     def test_back_bone(self):
+        logger.info('%s starts' % sys._getframe().f_code.co_name)
         # source: F. Rouah "The SABR Model"
         # expect to recover Fabrice Rouah's paper on SABR model back bone part
         t = 1.0
@@ -295,9 +327,12 @@ class TestSABRModel(TestCase):
         plt.ylim([0.08, 0.22])
 
         plt.show()
+
+        logger.info('%s passes' % sys._getframe().f_code.co_name)
         pass
 
     def test_calc_fwd_den_sp(self):
+        logger.info('%s starts' % sys._getframe().f_code.co_name)
         # test to compare density function from simulation, numerical implication, and special case analytical result
         # the special case is beta of one which gives possibility of derivation
         # expect to see three density plots very close to each other
@@ -318,4 +353,5 @@ class TestSABRModel(TestCase):
         plt.title('SABR model density functions')
         plt.show()
 
+        logger.info('%s passes' % sys._getframe().f_code.co_name)
         pass
