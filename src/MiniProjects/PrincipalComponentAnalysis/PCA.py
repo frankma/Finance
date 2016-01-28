@@ -21,15 +21,15 @@ w, v = np.linalg.eig(cov)
 print(w)
 print(v)
 
-# colours = cm.spectral(np.linspace(0.0, 1.0, num=10))
-#
-# plt.figure(1)
-# for idx, column in enumerate(df_ds.columns):
-#     plt.plot(df_ds.index, df_ds[column], '.', c=colours[idx])
-# plt.legend(df_ds.columns)
-#
-# plt.figure(2)
-# for idx, column in enumerate(df_rd.columns):
-#     plt.plot(df_rd.index, df_rd[column], '+', c=colours[idx])
-# plt.legend(df_rd.columns)
-# plt.show()
+colours = cm.spectral(np.linspace(0.0, 1.0, num=10))
+
+plt.figure(1)
+for idx, column in enumerate(df_ds.columns):
+    plt.plot(df_ds.index, df_ds[column], '.', c=colours[idx])
+plt.legend(df_ds.columns)
+
+plt.figure(2)
+for idx, column in enumerate(df_rd.columns):
+    plt.plot(df_rd.index, df_rd[column], '+', c=colours[idx])
+plt.legend(df_rd.columns)
+plt.show()
