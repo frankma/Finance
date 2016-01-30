@@ -65,3 +65,4 @@ class TestCashFlowDiscounter(TestCase):
         irr = cfd.calc_irr()
         self.assertAlmostEqual(rate, irr, places=6)
         logger.info('%s passes' % sys._getframe().f_code.co_name)
+        pass

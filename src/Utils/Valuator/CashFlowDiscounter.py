@@ -6,7 +6,7 @@ from src.Utils.Solver.IVariateFunction import IUnivariateFunction
 
 __author__ = 'frank.ma'
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 
 class CashFlowDiscounter(object):
