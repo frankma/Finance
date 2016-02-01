@@ -39,7 +39,7 @@ class MarketRateToZeroRate(object):
     def fit_zero_curve(self):
         # initial guess is on market rate
         init_guess = np.interp(self.tenors, self.bonds_maturities, self.market_rates)
-        bounds = [(-0.05, 1.0) for _ in init_guess.__len__()]
+        bounds = [(-0.05, 1.0) for _ in range(init_guess.__len__())]
         res = opt.minimize(self.fitting_error_function, init_guess, method='L-BFGS-B', jac=False,
                            bounds=bounds, tol=1e-8)
         zero_rates = res.x
