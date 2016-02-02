@@ -1,8 +1,8 @@
 import logging
 
 import numpy as np
-import scipy.interpolate as interp
 import scipy.optimize as opt
+from scipy import interp
 
 from src.Utils.Valuator.CashFlowDiscounter import CashFlowDiscounter
 
@@ -28,9 +28,8 @@ class MarketRateToZeroRate(object):
 
     def fitting_error_function(self, zero_rates: tuple) -> float:
         errors = np.full(self.bonds.__len__(), 1.0)  # initialize npv errors as ones
-        interpolator = interp.interp1d(self.tenors, zero_rates, kind=self.interp_method)
         for idx, bond in enumerate(self.bonds):
-            rates = interpolator(bond.ts)
+            rates = interp(bond.ts, self.tenors, zero_rates)
             npv = bond.calc_npv(rates)
             errors[idx] = npv
         weighted_errors_sq = np.power(errors * self.weights, 2)
