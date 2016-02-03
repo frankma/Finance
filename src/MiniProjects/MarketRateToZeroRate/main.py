@@ -1,8 +1,8 @@
+import matplotlib.pyplot as plt
 import numpy as np
 
 from src.MiniProjects.MarketRateToZeroRate.MarketRateToZeroRate import MarketRateToZeroRate
 from src.Utils.Valuator.CashFlowDiscounter import CashFlowDiscounter
-import matplotlib.pyplot as plt
 
 __author__ = 'frank.ma'
 

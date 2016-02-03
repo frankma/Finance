@@ -45,4 +45,17 @@ class MarketRateToZeroRate(object):
         return zero_rates
 
     def bootstrap(self):
-        pass
+        bonds_union = dict(zip(self.bonds_maturities, self.bonds))
+        tenors = []
+        zero_rates = []
+        for idx, bond_mat in enumerate(sorted(bonds_union.keys())):
+            bond = bonds_union[bond_mat]
+
+            if idx == 0:
+                tenors += list(bond.ts)
+                zero_rates += [bond.calc_irr for _ in range(tenors.__len__())]
+            else:
+                tenors += []
+                zero_rates += []
+
+        return dict(zip(tenors, zero_rates))
