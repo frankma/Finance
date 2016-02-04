@@ -225,7 +225,7 @@ Furthermore from the model point of view, $ \Gamma_K $ is actually the expected 
 Vomma $ \frac{\partial^2 V_t^T}{\partial \sigma^2} $ is the second derivative of option price against the volatility $ \sigma $ or the first derivative of vega against volatility $ \frac{\partial \nu}{\partial \sigma} $.
 \begin{align}
     \frac{\partial^2 V_t^T}{\partial \sigma^2} &= B_t^T F \phi(d_1) (-d_1) \frac{\partial d_1}{\partial \sigma} \sqrt{\tau} \nonumber \\
-    &= -\frac{\partial V_t^T}{\partial \sigma} d_1 \left(-\frac{\ln{\frac{F}{K}}}{\sigma^2 \sqrt{\tau}} + \frac{1}{2} \sigma \sqrt{\tau}\right) \nonumber \\
+    &= -\frac{\partial V_t^T}{\partial \sigma} d_1 \left(-\frac{\ln{\frac{F}{K}}}{\sigma^2 \sqrt{\tau}} + \frac{1}{2} \sqrt{\tau}\right) \nonumber \\
     &= \frac{\partial V_t^T}{\partial \sigma} \frac{d_1 d_2}{\sigma}
 \end{align}
 
