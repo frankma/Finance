@@ -38,12 +38,15 @@ rate_converter = MarketRateToZeroRate(bonds, weights, tenors)
 market_rates = rate_converter.market_rates
 zero_rates = rate_converter.fit_zero_curve()
 
+zero_rates_bootstrapped = rate_converter.bootstrap_pwc()
+
 print(market_rates)
 print(zero_rates)
 
 plt.plot(rate_converter.bonds_maturities, rate_converter.market_rates, '-+r')
 plt.plot(tenors, zero_rates, '-xb')
-plt.legend(['mkt rate', 'zero rate'], loc=4)
+plt.plot(list(zero_rates_bootstrapped.keys()), list(zero_rates_bootstrapped.values()), '^w')
+plt.legend(['mkt rate', 'zero rate', 'zero rate bootstrapped'], loc=4)
 plt.xlim([0.0, 25.0])
 plt.ylim([0.0, 0.08])
 plt.show()

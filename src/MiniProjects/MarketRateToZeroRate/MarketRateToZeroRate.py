@@ -37,25 +37,27 @@ class MarketRateToZeroRate(object):
 
     def fit_zero_curve(self):
         # initial guess is on market rate
-        init_guess = np.interp(self.tenors, self.bonds_maturities, self.market_rates)
+        init_guess = interp(self.tenors, self.bonds_maturities, self.market_rates)
         bounds = [(-0.05, 1.0) for _ in range(init_guess.__len__())]
         res = opt.minimize(self.fitting_error_function, init_guess, method='L-BFGS-B', jac=False,
                            bounds=bounds, tol=1e-8)
         zero_rates = res.x
         return zero_rates
 
-    def bootstrap(self):
+    def bootstrap_pwc(self):
         bonds_union = dict(zip(self.bonds_maturities, self.bonds))
         tenors = []
         zero_rates = []
+        # sorting bonds maturities from shortest to longest
         for idx, bond_mat in enumerate(sorted(bonds_union.keys())):
             bond = bonds_union[bond_mat]
-
             if idx == 0:
-                tenors += list(bond.ts)
-                zero_rates += [bond.calc_irr for _ in range(tenors.__len__())]
+                # first zero rates must agree with market rate
+                zero_rates += [bond.calc_irr()]
+                tenors += [bond_mat]
             else:
-                tenors += []
-                zero_rates += []
+                ts_interp = bond.ts[bond.ts < tenors[-1]]
+                rate = 0.0
+                zero_rates += [rate]
 
-        return dict(zip(tenors, zero_rates))
+        return dict(zip(self.bonds_maturities, zero_rates))
