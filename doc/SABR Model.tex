@@ -1,0 +1,182 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+
+\title{SABR Model}
+\author{Frank Ma}
+\date{July 2015}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+    This paper introduce a stochastic volatility model called SABR model and its related applications.
+    A few special cases are studied and the model calibration is documented for reference as well.
+\end{abstract}
+
+\section{Introduction}
+
+Stochastic Alpha Beta and Rho model (SABR model) is a stochastic volatility model managing to capture volatility smiles.
+The forward term is modeled with an exponential parameter $ \beta $ while the stochastic volatility term is modeled as Log-Normal process which naturally avoids negative values.
+The two process is bounded by a correlation term $ \rho $.
+\begin{align}
+    d F &= \sigma F^{\beta} d W^F \\
+    d \sigma &= \nu \sigma d W^{\sigma} \\
+    \text{where } & d W^F d W^{\sigma} = \rho d t \text{, and } {\sigma}_0 = \alpha \text{.}\nonumber
+\end{align}
+
+Practitioners usually find two primary uses of SABR model: volatility surface interpolation and sensitivity measurements.
+This parametrized model not only produces smooth and continuous volatility smile and but also provides sensible model implied volatilities when the forward is shocked.
+A crucial drawback of the model, however, is the lacking of evolution from one expiry to the next hence restrains it from pricing path dependent instruments.
+
+In financial markets, quote is usually referenced in either implied black or normal volatility in addition to its price.
+To match the market quotes, Hangan et al \cite{Managing Smile Risk} present a few semi-analytic approximations to match up market quotes.
+The following two sections examine these approximations and their applications closely.
+
+
+\section{Log-normal Volatility Approximation}
+
+Black 76 or Black-Scholes-Merton model assumes underlying as a log-normal process.
+Therefore, brokers produces quoted converted through these models as log-normal volatility.
+A semi-analytic approximation of log-normal volatility is given as below.
+\begin{subequations}
+    \begin{align}
+        \sigma_B{(F, K)} &\approx \frac{\alpha}{(FK)^{\frac{1 - \beta}{2}}\left(1 + \frac{\left(1 - \beta\right)^2}{24} \ln^2{\frac{F}{K}} + \frac{{\left(1 - \beta\right)}^{4}}{1920} \ln^4{\frac{F}{K}}\right)} \cdot \frac{\zeta}{\chi (\zeta)} \nonumber \\
+        & \quad \cdot \left(1 + \left(\frac{\alpha^2 {\left(1 - \beta\right)}^{2}}{24 \left(F K\right)^{1 - \beta}} + \frac{\alpha \beta \nu \rho}{4 {\left(F K\right)}^{\frac{1 - \beta}{2}}} + \frac{\nu^2 \left(2 - 3 \rho^2\right)}{24}\right) T\right)\\
+        \zeta &= \frac{\nu}{\alpha} {(F K)}^{\frac{1 - \beta}{2}} \ln{\frac{F}{K}} \\
+        \chi(\zeta) &= \ln{\frac{\sqrt{1 - 2 \rho \zeta + {\zeta}^2} - \rho + \zeta}{1 - \rho}}
+    \end{align}
+\end{subequations}
+
+Special case need to be consider when $ \beta = 1 $, the approximation could be reduced to a simple form as bellow.
+\begin{subequations} \label{SABR_LogNormal_Beta_1}
+    \begin{align}
+        \sigma_B^{\beta = 1}{(F, K)} &= \alpha \frac{\zeta}{\chi(\zeta)} \left(1 + \left(\frac{\alpha \nu \rho}{4} + \frac{\nu^2 \left(2 - 3 \rho^2\right)}{24}\right) T \right) \\
+        \zeta &= \frac{\nu}{\alpha} \ln{\frac{F}{K}} \\
+        \chi(\zeta) &= \ln{\frac{\sqrt{1 - 2 \rho \zeta + \zeta^2} - \rho + \zeta}{1 - \rho}}
+    \end{align}
+\end{subequations}
+
+Note, $ \zeta $ is zero for ATM quotes, so as to $ \chi(\zeta) $.
+L'H\^opital's rule resolves the undefined point of $ \frac{\zeta}{\chi(\zeta)} $ in the ATM case as below.
+\begin{align}
+    \lim_{\zeta \to 0}{\chi(\zeta)} &= \lim_{\zeta \to 0}{\frac{1}{\frac{1 - \rho}{\left(1 - 2 \rho \zeta + \zeta^2\right)^{\frac{1}{2}} - \rho + \zeta} \cdot \frac{\frac{1}{2}\left(1 - 2 \rho \zeta + \zeta^2\right)^{-\frac{1}{2}}\left(-2\rho + 2 \zeta \right) + 1}{1 - \rho}}} \nonumber \\
+    &= \lim_{\zeta \to 0}{\frac{\left(1 - 2 \rho \zeta + \zeta^2\right)^{\frac{1}{2}}}{\frac{1 - \rho}{\left(1 - 2 \rho \zeta + \zeta^2\right)^{\frac{1}{2}} - \rho + \zeta} \cdot \frac{-\rho + \zeta + \left(1 - 2 \rho \zeta + \zeta^2\right)^{\frac{1}{2}}}{1 - \rho}}} \nonumber \\
+    &= \lim_{\zeta \to 0}{\left(1 - 2 \rho \zeta + \zeta^2\right)^{\frac{1}{2}}} \nonumber \\
+    &= 1
+\end{align}
+
+
+\section{Normal Volatility Approximation}
+
+Normal or Bachelier model assumes underlying follows normal process.
+The normal volatility of underlying can be approximated as below.
+\begin{subequations}
+    \begin{align}
+        \sigma_N{(F, K)} &\approx \alpha {\left(F K\right)}^{\frac{\beta}{2}} \frac{1 + \frac{1}{24} \ln^2{\frac{F}{K}} + \frac{1}{1920} \ln^4{\frac{F}{K}}}{1 + \frac{\left(1 - \beta\right)^{2}}{24} \ln^2{\frac{F}{K}} + \frac{\left(1 - \beta\right)^{4}}{1920} \ln^4{\frac{F}{K}}} \cdot \frac{\zeta}{\chi \left(\zeta\right)}\nonumber \\
+        & \quad \cdot \left(1 + \left(-\frac{\alpha \beta (2 - \beta)}{24 {\left(F K\right)}^{1 - \beta}} + \frac{\alpha \beta \nu \rho}{4 {\left(F K\right)}^{\frac{1 - \beta}{2}}} + \frac{\nu^2 \left(2 - 3 \rho^2\right)}{24}\right) T \right)\\
+        \zeta &= \frac{\nu}{\alpha} {(F K)}^{\frac{1 - \beta}{2}} \ln{\frac{F}{K}} \\
+        \chi(\zeta) &= \ln{\frac{\sqrt{1 - 2 \rho \zeta + {\zeta}^2} - \rho + \zeta}{1 - \rho}}
+    \end{align}
+\end{subequations}
+
+Special case need to be consider when $ \beta = 0 $, the approximation could be reduced to a simple form as bellow.
+\begin{subequations}
+    \begin{align}
+        \sigma_N^{\beta=0} &\approx \alpha \cdot \frac{\zeta}{\chi(\zeta)} \cdot \left(1 + \frac{\nu^2 \left(2 - 3 \rho^2\right)}{24} T \right) \\
+        \zeta &= \frac{\nu}{\alpha} (F K)^{\frac{1}{2}} \ln{\frac{F}{K}} \\
+        \chi(\zeta) &= \ln{\frac{\sqrt{1 - 2 \rho \zeta + \zeta^2} - \rho + \zeta}{1 - \rho}}
+    \end{align}
+\end{subequations}
+
+Practically, when $ \beta $ is set to zero and normal volatility is requested, none-positive forward or strike is expected.
+In the case of zero or negative forward or strike, $ \zeta $ term is undefined.
+Therefore, the volatility requires a different and meaningful approximation as below.
+\begin{equation}
+    \zeta = \frac{\nu}{\alpha} \left(F - K\right)
+\end{equation}
+
+\section{Sensitivities}
+
+
+
+\section{Local Volatility}
+
+Local variance
+\begin{equation}
+    \sigma_{L}^2 = \frac{\sigma_{B}^2 + 2 \sigma_{B} T \left(\frac{\partial \sigma_{B}}{\partial T} + (r_T - q_T) K \frac{\partial \sigma_{B}}{\partial K}\right)}{\left(1 - \frac{K \ln{\frac{K}{F}}}{\sigma_{B}} \frac{\partial \sigma_{B}}{\partial K}\right)^2 + K \sigma_{B} T \left(\frac{\partial \sigma_{B}}{\partial K} - \frac{1}{4} K \sigma_{B} T \left(\frac{\partial \sigma_{B}}{\partial K}\right)^2 + K \frac{\partial^2 \sigma_{B}}{\partial K^2}\right)}
+\end{equation}
+
+In special cases when $ \beta $ equals to one, the log-normal volatility approximation equation reduced to a relative simple structure as formula \ref{SABR_LogNormal_Beta_1}.
+Before calculating the derivative of black volatility against strike, a few intermediate steps as below.
+\begin{subequations}
+    \begin{align}
+        \frac{d \zeta}{d K} &= -\frac{\nu}{\alpha K} \\
+        \frac{\partial \chi}{\partial \zeta} &= \sqrt{1 - 2 \rho \zeta + \zeta^2}\\
+        \frac{\partial^2 \zeta}{\partial K^2} &= \frac{\nu}{\alpha K^2}\\
+        \frac{\partial^2 \chi}{\partial \zeta^2} &= \frac{1}{\sqrt{1 - 2 \rho \zeta + \zeta^2} \left(\zeta - \rho\right)}
+    \end{align}
+\end{subequations}
+The first derivative of black volatility against strike when beta equals to one.
+\begin{align} \label{dSigdK}
+    \frac{\partial \sigma_{B}^{\beta=1}}{\partial K} &= 
+\end{align}
+The second derivatve of black volatility against strike when beta equals to one.
+\begin{align} \label{dSig2dK2}
+    \frac{\partial^2 \sigma_{B}^{\beta=1}}{\partial K^2} &=
+\end{align}
+
+
+
+\section{Analytic Density Function}
+
+Independent from modeling, density function $ \mathcal{P}\left(T, S_T\right) $ equals to the second order derivative of pre-discounted option price $ V^T $ against strike $ K $.
+\begin{equation}
+    \mathcal{P}\left(T, S_T\right) = \frac{\partial^2 V^T}{\partial K^2}
+\end{equation}
+
+Define Black 76 model forward price function $ V^T $ as $ U\left(T, K, \sigma(T, K)\right) $.
+Then chain rule finds the density function as below.
+\begin{align}
+    \frac{d U}{d K} &= \frac{\partial U}{\partial K} + \frac{\partial U}{\partial \sigma} \frac{\partial \sigma}{\partial K} \\
+    \frac{d^2 U}{d K^2} &= \frac{\partial^2 U}{\partial K^2} + \frac{\partial^2 U}{\partial K \partial \sigma} \frac{\partial \sigma}{\partial K}  + \frac{\partial^2 U}{\partial \sigma \partial K} \frac{\partial \sigma}{\partial K} + \frac{\partial^2 U}{\partial \sigma^2} \left(\frac{\partial \sigma}{\partial K}\right)^2 + \frac{\partial U}{\partial \sigma} \frac{\partial^2 \sigma}{\partial K^2} \nonumber \\
+    &= \frac{\partial^2 U}{\partial K^2} + 2 \frac{\partial^2 U}{\partial K \partial \sigma} \frac{\partial \sigma}{\partial K} + \frac{\partial^2 U}{\partial \sigma^2} \left(\frac{\partial \sigma}{\partial K}\right)^2 + \frac{\partial U}{\partial \sigma} \frac{\partial^2 \sigma}{\partial K^2} \label{d2U_per_dK2}
+\end{align}
+
+In above formula \ref{d2U_per_dK2} of the forward density function, terms $ \frac{\partial U}{\partial \sigma} $, $ \frac{\partial^2 U}{\partial \sigma^2} $, $ \frac{\partial^2 U}{\partial K \partial \sigma} $ and $ \frac{\partial^2 U}{\partial K^2} $ correspond to pre-discounted black formula greeks $ Vega^T $, $ Vomma^T $, $ Vanna_{K}^T $ and $ Gamma_{K}^T $.
+\begin{subequations}
+    \begin{align}
+        \frac{\partial U}{\partial \sigma} &= F_{t}^{T} \phi(d_1) \sqrt{\tau} \\
+        \frac{\partial^2 U}{\partial \sigma^2} &= F_{t}^{T} \phi(d_1) \sqrt{\tau} \cdot \frac{d_1 d_2}{\sigma} \\
+        \frac{\partial^2 U}{\partial K \partial \sigma} &= F_{t}^{T} \phi(d_1) \cdot \frac{d_1}{K \sigma} \\
+        \frac{\partial^2 U}{\partial K^2} &= \frac{\phi(d_2)}{K \sigma \sqrt{\tau}}
+    \end{align}
+\end{subequations}
+
+Two terms on the derivative of black volatility against strike $ \frac{\partial \sigma}{\partial K} $ and $ \frac{\partial^2 \sigma}{\partial K^2} $ could be implied from SABR model.
+In the reduced form of log-normal volatility approximation as formula \ref{SABR_LogNormal_Beta_1}, derivatives of black implied volatility against strike $ \frac{\partial \sigma}{\partial K} $ and $ \frac{\partial^2 \sigma}{\partial K^2} $ can be found in formula \ref{dSigdK} and \ref{dSig2dK2}.
+
+
+\section{Parameter Estimation and Model Calibration}
+
+
+
+\begin{thebibliography}{9}
+    \bibitem{Managing Smile Risk}
+    Hagan, P., Kumar, D., Lesniewski, A., Woodward, D.
+    \textit{Managing Smile Risk}
+    Wilmott Magazine, September, 2002.
+    
+    \bibitem{The SABR Model}
+    Rouah, F.
+    \textit{The SABR Model}
+    www.FRouah.com
+    
+    \bibitem{Derivation of Local Volatility}
+    Rouah, F.
+    \textit{Derivation of Local Volatility}
+    www.FRouah.com
+\end{thebibliography}
+
+\end{document}
