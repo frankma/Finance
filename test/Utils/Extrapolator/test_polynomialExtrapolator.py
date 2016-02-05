@@ -141,6 +141,7 @@ class TestPolynomialExtrapolator(TestCase):
             vol_m = sabr_model.calc_vol(forward, strike_m)
             vol = sabr_model.calc_vol(forward, strike)
             vol_p = sabr_model.calc_vol(forward, strike_p)
+            # use numerical implication of derivatives here because of SABR model
             price_m = Black76.price(forward, strike_m, ttm, vol_m, 1.0, opt_type)
             price = Black76.price(forward, strike, ttm, vol, 1.0, opt_type)
             price_p = Black76.price(forward, strike_p, ttm, vol_p, 1.0, opt_type)
