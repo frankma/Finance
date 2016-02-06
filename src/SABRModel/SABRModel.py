@@ -233,34 +233,34 @@ class SABRModelLognormalApprox(SABRModel):
         # calculate first order partial derivative (d (z/(x(z))))/(d z)
         is_not_atm = np.abs(forward - strikes) > 1e-12
         is_atm = np.logical_not(is_not_atm)
-        dx_dz = np.ones(strikes.__len__())
+        dg_dz = np.ones(strikes.__len__())  # g denotes the function of z / x(z)
 
         z = self._calc_z(forward, strikes)
         x = self._calc_x(z)
-        s = np.sqrt(1.0 - 2.0 * self.rho * z + (z ** 2))
+        s = np.sqrt(1.0 - 2.0 * self.rho * z + (z ** 2))  # s denotes 1 / (dx / dz)
         rho_sq = self.rho ** 2
-        dx_dz[is_atm] = -self.rho / 2.0 + 2.0 * (-rho_sq / 4.0 + 1.0 / 6.0) * z[is_atm] - \
+        dg_dz[is_atm] = -self.rho / 2.0 + 2.0 * (-rho_sq / 4.0 + 1.0 / 6.0) * z[is_atm] - \
                         (6.0 * rho_sq - 5.0) * self.rho * (z[is_atm] ** 2) / 8.0
-        dx_dz[is_not_atm] = (x[is_not_atm] * s[is_not_atm] - z[is_not_atm]) / (x[is_not_atm] ** 2) / s[is_not_atm]
+        dg_dz[is_not_atm] = (x[is_not_atm] * s[is_not_atm] - z[is_not_atm]) / (x[is_not_atm] ** 2) / s[is_not_atm]
 
-        return dx_dz
+        return dg_dz
 
     def __calc_d2_z_per_x_d_z2(self, forward: float, strikes: np.array) -> np.array:
         # calculate second order partial derivative (d^2 (z/x(z)))/(d z^2)
         is_not_atm = np.abs(forward - strikes) > 1e-12
         is_atm = np.logical_not(is_not_atm)
-        d2x_dz2 = np.ones(strikes.__len__())
+        d2g_dz2 = np.ones(strikes.__len__())  # g denotes the function of z / x(z)
 
         z = self._calc_z(forward, strikes)
         x = self._calc_x(z)
-        s = np.sqrt(1.0 - 2.0 * self.rho * z + (z ** 2))
+        s = np.sqrt(1.0 - 2.0 * self.rho * z + (z ** 2))  # s denotes 1 / (dx / dz)
         rho_sq = self.rho ** 2
-        d2x_dz2[is_atm] = 2.0 * (-rho_sq / 4.0 + 1.0 / 6.0) - (6.0 * rho_sq - 5.0) * self.rho * z[is_atm] / 2.0 + \
+        d2g_dz2[is_atm] = 2.0 * (-rho_sq / 4.0 + 1.0 / 6.0) - (6.0 * rho_sq - 5.0) * self.rho * z[is_atm] / 2.0 + \
                           12.0 * (-5.0 * (rho_sq ** 2) / 16.0 + rho_sq / 3.0 - 17.0 / 360.0) * (z[is_atm] ** 2)
-        d2x_dz2[is_not_atm] = (x[is_not_atm] * (3.0 * self.rho * z[is_not_atm] - (z[is_not_atm] ** 2) - 2.0) +
+        d2g_dz2[is_not_atm] = (x[is_not_atm] * (3.0 * self.rho * z[is_not_atm] - (z[is_not_atm] ** 2) - 2.0) +
                                2.0 * s[is_not_atm] * z[is_not_atm]) / ((x[is_not_atm] * s[is_not_atm]) ** 3)
 
-        return d2x_dz2
+        return d2g_dz2
 
     def __calc_const(self):
         const = (1.0 + (self.alpha * self.nu * self.rho / 4.0 +

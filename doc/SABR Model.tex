@@ -4,7 +4,7 @@
 
 \title{SABR Model}
 \author{Frank Ma}
-\date{July 2015}
+\date{Initial Creation: July 2015 \\ Last Update: February 2016}
 
 \begin{document}
 
@@ -113,7 +113,7 @@ Before calculating the derivative of black volatility against strike, a few inte
 \begin{subequations}
     \begin{align}
         \frac{d \zeta}{d K} &= -\frac{\nu}{\alpha K} \\
-        \frac{\partial \chi}{\partial \zeta} &= \sqrt{1 - 2 \rho \zeta + \zeta^2}\\
+        \frac{\partial \chi}{\partial \zeta} &= \left(1 - 2 \rho \zeta + \zeta^2\right)\\
         \frac{\partial^2 \zeta}{\partial K^2} &= \frac{\nu}{\alpha K^2}\\
         \frac{\partial^2 \chi}{\partial \zeta^2} &= \frac{1}{\sqrt{1 - 2 \rho \zeta + \zeta^2} \left(\zeta - \rho\right)}
     \end{align}
