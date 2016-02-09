@@ -122,24 +122,23 @@ Before calculating the derivative of black volatility against strike, a few inte
 Further, define function $ G = \frac{\zeta}{\chi\left(\zeta\right)} $ and $ S = \left(1 - 2 \rho \zeta + \zeta^2\right)^{\frac{1}{2}} $ to find the derivatives of function $ g $ against $ \zeta $ as below.
 \begin{subequations}
     \begin{align}
-        \frac{\partial G}{\partial \zeta} &= \frac{1}{\chi} - \frac{\zeta}{\chi^2} \frac{\partial \chi}{\partial \zeta} \nonumber \\
-        &= \frac{\chi S - \zeta}{\chi^2 S} \\
-        \frac{\partial^2 G}{\partial \zeta^2} &= -\frac{1}{\chi^2} \frac{\partial \chi}{\partial \zeta} - \left(\frac{1}{\chi^2} \frac{\partial \chi}{\partial \zeta} - 2 \frac{\zeta}{\chi^3} \left(\frac{\partial \chi}{\partial \zeta}\right)^2 + \frac{\zeta}{\chi^2} \frac{\partial^2 \chi}{\partial \zeta^2}\right) \nonumber \\
-        &= -\frac{2}{\chi^2 S} + \frac{2 \zeta}{\chi^3 S^2} + \frac{\zeta \left(\zeta - \rho\right)}{\chi^2 S^3} \nonumber \\
-        &= \frac{\zeta^2 \chi - \rho \chi + 2 \zeta S - 2 \chi S^2}{\chi^3 S^3}
+        \frac{\partial S}{\partial \zeta} &= S^{-1} \left(\zeta - \rho\right) \\
+        \frac{\partial G}{\partial \zeta} &= \chi^{-1} - \zeta \chi^{-2} S^{-1} \\
+        \frac{\partial^2 G}{\partial \zeta^2} &= -\chi^{-2} S^{-1} - \left(\chi^{-2} S^{-1} - \zeta \chi^{-3} S^{-2} - \zeta \chi^{-2} S^{-3} \left(\zeta - \rho\right)\right) \nonumber \\
+        &= \frac{-2 \chi S^2 + \zeta S + \zeta \chi \left(\zeta - \rho\right)}{\chi^3 S^3} \nonumber \\
+        &= \frac{\left(-\zeta^2 + 3 \rho \zeta - 2\right) \chi + 2 S \zeta}{\chi^3 S^3}
     \end{align}
 \end{subequations}
 
 The first derivative of black volatility against strike when beta equals to one.
 \begin{align} \label{dSigdK}
-    \frac{\partial \sigma_{B}^{\beta=1}}{\partial K} &=
+    \frac{\partial \sigma_{B}^{\beta=1}}{\partial K} &= -\frac{\nu}{K} \frac{\partial G}{\partial \zeta} \left(1 + \left(\frac{\alpha \rho \nu}{4} + \frac{\nu^2 \left(2 - 3 \rho^2\right)}{24}\right) T\right)
 \end{align}
 
 The second derivatve of black volatility against strike when beta equals to one.
 \begin{align} \label{dSig2dK2}
-    \frac{\partial^2 \sigma_{B}^{\beta=1}}{\partial K^2} &=
+    \frac{\partial^2 \sigma_{B}^{\beta=1}}{\partial K^2} &= \left(\frac{\nu}{K^2} \frac{\partial G}{\partial K} - \frac{\nu}{\alpha K^2} \frac{\partial^2 G}{\partial K^2}\right) \left(1 + \left(\frac{\alpha \rho \nu}{4} + \frac{\nu^2 \left(2 - 3 \rho^2\right)}{24}\right) T\right)
 \end{align}
-
 
 
 \section{Analytic Density Function}
