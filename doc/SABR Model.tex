@@ -17,8 +17,8 @@
 
 \section{Introduction}
 
-Stochastic Alpha Beta and Rho model (SABR model) is a stochastic volatility model managing to capture volatility smiles.
-The forward term is modeled with an exponential parameter $ \beta $ while the stochastic volatility term is modeled as Log-Normal process which naturally avoids negative values.
+Stochastic Alpha Beta and Rho (SABR) model is a stochastic volatility model managing to capture the volatility smiles.
+The underlying term is modeled with an exponential parameter $ \beta $ while the stochastic volatility term is modeled as a Log-Normal process which naturally avoids negative values.
 The two process is bounded by a correlation term $ \rho $.
 \begin{align}
     d F &= \sigma F^{\beta} d W^F \\
@@ -27,18 +27,17 @@ The two process is bounded by a correlation term $ \rho $.
 \end{align}
 
 Practitioners usually find two primary uses of SABR model: volatility surface interpolation and sensitivity measurements.
-This parametrized model not only produces smooth and continuous volatility smile and but also provides sensible model implied volatilities when the forward is shocked.
+This parametrized model can not only produce smooth volatility smile but also provide sensible model implied volatilities when the forward is shocked.
 A crucial drawback of the model, however, is the lacking of evolution from one expiry to the next hence restrains it from pricing path dependent instruments.
 
-In financial markets, quote is usually referenced in either implied black or normal volatility in addition to its price.
-To match the market quotes, Hangan et al \cite{Managing Smile Risk} present a few semi-analytic approximations to match up market quotes.
-The following two sections examine these approximations and their applications closely.
+In financial markets, quote is usually referenced as implied volatility in addition to the price.
+To match the market quotes in the volatility space, Hangan et al \cite{Managing Smile Risk} present a few semi-analytic approximations.
+The following two sections examine the approximations and their applications closely.
 
 
 \section{Log-normal Volatility Approximation}
 
 Black 76 or Black-Scholes-Merton model assumes underlying as a log-normal process.
-Therefore, brokers produces quoted converted through these models as log-normal volatility.
 A semi-analytic approximation of log-normal volatility is given as below.
 \begin{subequations}
     \begin{align}
@@ -104,12 +103,13 @@ Therefore, the volatility requires a different and meaningful approximation as b
 \section{Local Volatility}
 
 Local variance
-\begin{equation}
+\begin{equation} \label{Local Vol General Form}
     \sigma_{L}^2 = \frac{\sigma_{B}^2 + 2 \sigma_{B} T \left(\frac{\partial \sigma_{B}}{\partial T} + (r_T - q_T) K \frac{\partial \sigma_{B}}{\partial K}\right)}{\left(1 - \frac{K \ln{\frac{K}{F}}}{\sigma_{B}} \frac{\partial \sigma_{B}}{\partial K}\right)^2 + K \sigma_{B} T \left(\frac{\partial \sigma_{B}}{\partial K} - \frac{1}{4} K \sigma_{B} T \left(\frac{\partial \sigma_{B}}{\partial K}\right)^2 + K \frac{\partial^2 \sigma_{B}}{\partial K^2}\right)}
 \end{equation}
 
-In special cases when $ \beta $ equals to one, the log-normal volatility approximation equation reduced to a relative simple structure as formula \ref{SABR_LogNormal_Beta_1}.
-Before calculating the derivative of black volatility against strike, a few intermediate derivatives as below.
+When $ \beta $ equals to one, the log-normal volatility approximation collapses to a relative simple structure as sknown in formula \ref{SABR_LogNormal_Beta_1}.
+The reduced form greatly simplifies the local volatility expression \ref{Local Vol General Form} in the analytic form.
+Before deriving the derivatives of black volatility against strike, a few prerequisites are listed as below.
 \begin{subequations}
     \begin{align}
         \frac{d \zeta}{d K} &= -\frac{\nu}{\alpha K} \\
@@ -123,23 +123,22 @@ Further, define function $ G = \frac{\zeta}{\chi\left(\zeta\right)} $ and $ S = 
 \begin{subequations}
     \begin{align}
         \frac{\partial S}{\partial \zeta} &= S^{-1} \left(\zeta - \rho\right) \\
-        \frac{\partial G}{\partial \zeta} &= \chi^{-1} - \zeta \chi^{-2} S^{-1} \\
-        \frac{\partial^2 G}{\partial \zeta^2} &= -\chi^{-2} S^{-1} - \left(\chi^{-2} S^{-1} - 2 \zeta \chi^{-3} S^{-2} - \zeta \chi^{-2} S^{-3} \left(\zeta - \rho\right)\right) \nonumber \\
+        \frac{\partial G}{\partial \zeta} &= \frac{\chi S - \zeta}{\chi^2 S} \\
+        \frac{\partial^2 G}{\partial \zeta^2} &= \frac{\chi^2 S \left(\frac{1}{S} S + \chi \frac{1}{S} \left(\zeta - \rho\right) - 1\right) - \left(\chi S - \zeta\right) \left(2 \chi \frac{1}{S} S + \chi^2 \frac{1}{S} \left(\zeta - \rho\right)\right)}{\chi^4 S^2} \nonumber \\
         &= \frac{-2 \chi S^2 + 2 S \zeta + \zeta \chi \left(\zeta - \rho\right)}{\chi^3 S^3} \nonumber \\
         &= \frac{-2 \chi \left(1 - 2\rho \zeta + \zeta^2\right) + 2 S \zeta + \zeta^2 \chi - \rho \chi \zeta}{\chi^3 S^3} \nonumber \\
         &= \frac{\left(-\zeta^2 + 3 \rho \zeta - 2\right) \chi + 2 S \zeta}{\chi^3 S^3}
     \end{align}
 \end{subequations}
 
-The first derivative of black volatility against strike when beta equals to one.
-\begin{align} \label{dSigdK}
-    \frac{\partial \sigma_{B}^{\beta=1}}{\partial K} &= -\frac{\nu}{K} \frac{\partial G}{\partial \zeta} \left(1 + \left(\frac{\alpha \rho \nu}{4} + \frac{\nu^2 \left(2 - 3 \rho^2\right)}{24}\right) T\right)
-\end{align}
-
-The second derivatve of black volatility against strike when beta equals to one.
-\begin{align} \label{dSig2dK2}
-    \frac{\partial^2 \sigma_{B}^{\beta=1}}{\partial K^2} &= \left(\frac{\nu}{K^2} \frac{\partial G}{\partial K} - \frac{\nu}{\alpha K^2} \frac{\partial^2 G}{\partial K^2}\right) \left(1 + \left(\frac{\alpha \rho \nu}{4} + \frac{\nu^2 \left(2 - 3 \rho^2\right)}{24}\right) T\right)
-\end{align}
+The derivatives of black volatility against ttm and strike when $ \beta $ equals to one are as below.
+\begin{subequations}
+    \begin{align}
+        \frac{\partial \sigma_{B}^{\beta=1}}{\partial T} &= \alpha \frac{\zeta}{\chi \left(\zeta\right)} \left(\frac{\alpha \rho \nu}{4} + \frac{\nu^2 \left(2 - 3 \rho^2\right)}{24}\right) \label{dSigdT} \\
+        \frac{\partial \sigma_{B}^{\beta=1}}{\partial K} &= -\frac{\nu}{K} \frac{\partial G}{\partial \zeta} \left(1 + \left(\frac{\alpha \rho \nu}{4} + \frac{\nu^2 \left(2 - 3 \rho^2\right)}{24}\right) T\right) \label{dSigdK} \\
+        \frac{\partial^2 \sigma_{B}^{\beta=1}}{\partial K^2} &= \left(\frac{\nu}{K^2} \frac{\partial G}{\partial K} - \frac{\nu}{\alpha K^2} \frac{\partial^2 G}{\partial K^2}\right) \left(1 + \left(\frac{\alpha \rho \nu}{4} + \frac{\nu^2 \left(2 - 3 \rho^2\right)}{24}\right) T\right) \label{dSig2dK2}
+    \end{align}
+\end{subequations}
 
 
 \section{Analytic Density Function}
