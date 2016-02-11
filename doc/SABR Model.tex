@@ -19,7 +19,7 @@
 
 Stochastic Alpha Beta and Rho (SABR) model is a stochastic volatility model managing to capture the volatility smiles.
 The underlying term is modeled with an exponential parameter $ \beta $ while the stochastic volatility term is modeled as a Log-Normal process which naturally avoids negative values.
-The two process is bounded by a correlation term $ \rho $.
+The two process are correlated with a coefficient $ \rho $.
 \begin{align}
     d F &= \sigma F^{\beta} d W^F \\
     d \sigma &= \nu \sigma d W^{\sigma} \\
@@ -140,6 +140,17 @@ The derivatives of black volatility against ttm and strike when $ \beta $ equals
     \end{align}
 \end{subequations}
 
+Same issue persists in the derivatives of $ G $ function for ATM volatilities where $ \zeta $ is zero.
+To overcome the problem, Taylor expansions are applied to find the close and stable approximation.
+The following formulas expand till the third order.
+\begin{subequations}
+    \begin{align}
+        G^{K \approx F} &= 1 - \frac{1}{2} \rho \zeta + \left(-\frac{1}{4} \rho^2 + \frac{1}{6}\right) \zeta^2 \\
+        \frac{\partial G^{K \approx F}}{\partial K} &= -\frac{1}{2} \rho  + 2 \left(-\frac{1}{4} \rho^2 + \frac{1}{6}\right) \zeta - \frac{1}{8} \left(6 \rho^2 - 5\right) \rho \zeta^2 \\
+        \frac{\partial^2 G^{K \approx F}}{\partial K^2} &= 2 \left(-\frac{1}{4} \rho^2 + \frac{1}{6}\right) - \frac{1}{4} \left(6 \rho^2 - 5\right) \rho \zeta + 12 \left(-\frac{5}{16} \rho^4 + \frac{1}{3} \rho^2 - \frac{17}{360}\right) \zeta^2
+    \end{align}
+\end{subequations}
+
 
 \section{Analytic Density Function}
 
@@ -172,6 +183,7 @@ In the reduced form of log-normal volatility approximation as formula \ref{SABR_
 
 \section{Parameter Estimation and Model Calibration}
 
+For any given expiry, the model has four parameters need to be calibrated.
 
 
 \begin{thebibliography}{9}
