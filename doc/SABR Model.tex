@@ -11,8 +11,8 @@
 \maketitle
 
 \begin{abstract}
-    This paper introduce a stochastic volatility model called SABR model and its related applications.
-    A few special cases are studied and the model calibration is documented for reference as well.
+    This paper introduces SABR model and its related applications.
+    A few special cases are studied and the model calibration is documented for references.
 \end{abstract}
 
 \section{Introduction}
@@ -27,8 +27,8 @@ The two process are correlated with a coefficient $ \rho $.
 \end{align}
 
 Practitioners usually find two primary uses of SABR model: volatility surface interpolation and sensitivity measurements.
-This parametrized model can not only produce smooth volatility smile but also provide sensible model implied volatilities when the forward is shocked.
-A crucial drawback of the model, however, is the lacking of evolution from one expiry to the next hence restrains it from pricing path dependent instruments.
+This parametrized model not only produces smooth volatility smile but also provides sensible model implied volatilities when the forward is shocked.
+A crucial drawback of the model, however, is the lacking of evolution from one expiry to the next hence restrained from path dependent instruments pricing.
 
 In financial markets, quote is usually referenced as implied volatility in addition to the price.
 To match the market quotes in the volatility space, Hangan et al \cite{Managing Smile Risk} present a few semi-analytic approximations.
@@ -48,7 +48,7 @@ A semi-analytic approximation of log-normal volatility is given as below.
     \end{align}
 \end{subequations}
 
-Special case need to be consider when $ \beta = 1 $, the approximation could be reduced to a simple form as bellow.
+Under special case when $ \beta = 1 $, the underlying is modeled as Log-Normal process and the approximation could be reduced to the below.
 \begin{subequations} \label{SABR_LogNormal_Beta_1}
     \begin{align}
         \sigma_B^{\beta = 1}{(F, K)} &= \alpha \frac{\zeta}{\chi(\zeta)} \left(1 + \left(\frac{\alpha \nu \rho}{4} + \frac{\nu^2 \left(2 - 3 \rho^2\right)}{24}\right) T \right) \\
@@ -80,7 +80,7 @@ The normal volatility of underlying can be approximated as below.
     \end{align}
 \end{subequations}
 
-Special case need to be consider when $ \beta = 0 $, the approximation could be reduced to a simple form as bellow.
+Under special case when $ \beta = 0 $, the underlying is modeled as Normal process and the approximation could be reduced to the below.
 \begin{subequations}
     \begin{align}
         \sigma_N^{\beta=0} &\approx \alpha \cdot \frac{\zeta}{\chi(\zeta)} \cdot \left(1 + \frac{\nu^2 \left(2 - 3 \rho^2\right)}{24} T \right) \\
@@ -107,9 +107,9 @@ Local variance
     \sigma_{L}^2 = \frac{\sigma_{B}^2 + 2 \sigma_{B} T \left(\frac{\partial \sigma_{B}}{\partial T} + (r_T - q_T) K \frac{\partial \sigma_{B}}{\partial K}\right)}{\left(1 - \frac{K \ln{\frac{K}{F}}}{\sigma_{B}} \frac{\partial \sigma_{B}}{\partial K}\right)^2 + K \sigma_{B} T \left(\frac{\partial \sigma_{B}}{\partial K} - \frac{1}{4} K \sigma_{B} T \left(\frac{\partial \sigma_{B}}{\partial K}\right)^2 + K \frac{\partial^2 \sigma_{B}}{\partial K^2}\right)}
 \end{equation}
 
-When $ \beta $ equals to one, the log-normal volatility approximation collapses to a relative simple structure as sknown in formula \ref{SABR_LogNormal_Beta_1}.
-The reduced form greatly simplifies the local volatility expression \ref{Local Vol General Form} in the analytic form.
-Before deriving the derivatives of black volatility against strike, a few prerequisites are listed as below.
+When $ \beta $ equals to one, the log-normal volatility approximation collapses to a relative simple structure as shown in formula \ref{SABR_LogNormal_Beta_1}.
+The reduced form greatly simplifies the analytical expression of the local volatility formula \ref{Local Vol General Form}.
+Before deriving the derivatives of black volatility against strike, a few intermediate derivatives are listed as below.
 \begin{subequations}
     \begin{align}
         \frac{d \zeta}{d K} &= -\frac{\nu}{\alpha K} \\
@@ -119,7 +119,7 @@ Before deriving the derivatives of black volatility against strike, a few prereq
     \end{align}
 \end{subequations}
 
-Further, define function $ G = \frac{\zeta}{\chi\left(\zeta\right)} $ and $ S = \left(1 - 2 \rho \zeta + \zeta^2\right)^{\frac{1}{2}} $ to find the derivatives of function $ g $ against $ \zeta $ as below.
+Further, define function $ G = \frac{\zeta}{\chi\left(\zeta\right)} $ and $ S = \left(1 - 2 \rho \zeta + \zeta^2\right)^{\frac{1}{2}} $ and find the derivatives of function $ G $ against $ \zeta $ as the following.
 \begin{subequations}
     \begin{align}
         \frac{\partial S}{\partial \zeta} &= S^{-1} \left(\zeta - \rho\right) \\
@@ -141,7 +141,7 @@ The derivatives of black volatility against ttm and strike when $ \beta $ equals
 \end{subequations}
 
 Same issue persists in the derivatives of $ G $ function for ATM volatilities where $ \zeta $ is zero.
-To overcome the problem, Taylor expansions are applied to find the close and stable approximation.
+To overcome the problem, Taylor expansions are applied to find close but stable approximations.
 The following formulas expand till the third order.
 \begin{subequations}
     \begin{align}
