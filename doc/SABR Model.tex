@@ -26,12 +26,12 @@ The two process are correlated with a coefficient $ \rho $.
     \text{where } & d W^F d W^{\sigma} = \rho d t \text{, and } {\sigma}_0 = \alpha \text{.}\nonumber
 \end{align}
 
-Practitioners usually find two primary uses of SABR model: volatility surface interpolation and sensitivity measurements.
-This parametrized model not only produces smooth volatility smile but also provides sensible model implied volatilities when the forward is shocked.
-A crucial drawback of the model, however, is the lacking of evolution from one expiry to the next hence restrained from path dependent instruments pricing.
+Practitioners usually find two primary uses of SABR model: volatility surface interpolations and sensitivity measurements.
+This parametrized model not only produces smooth volatility smile but also provides sensible implied volatilities when the forward is shocked.
+A crucial drawback of the model, however, is the lacking of evolution from one expiry to the next hence restrained it from path dependent instruments pricing.
 
-In financial markets, quote is usually referenced as implied volatility in addition to the price.
-To match the market quotes in the volatility space, Hangan et al \cite{Managing Smile Risk} present a few semi-analytic approximations.
+In financial markets, quote is usually referenced as implied volatility in addition to its price.
+To match the market quotes in the volatility space, Hagan et al \cite{Managing Smile Risk} present a few semi-analytic approximations.
 The following two sections examine the approximations and their applications closely.
 
 
@@ -48,7 +48,7 @@ A semi-analytic approximation of log-normal volatility is given as below.
     \end{align}
 \end{subequations}
 
-Under special case when $ \beta = 1 $, the underlying is modeled as Log-Normal process and the approximation could be reduced to the below.
+Under the special case when $ \beta = 1 $, the underlying is modeled as Log-Normal process and the approximation could be reduced to the below.
 \begin{subequations} \label{SABR_LogNormal_Beta_1}
     \begin{align}
         \sigma_B^{\beta = 1}{(F, K)} &= \alpha \frac{\zeta}{\chi(\zeta)} \left(1 + \left(\frac{\alpha \nu \rho}{4} + \frac{\nu^2 \left(2 - 3 \rho^2\right)}{24}\right) T \right) \\
