@@ -15,7 +15,6 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
-
 sh = logging.StreamHandler()
 sh.setLevel(logging.DEBUG)
 sh.setFormatter(formatter)
@@ -287,5 +286,15 @@ class TestBAW(unittest.TestCase):
                 diff = theta / theta_n - 1.0
                 # print('%r\t%s\t%.12f\t%.12f\t%.6e' % (tau, opt_type.name, theta, theta_n, diff))
                 self.assertAlmostEqual(0.0, diff / 10.0, places=1)  # up to 10% allowance for long maturities
+        logger.info('%s passes' % sys._getframe().f_code.co_name)
+        pass
+
+    def test_imp_vol(self):
+        logger.info('%s starts' % sys._getframe().f_code.co_name)
+        s, k, tau, r, q, sig = 100.0, 110.0, 0.75, 0.02, 0.04, 0.4
+        for opt_type in [OptionType.call, OptionType.put]:
+            price = BAW.price(s, k, tau, r, q, sig, opt_type)
+            vol = BAW.imp_vol(s, k, tau, r, q, price, opt_type)
+            self.assertAlmostEqual(sig, vol, places=4)
         logger.info('%s passes' % sys._getframe().f_code.co_name)
         pass

@@ -3,6 +3,7 @@ import logging
 import numpy as np
 
 from src.Utils.OptionType import OptionType
+from src.Utils.Solver.Brent import Brent
 from src.Utils.Solver.IVariateFunction import IUnivariateFunction
 from src.Utils.Solver.NewtonRaphson import NewtonRaphson
 from src.Utils.Valuator.BSM import BSM
@@ -62,6 +63,20 @@ class BAW(object):
         else:
             price_ame = eta * (s - k)
         return price_ame
+
+    @staticmethod
+    def imp_vol(s: float, k: float, tau: float, r: float, q: float, price: float, opt_type: OptionType):
+        vol_lb = 1e-4
+        vol_ub = 10.0
+
+        class PriceFunction(IUnivariateFunction):
+            def evaluate(self, x):
+                return BAW.price(s, k, tau, r, q, x, opt_type) - price
+
+        pf = PriceFunction()
+        bt = Brent(pf, vol_lb, vol_ub)
+        vol = bt.solve()
+        return vol
 
     @staticmethod
     def delta(s: float, k: float, tau: float, r: float, q: float, sig: float, opt_type: OptionType):
