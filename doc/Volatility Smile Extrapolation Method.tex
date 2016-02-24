@@ -20,10 +20,10 @@
 
 Quotes of volatility instrument are finite, usually scattered sparsely.
 Great amount of applications requires off-node market quotes which could never be available to the practitioners.
-Interpolation and extrapolation techniques are used to find such points uncommon in the liquid market but critical to applications. 
+Interpolation and extrapolation techniques are applied to find such points uncommon in the liquid market but critical to applications.
 
-Extrapolation methods are the focus in this paper. 
-he study starts from the constrains of volatility surface and move on to the extrapolation methods.
+Extrapolation methods are the focus in this paper.
+The study starts from the constrains of volatility surface and move on to the extrapolation methods.
 The conclusion make proper comparison of the introduced methods.
 
 
@@ -66,10 +66,10 @@ Furthermore, second derivative of option forward price against strike reaches pr
 \end{subequations}
 
 Apparently, valid value ranges of Cumulative-Density-Function (CDF) and Probability-Density-Function (PDF) are $ [0, 1] $ and $ [0, +\infty) $.
-That means, second derivative of forward option price against strike $ \frac{\partial^2 V}{\partial K^2} $ must be strictly positive to assure arbitrage-free volatility quotes. 
+That means, second derivative of forward option price against strike $ \frac{\partial^2 V}{\partial K^2} $ must be strictly positive to assure arbitrage-free volatility quotes.
 
 \subsection{Smoothness}
-Smoothness of the volatility surface is also a reasonable concern of volatility surface construction as exotic instrument pricing usually rely on a robust and smooth volatility surface. 
+Smoothness of the volatility surface is also a reasonable concern of volatility surface construction as exotic instrument pricing usually relies on a robust and smooth volatility surface.
 
 
 \section{Polynomial Method}
@@ -87,9 +87,9 @@ OTM options are used because their prices converge to zero with deeper out-the-m
 $ \lambda $ term is carefully chosen to enforce the convergence and arbitrage-free.
 For low strikes, $ \lambda \geq 1 $ and for high strikes, $ \lambda \geq 0 $.
 \begin{subequations}
-    \begin{align}   
+    \begin{align}
         V &= X^{\lambda} \cdot e^{\beta_0 + \beta_1 X + \beta_2 X^2} \\
-        X &= K^{-\eta} \text{, where } \eta = 
+        X &= K^{-\eta} \text{, where } \eta =
         \begin{cases}
             1 \text{, if call} \\
             -1 \text{, if put}
@@ -106,7 +106,7 @@ First derivative $ \Delta_X $ against $ X $ can be find as bellow.
 
 Second derivative $ \Gamma_X $ against $ X $ is as the follwoing.
 \begin{align}
-    \frac{\partial^2 V}{\partial X^2} &= \frac{\partial V}{\partial X} \left(\frac{\lambda}{X} + \beta_1 + \beta_2 X^2\right) + V \left(-\frac{\lambda}{X^2} + 2 \beta_2\right) \nonumber \\
+    \frac{\partial^2 V}{\partial X^2} &= \frac{\partial V}{\partial X} \left(\frac{\lambda}{X} + \beta_1 + 2 \beta_2 X\right) + V \left(-\frac{\lambda}{X^2} + 2 \beta_2\right) \nonumber \\
     &= \frac{\partial V}{\partial X} \frac{\frac{\partial V}{\partial X}}{V} + V \left(-\frac{\lambda}{X^2} + 2 \beta_2\right) \nonumber \\
     &= V \left(\left(\frac{\Delta_X}{V}\right)^2 -\frac{\lambda}{X^2} + 2 \beta_2 \right)
 \end{align}
@@ -140,7 +140,7 @@ Interchangeably, derivative against strike $ K $ can be transformed into derivat
 \end{subequations}
 
 
-Where first and second derivative of $ X $ against K can be found with the cases of $ \eta $ as belows.
+Where the first and second derivatives of $ X $ against K can be found with the cases of $ \eta $ as belows.
 \begin{subequations}
     \begin{align}
         \frac{\partial X}{\partial K} &= 
