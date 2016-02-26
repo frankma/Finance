@@ -17,29 +17,29 @@ class SABRGreeks(object):
         pass
 
     @staticmethod
-    def theta(f: float, k: np.float, tau: float, b: float, opt_type: OptionType,
+    def theta(f: float, k: np.array, tau: float, b: float, opt_type: OptionType,
               model: SABRModelLognormalApprox) -> np.array:
         SABRGreeks.__check_model(model)
-        sig = model.calc_vol(f, k, vol_type=VolType.black)
+        sig = model.calc_vol_vec(f, k, vol_type=VolType.black)
         theta = Black76Vec.theta(f, k, tau, sig, b, opt_type)
         vega = Black76Vec.vega(f, k, tau, sig, b)
         d_black_d_t = model.calc_d_black_d_t(f, k)
         return theta + vega * d_black_d_t
 
     @staticmethod
-    def delta_k(f: float, k: np.float, tau: float, b: float, opt_type: OptionType,
+    def delta_k(f: float, k: np.array, tau: float, b: float, opt_type: OptionType,
                 model: SABRModelLognormalApprox) -> np.array:
         SABRGreeks.__check_model(model)
-        sig = model.calc_vol(f, k, vol_type=VolType.black)
+        sig = model.calc_vol_vec(f, k, vol_type=VolType.black)
         delta_k = Black76Vec.delta_k(f, k, tau, sig, b, opt_type)
         vega = Black76Vec.vega(f, k, tau, sig, b)
         d_black_d_k = model.calc_d_black_d_k(f, k)
         return delta_k + vega * d_black_d_k
 
     @staticmethod
-    def gamma_k(f: float, k: np.float, tau: float, b: float, model: SABRModelLognormalApprox) -> np.array:
+    def gamma_k(f: float, k: np.array, tau: float, b: float, model: SABRModelLognormalApprox) -> np.array:
         SABRGreeks.__check_model(model)
-        sig = model.calc_vol(f, k, vol_type=VolType.black)
+        sig = model.calc_vol_vec(f, k, vol_type=VolType.black)
         gamma_k = Black76Vec.gamma_k(f, k, tau, sig, b)
         vanna = Black76Vec.vanna(f, k, tau, sig, b)
         vomma = Black76Vec.vomma(f, k, tau, sig, b)

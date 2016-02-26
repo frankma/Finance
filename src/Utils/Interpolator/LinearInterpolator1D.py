@@ -11,8 +11,8 @@ logger = logging.getLogger(__name__)
 
 class LinearInterpolator1D(IInterpolator1D):
     def __init__(self, x: list, y: list, extrapolate='flat'):
-        super().__init__(x, y)
         self.ex = extrapolate
+        super().__init__(x, y)
 
     def sanity_check(self):
         super().sanity_check()
