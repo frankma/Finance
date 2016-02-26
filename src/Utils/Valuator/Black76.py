@@ -111,6 +111,25 @@ class Black76(object):
         d2 = Black76.calc_d2(f, k, tau, sig)
         return b * norm.pdf(d2) / k / sig / sqrt(tau)
 
+    @staticmethod
+    def vomma(f: float, k: float, tau: float, sig: float, b: float):
+        vega = Black76.vega(f, k, tau, sig, b)
+        d1 = Black76.calc_d1(f, k, tau, sig)
+        d2 = Black76.calc_d2(f, k, tau, sig)
+        return vega * d1 * d2 / sig
+
+    @staticmethod
+    def vanna(f: float, k: float, tau: float, sig: float, b: float):
+        vega = Black76.vega(f, k, tau, sig, b)
+        d2 = Black76.calc_d2(f, k, tau, sig)
+        return -vega * d2 / sig / sqrt(tau) / f
+
+    @staticmethod
+    def vanna_k(f: float, k: float, tau: float, sig: float, b: float):
+        vega = Black76.vega(f, k, tau, sig, b)
+        d1 = Black76.calc_d1(f, k, tau, sig)
+        return vega * d1 / sig / sqrt(tau) / k
+
 
 class Black76Vec(Black76):
     @staticmethod

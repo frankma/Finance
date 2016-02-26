@@ -180,8 +180,8 @@ class SABRModelLognormalApprox(SABRModel):
         vanna_k = Black76Vec.vanna_k(forward, strikes, self.t, vols, b)
         vomma = Black76Vec.vomma(forward, strikes, self.t, vols, b)
         vega = Black76Vec.vega(forward, strikes, self.t, vols, b)
-        d_black_d_k = self.__calc_d_black_d_k(forward, strikes)
-        d2_black_d_k2 = self.__calc_d2_black_d_k2(forward, strikes)
+        d_black_d_k = self.calc_d_black_d_k(forward, strikes)
+        d2_black_d_k2 = self.calc_d2_black_d_k2(forward, strikes)
         density = gamma_k + 2.0 * vanna_k * d_black_d_k + vomma * (d_black_d_k ** 2) + vega * d2_black_d_k2
         return density, strikes
 
@@ -190,9 +190,9 @@ class SABRModelLognormalApprox(SABRModel):
             raise ValueError('current method only support reduced form in which beta %r must be one.' % self.beta)
 
         black = self.calc_vol_vec(forward, strikes, vol_type=VolType.black)
-        d_black_d_t = self.__calc_d_black_d_t(forward, strikes)
-        d_black_d_k = self.__calc_d_black_d_k(forward, strikes)
-        d2_black_d_k2 = self.__calc_d2_black_d_k2(forward, strikes)
+        d_black_d_t = self.calc_d_black_d_t(forward, strikes)
+        d_black_d_k = self.calc_d_black_d_k(forward, strikes)
+        d2_black_d_k2 = self.calc_d2_black_d_k2(forward, strikes)
 
         num = ((black ** 2) + 2.0 * black * self.t * (d_black_d_t + mu * strikes * d_black_d_k))
         den = ((1.0 - d_black_d_k * strikes * np.log(strikes / forward) / black) ** 2) + strikes * black * self.t * (
@@ -201,7 +201,7 @@ class SABRModelLognormalApprox(SABRModel):
 
         return np.sqrt(loc_variance)
 
-    def __calc_d_black_d_t(self, forward: float, strikes: np.array) -> np.array:
+    def calc_d_black_d_t(self, forward: float, strikes: np.array) -> np.array:
         is_atm = np.abs(forward - strikes) < self.abs_tol
         is_not_atm = np.logical_not(is_atm)
         d_black_d_t = np.ones(strikes.__len__())
@@ -215,13 +215,13 @@ class SABRModelLognormalApprox(SABRModel):
 
         return d_black_d_t
 
-    def __calc_d_black_d_k(self, forward: float, strikes: np.array) -> np.array:
+    def calc_d_black_d_k(self, forward: float, strikes: np.array) -> np.array:
         d_black_d_k = -self.nu * self.__calc_d_z_per_x_d_z(forward, strikes) / strikes
         d_black_d_k *= self.__calc_const()
 
         return d_black_d_k
 
-    def __calc_d2_black_d_k2(self, forward: float, strikes: np.array) -> np.array:
+    def calc_d2_black_d_k2(self, forward: float, strikes: np.array) -> np.array:
         strikes_sq = strikes ** 2
         d2_black_d_k2 = self.nu * self.__calc_d_z_per_x_d_z(forward, strikes) / strikes_sq + \
                         (self.nu ** 2) * self.__calc_d2_z_per_x_d_z2(forward, strikes) / self.alpha / strikes_sq
