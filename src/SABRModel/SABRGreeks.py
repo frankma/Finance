@@ -41,9 +41,9 @@ class SABRGreeks(object):
         SABRGreeks.__check_model(model)
         sig = model.calc_vol_vec(f, k, vol_type=VolType.black)
         gamma_k = Black76Vec.gamma_k(f, k, tau, sig, b)
-        vanna = Black76Vec.vanna(f, k, tau, sig, b)
+        vanna_k = Black76Vec.vanna_k(f, k, tau, sig, b)
         vomma = Black76Vec.vomma(f, k, tau, sig, b)
         vega = Black76Vec.vega(f, k, tau, sig, b)
         d_black_d_k = model.calc_d_black_d_k(f, k)
         d2_black_d_k2 = model.calc_d2_black_d_k2(f, k)
-        return gamma_k + 2 * vanna * d_black_d_k + vomma * (d_black_d_k ** 2) + vega * d2_black_d_k2
+        return gamma_k + 2.0 * vanna_k * d_black_d_k + vomma * (d_black_d_k ** 2) + vega * d2_black_d_k2
