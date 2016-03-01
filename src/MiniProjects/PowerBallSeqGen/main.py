@@ -3,7 +3,6 @@ from src.MiniProjects.PowerBallSeqGen.SequenceGenerator import SequenceGenerator
 
 __author__ = 'frank.ma'
 
-
 n = 69
 numbers = list(np.linspace(1, n, num=n, dtype=int))
 frequencies = list(np.full(n, 1.0 / float(n)))
@@ -16,4 +15,3 @@ for _ in range(n_sets):
     seq = sg.draw(size=5)
     pb = np.random.randint(1, 27, size=1)
     print(seq, pb)
-s
