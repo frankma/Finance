@@ -12,7 +12,7 @@ from src.Utils.Valuator.BinomialTreePricer import BinomialTreePricer
 __author__ = 'frank.ma'
 
 logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 sh = logging.StreamHandler()
@@ -22,25 +22,6 @@ logger.addHandler(sh)
 
 
 class TestBinomialTreePricer(TestCase):
-    def test_calc_u_d_p(self):
-        logger.info('%s starts' % sys._getframe().f_code.co_name)
-        dts = [0.01, 0.02, 0.05, 0.1, 0.2, 0.5]
-        rs = [-0.1, -0.05, -0.02, -0.01, 0.0, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5]
-        qs = [-0.1, -0.05, -0.02, -0.01, 0.0, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5]
-        sigs = [0.0001, 0.001, 0.01, 0.1, 0.5, 1.0, 2.0]
-        for dt in dts:
-            for r in rs:
-                for q in qs:
-                    for sig in sigs:
-                        u, d, p = BinomialTreePricer.calc_u_d_p(dt, r, q, sig)
-                        label = 'dt: %.8f, r: %.8f, q: %.8f, sig: %.8f' % (dt, r, q, sig)
-                        self.assertAlmostEqual(1.0, u * d, places=12,
-                                               msg='up and down sanity check failed with params %s' % label)
-                        self.assertAlmostEqual(1.0, np.exp(-dt * (r - q)) * (u * p + d * (1.0 - p)), places=12,
-                                               msg='probability sanity check failed with params %s' % label)
-        logger.info('%s passes' % sys._getframe().f_code.co_name)
-        pass
-
     def test_create_state(self):
         logger.info('%s starts' % sys._getframe().f_code.co_name)
         s_s = [10.0, 20.0, 50.0, 100.0, 200.0, 500.0, 1000.0]
@@ -54,18 +35,34 @@ class TestBinomialTreePricer(TestCase):
         logger.info('%s passes' % sys._getframe().f_code.co_name)
         pass
 
-    def test_time_march(self):
+    def test_price_european_option(self):
         logger.info('%s starts' % sys._getframe().f_code.co_name)
-        s, k, tau, r, q, sig, opt_type, n_steps = 100.0, 102.0, 2.0, 0.01, 0.1, 0.6, OptionType.call, 1000
-        btp = BinomialTreePricer(s, k, tau, r, q, sig, opt_type, n_steps)
-        opt_ame_num = btp.price_ame_opt()
-        opt_ame_ana = BAW.price(s, k, tau, r, q, sig, opt_type)
-        print('Option Type\tAnalytical Price\tNumerical Price\tDifference')
-        print('American:\t%.6f\t%.6f\t%.4e' % (opt_ame_ana, opt_ame_num, opt_ame_num / opt_ame_ana - 1.0))
+        tau, r, q, n_steps = 2.0, 0.02, 0.04, 99
+        logger.debug('testing instrument name\tanalytical\tnumerical\tdiff')
+        for s in [140.0, 150.0, 160.0]:
+            for k in [140.0, 150.0, 160.0]:
+                for sig in [0.4, 0.5, 0.6]:
+                    for opt_type in [OptionType.put, OptionType.call]:
+                        num = BinomialTreePricer.price_european_option(s, k, tau, r, q, sig, opt_type, n_steps)
+                        ana = BSM.price(s, k, tau, r, q, sig, opt_type)
+                        self.assertAlmostEqual(1.0, num / ana, places=2)
+                        logger.debug('s_%.2f_k_%.2f_vol_%.2f_%s\t%.6f\t%.6f\t%.2e'
+                                     % (s, k, sig, opt_type.name[0], ana, num, num / ana - 1.0))
+        logger.info('%s passes' % sys._getframe().f_code.co_name)
+        pass
 
-        opt_eur_num = btp.price_eur_opt()
-        opt_eur_ana = BSM.price(s, k, tau, r, q, sig, opt_type)
-        print('European:\t%.6f\t%.6f\t%.4e' % (opt_eur_ana, opt_eur_num, opt_eur_num / opt_eur_ana - 1.0))
-
+    def test_price_american_option(self):
+        logger.info('%s starts' % sys._getframe().f_code.co_name)
+        tau, r, q, n_steps = 2.0, 0.02, 0.04, 99
+        logger.debug('testing instrument name\tanalytical\tnumerical\tdiff')
+        for s in [140.0, 150.0, 160.0]:
+            for k in [140.0, 150.0, 160.0]:
+                for sig in [0.4, 0.5, 0.6]:
+                    for opt_type in [OptionType.put, OptionType.call]:
+                        num = BinomialTreePricer.price_american_option(s, k, tau, r, q, sig, opt_type, n_steps)
+                        ana = BAW.price(s, k, tau, r, q, sig, opt_type)
+                        self.assertAlmostEqual(1.0, num / ana, places=1)
+                        logger.debug('s_%.2f_k_%.2f_vol_%.2f_%s\t%.6f\t%.6f\t%.2e'
+                                     % (s, k, sig, opt_type.name[0], ana, num, num / ana - 1.0))
         logger.info('%s passes' % sys._getframe().f_code.co_name)
         pass
