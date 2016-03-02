@@ -12,7 +12,7 @@ from src.Utils.Valuator.BinomialTreePricer import BinomialTreePricer
 __author__ = 'frank.ma'
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 sh = logging.StreamHandler()
@@ -37,32 +37,62 @@ class TestBinomialTreePricer(TestCase):
 
     def test_price_european_option(self):
         logger.info('%s starts' % sys._getframe().f_code.co_name)
-        tau, r, q, n_steps = 2.0, 0.02, 0.04, 99
+        tau, r, q, n_steps = 2.0, 0.02, 0.02, 99
         logger.debug('testing instrument name\tanalytical\tnumerical\tdiff')
         for s in [140.0, 150.0, 160.0]:
             for k in [140.0, 150.0, 160.0]:
-                for sig in [0.4, 0.5, 0.6]:
+                for sig in [0.2, 0.4, 0.6]:
                     for opt_type in [OptionType.put, OptionType.call]:
                         num = BinomialTreePricer.price_european_option(s, k, tau, r, q, sig, opt_type, n_steps)
                         ana = BSM.price(s, k, tau, r, q, sig, opt_type)
-                        self.assertAlmostEqual(1.0, num / ana, places=2)
-                        logger.debug('s_%.2f_k_%.2f_vol_%.2f_%s\t%.6f\t%.6f\t%.2e'
+                        self.assertAlmostEqual(0.0, num / ana - 1.0, places=2)
+                        logger.debug('s_%.2f_k_%.2f_vol_%.2f_eur_%s\t%.6f\t%.6f\t%.2e'
                                      % (s, k, sig, opt_type.name[0], ana, num, num / ana - 1.0))
+        logger.info('%s passes' % sys._getframe().f_code.co_name)
+        pass
+
+    def test_imp_vol_european_option(self):
+        logger.info('%s starts' % sys._getframe().f_code.co_name)
+        tau, r, q, n_step = 2.0, 0.02, 0.04, 99
+        for s in [140.0, 150.0, 160.0]:
+            for k in [140.0, 150.0, 160.0]:
+                for sig in [0.2, 0.4, 0.6]:
+                    for opt_type in [OptionType.put, OptionType.call]:
+                        price = BinomialTreePricer.price_european_option(s, k, tau, r, q, sig, opt_type, n_step)
+                        vol = BinomialTreePricer.imp_vol_european_option(s, k, tau, r, q, price, opt_type, n_step)
+                        self.assertAlmostEqual(sig, vol, places=6)
+                        logger.debug('s_%.2f_k_%.2f_vol_%.2f_eur_%s\t%.4f\t%.4f\t%.2e'
+                                     % (s, k, sig, opt_type.name[0], sig, vol, vol / sig - 1.0))
         logger.info('%s passes' % sys._getframe().f_code.co_name)
         pass
 
     def test_price_american_option(self):
         logger.info('%s starts' % sys._getframe().f_code.co_name)
-        tau, r, q, n_steps = 2.0, 0.02, 0.04, 99
+        tau, r, q, n_steps = 2.0, 0.02, 0.02, 99
         logger.debug('testing instrument name\tanalytical\tnumerical\tdiff')
         for s in [140.0, 150.0, 160.0]:
             for k in [140.0, 150.0, 160.0]:
-                for sig in [0.4, 0.5, 0.6]:
+                for sig in [0.2, 0.4, 0.6]:
                     for opt_type in [OptionType.put, OptionType.call]:
                         num = BinomialTreePricer.price_american_option(s, k, tau, r, q, sig, opt_type, n_steps)
                         ana = BAW.price(s, k, tau, r, q, sig, opt_type)
-                        self.assertAlmostEqual(1.0, num / ana, places=1)
-                        logger.debug('s_%.2f_k_%.2f_vol_%.2f_%s\t%.6f\t%.6f\t%.2e'
+                        self.assertAlmostEqual(0.0, num / ana - 1.0, places=2)
+                        logger.debug('s_%.2f_k_%.2f_vol_%.2f_ame_%s\t%.6f\t%.6f\t%.2e'
                                      % (s, k, sig, opt_type.name[0], ana, num, num / ana - 1.0))
+        logger.info('%s passes' % sys._getframe().f_code.co_name)
+        pass
+
+    def test_imp_vol_american_option(self):
+        logger.info('%s starts' % sys._getframe().f_code.co_name)
+        tau, r, q, n_step = 2.0, 0.02, 0.04, 99
+        for s in [140.0, 150.0, 160.0]:
+            for k in [140.0, 150.0, 160.0]:
+                for sig in [0.2, 0.4, 0.6]:
+                    for opt_type in [OptionType.put, OptionType.call]:
+                        price = BinomialTreePricer.price_american_option(s, k, tau, r, q, sig, opt_type, n_step)
+                        vol = BinomialTreePricer.imp_vol_american_option(s, k, tau, r, q, price, opt_type, n_step)
+                        self.assertAlmostEqual(sig, vol, places=6)
+                        logger.debug('s_%.2f_k_%.2f_vol_%.2f_ame_%s\t%.4f\t%.4f\t%.2e'
+                                     % (s, k, sig, opt_type.name[0], sig, vol, vol / sig - 1.0))
         logger.info('%s passes' % sys._getframe().f_code.co_name)
         pass

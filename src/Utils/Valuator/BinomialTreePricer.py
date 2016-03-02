@@ -1,8 +1,14 @@
+import logging
+
 import numpy as np
 
 from src.Utils.OptionType import OptionType
+from src.Utils.Solver.Brent import Brent
+from src.Utils.Solver.IVariateFunction import IUnivariateFunction
 
 __author__ = 'frank.ma'
+
+logger = logging.getLogger(__name__)
 
 
 class BinomialTreePricer(object):
@@ -39,8 +45,22 @@ class BinomialTreePricer(object):
         for idx in range(n_steps, 0, -1):
             option = disc * (p_u * option[:-1] + p_d * option[1:])
         if option.__len__() != 1:
-            raise ValueError('unexpected shape of final result')
+            msg = 'unexpected shape of final result, expected singular at last step'
+            logger.error(msg)
+            raise ValueError(msg)
         return option[0]
+
+    @staticmethod
+    def imp_vol_european_option(s: float, k: float, tau: float, r: float, q: float, price: float, opt_type: OptionType,
+                                n_step: int = 99, vol_range: tuple = (1e-2, 4.0)):
+        class EuropeanOptionTree(IUnivariateFunction):
+            def evaluate(self, x):
+                return BinomialTreePricer.price_european_option(s, k, tau, r, q, x, opt_type, n_step) - price
+
+        eot = EuropeanOptionTree()
+        bt = Brent(eot, vol_range[0], vol_range[1])
+        vol = bt.solve()
+        return vol
 
     @staticmethod
     def price_american_option(s: float, k: float, tau: float, r: float, q: float, sig: float, opt_type: OptionType,
@@ -60,5 +80,19 @@ class BinomialTreePricer(object):
             intrinsic = BinomialTreePricer.calc_intrinsic_value(state, k, opt_type)
             option = np.maximum(intrinsic, option)
         if option.__len__() != 1:
-            raise ValueError('unexpected shape of final result')
+            msg = 'unexpected shape of final result, expected singular at last step'
+            logger.error(msg)
+            raise ValueError(msg)
         return option[0]
+
+    @staticmethod
+    def imp_vol_american_option(s: float, k: float, tau: float, r: float, q: float, price: float, opt_type: OptionType,
+                                n_step: int = 99, vol_range: tuple = (1e-2, 10.0)):
+        class EuropeanOptionTree(IUnivariateFunction):
+            def evaluate(self, x):
+                return BinomialTreePricer.price_american_option(s, k, tau, r, q, x, opt_type, n_step) - price
+
+        eot = EuropeanOptionTree()
+        bt = Brent(eot, vol_range[0], vol_range[1])
+        vol = bt.solve()
+        return vol
