@@ -1,4 +1,9 @@
+import numpy as np
+
 from datetime import datetime, timedelta
+
+from src.Algorithms.VolatilityCrush.SimulatorSABR import SimulatorSABR
+from src.SABRModel.SABRModel import SABRModelLognormalApprox
 
 __author__ = 'frank.ma'
 
@@ -23,4 +28,12 @@ sig_l = 0.45
 strike = 155.0
 spot_pre = 150.0
 spot_post = 170.0
+
+
+tau, alpha, beta, nu, rho = 15.0 / 365.25, 0.7, 1.0, 2.2, -0.4
+forward, zb = 100.0, np.exp(-0.01 * tau)
+model_pre = SABRModelLognormalApprox(tau, alpha, beta, nu, rho)
+simulator = SimulatorSABR(model_pre, forward, zb)
+alpha_shift, nu_shift, rho_shift = 0.66, 1.0, 1.0
+simulator.display_vol_shocks(alpha_shift=alpha_shift, nu_shift=nu_shift, rho_shift=rho_shift)
 
