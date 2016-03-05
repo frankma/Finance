@@ -34,6 +34,6 @@ tau, alpha, beta, nu, rho = 15.0 / 365.25, 0.7, 1.0, 2.2, -0.4
 forward, zb = 100.0, np.exp(-0.01 * tau)
 model_pre = SABRModelLognormalApprox(tau, alpha, beta, nu, rho)
 simulator = SimulatorSABR(model_pre, forward, zb)
-alpha_shift, nu_shift, rho_shift = 0.66, 1.0, 1.0
+alpha_shift, nu_shift, rho_shift = 0.88, 1.5, 1.0
 simulator.display_vol_shocks(alpha_shift=alpha_shift, nu_shift=nu_shift, rho_shift=rho_shift)
 

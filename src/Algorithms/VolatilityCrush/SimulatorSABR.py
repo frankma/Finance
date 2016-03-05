@@ -4,6 +4,7 @@ from scipy.stats import norm
 
 from src.SABRModel.SABRModel import SABRModelLognormalApprox
 from src.Utils.OptionType import OptionType
+from src.Utils.Valuator.BAW import BAW
 from src.Utils.Valuator.Black76 import Black76Vec
 from src.Utils.Valuator.VarianceReplication import VarianceReplication
 
@@ -55,4 +56,27 @@ class SimulatorSABR(object):
             plt.plot(ks_display, vols_post, label='%.2f' % forward_post)
         plt.legend()
         plt.show()
+        pass
+
+    @staticmethod
+    def strategy_single_period(model_pre: SABRModelLognormalApprox, forward_pre: float, r_pre: float, q_pre: float,
+                               model_post: SABRModelLognormalApprox, forward_post: float, r_post: float, q_post: float,
+                               opt_types: list, strikes: list, positions: list):
+        n_trades = opt_types.__len__()
+        if n_trades != strikes.__len__() != positions.__len__():
+            raise ValueError('expect same shape of option, strike and position')
+        value = 0.0
+        s_pre = forward_pre / np.exp((r_pre - q_pre) * model_pre.t)
+        s_post = forward_post / np.exp((r_post - q_post) * model_post.t)
+        for idx in range(n_trades):
+            opt_type = opt_types[idx]
+            strike = strikes[idx]
+            vol_pre = model_pre.calc_vol(forward_pre, strike)
+            vol_post = model_post.calc_vol(forward_post, strike)
+            position = positions[idx]
+            value -= position * BAW.price(s_pre, strike, model_pre.t, r_pre, q_pre, vol_pre, opt_type)
+            value += position * BAW.price(s_post, strike, model_post.t, r_post, q_post, vol_post, opt_type)
+        return value
+
+    def simulate(self):
         pass
