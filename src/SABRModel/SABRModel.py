@@ -165,7 +165,7 @@ class SABRModelLognormalApprox(SABRModel):
         strikes = np.linspace(rel_bounds[0] * forward, rel_bounds[1] * forward, num=n_bins + 2)
         vols = self.calc_vol_vec(forward, strikes, vol_type=VolType.black)
         # must implied through numerical differentiation
-        # since analytical one is incorrect as a collection of lognormal distribution with variable vols
+        # since Black 76 analytical greek is incorrect as a collection of lognormal distribution with variable vols
         prices = Black76Vec.price(forward, strikes, self.t, vols, 1.0, OptionType.put)
         density = (prices[:-2] + prices[2:] - 2 * prices[1:-1]) / ((strikes[2:] - strikes[1:-1]) ** 2)
         strikes = strikes[1:-1]  # truncate strikes for numerical solution
@@ -372,7 +372,7 @@ class SABRModelNormalApprox(SABRModel):
         strikes = np.linspace(rel_bounds[0] * forward, rel_bounds[1] * forward, num=n_bins + 2)
         vols = self.calc_vol_vec(forward, strikes, vol_type=VolType.normal)
         # must implied through numerical differentiation
-        # since analytical one is incorrect as a collection of lognormal distribution with variable vols
+        # since normal model analytical greeks is incorrect as a collection of normal distribution with variable vols
         prices = NormalModelVec.price(forward, strikes, self.t, vols, 1.0, OptionType.put)
         density = (prices[:-2] + prices[2:] - 2 * prices[1:-1]) / ((strikes[2:] - strikes[1:-1]) ** 2)
         strikes = strikes[1:-1]  # truncate strikes for numerical solution
