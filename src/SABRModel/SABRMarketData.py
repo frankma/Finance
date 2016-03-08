@@ -24,7 +24,7 @@ class SABRMarketData(object):
         self.strikes = strikes
         self.volatilities = volatilities
         self.vol_type = vol_type
-        # some preliminary processings
+        # some preliminary processing
         self.vol_dict = dict(zip(self.strikes, self.volatilities))
         if self.vol_type == VolType.black:
             self.model = SABRModelLognormalApprox(self.tau, self.alpha, self.beta, self.nu, self.rho)
@@ -49,7 +49,7 @@ class SABRMarketData(object):
                                    strikes: np.array, prices: np.array, opt_types: np.array, vol_type: VolType,
                                    beta: float = 1.0, initial_guess: tuple = (0.2, 0.4, -0.25)):
         tau = (expiry - asof) / datetime(365.25)  # Act/365.25
-        # first convert volatilities
+        # convert prices into volatilities
         volatilities = np.zeros(np.shape(strikes))
         for idx, strike in enumerate(strikes):
             price = prices[idx]
@@ -69,7 +69,7 @@ class SABRMarketData(object):
             raise ValueError('strike %.2f is not in storage' % strike)
         return self.vol_dict[strike]
 
-    def get_quote_from_model(self, strike: float or np.array):
-        return self.model.calc_vol_vec(self.forward, strike)
+    def get_quote_from_model(self, strikes: float or np.array):
+        return self.model.calc_vol_vec(self.forward, strikes)
 
 
