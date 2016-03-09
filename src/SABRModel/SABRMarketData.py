@@ -4,7 +4,8 @@ import numpy as np
 
 from src.SABRModel.SABRModel import SABRModelLognormalApprox, SABRModelNormalApprox
 from src.SABRModel.SABRModelCalibrator import SABRModelCalibratorAlphaNuRho
-from src.Utils.Valuator.Black76 import Black76
+from src.Utils.OptionType import OptionType
+from src.Utils.Valuator.Black76 import Black76, Black76Vec
 from src.Utils.Valuator.NormalModel import NormalModel
 from src.Utils.VolType import VolType
 
@@ -69,7 +70,11 @@ class SABRMarketData(object):
             raise ValueError('strike %.2f is not in storage' % strike)
         return self.vol_dict[strike]
 
-    def get_quote_from_model(self, strikes: float or np.array):
+    def get_vols_from_model(self, strikes: float or np.array):
         return self.model.calc_vol_vec(self.forward, strikes)
+
+    def get_prices_from_model(self, strikes: float or np.array, opt_type: OptionType):
+        volatilities = self.get_vols_from_model(strikes)
+        return Black76Vec.price(self.forward, strikes, self.tau, volatilities, self.bond, opt_type)
 
 

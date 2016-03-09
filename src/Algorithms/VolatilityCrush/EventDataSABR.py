@@ -31,8 +31,8 @@ class EventDataSABR(object):
             raise ValueError('expect market data components as SABRMarketData')
         return mdc_pre, mdc_post
 
-    def check_cross_instruments(self, expiry: datetime, strikes: np.array):
+    def check_cross_instruments(self, expiry: datetime, strikes: np.array, opt_types: np.array):
         mdc_pre, mdc_post = self.get_mds_cross_event(expiry)
 
-        vols_pre = mdc_pre.get_quote_from_model(strikes)
-        vols_post = mdc_post.get_quote_from_model(strikes)
+        vols_pre = mdc_pre.get_vols_from_model(strikes)
+        vols_post = mdc_post.get_vols_from_model(strikes)
