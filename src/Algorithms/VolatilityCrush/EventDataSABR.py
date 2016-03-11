@@ -40,4 +40,4 @@ class EventDataSABR(object):
             opt_type = opt_types[idx]
             prices_pre += [mdc_pre.get_price_from_model(strike, opt_type)]
             prices_post += [mdc_post.get_vols_from_model(strike, opt_type)]
-        return
+        return prices_pre, prices_post
