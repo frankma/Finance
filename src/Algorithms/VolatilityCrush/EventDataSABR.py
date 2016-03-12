@@ -1,11 +1,9 @@
-import numpy as np
-
 from datetime import datetime
 
+import numpy as np
+
 from src.SABRModel.SABRMarketData import SABRMarketData
-from src.Utils.OptionType import OptionType
-from src.Utils.Valuator.Black76 import Black76Vec
-from src.Utils.VolType import VolType
+from src.Utils.PayoffType import PayoffType
 
 __author__ = 'frank.ma'
 
@@ -23,7 +21,7 @@ class EventDataSABR(object):
         self.cash_rate = cash_rate
         pass
 
-    def get_mds_cross_event(self, expiry: datetime):
+    def get_md_cross_event(self, expiry: datetime):
         if expiry not in self.expiries:
             raise ValueError('expiry (%s) is not cached in market data components.' % expiry)
         mdc_pre = self.md_pre[expiry]
@@ -32,12 +30,17 @@ class EventDataSABR(object):
             raise ValueError('expect market data components as SABRMarketData')
         return mdc_pre, mdc_post
 
-    def check_cross_instruments(self, expiry: datetime, strikes: np.array, opt_types: np.array):
-        mdc_pre, mdc_post = self.get_mds_cross_event(expiry)
-        prices_pre = []
-        prices_post = []
+    def check_cross_instruments(self, expiry: datetime, strikes: np.array, opt_types: np.array,
+                                payoff_type: PayoffType):
+        md_pre, md_post = self.get_md_cross_event(expiry)
+        vols_pre = md_pre.get_vols_from_model(strikes)
+        vols_post = md_post.get_vols_from_model(strikes)
+        prices_pre = np.empty(strikes.__len__())
+        prices_pre.fill(np.nan)
+        prices_post = np.empty(strikes.__len__())
+        prices_post.fill(np.nan)
+
         for idx, strike in enumerate(strikes):
             opt_type = opt_types[idx]
-            prices_pre += [mdc_pre.get_price_from_model(strike, opt_type)]
-            prices_post += [mdc_post.get_vols_from_model(strike, opt_type)]
+            # TODO: finish this
         return prices_pre, prices_post
