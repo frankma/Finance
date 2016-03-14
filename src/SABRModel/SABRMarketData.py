@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import numpy as np
 
@@ -38,7 +38,7 @@ class SABRMarketData(object):
     def calibrate_from_vol(asof: datetime, expiry: datetime, spot: float, forward: float, bond: float,
                            strikes: np.array, volatilities: np.array, vol_type: VolType,
                            beta: float = 1.0, initial_guess: tuple = (0.2, 0.4, -0.25)):
-        tau = (expiry - asof) / datetime(365.25)  # Act/365.25
+        tau = (expiry - asof) / timedelta(365.25)  # Act/365.25
         weights = np.full(np.shape(strikes), 1.0 / strikes.__len__())
         calibrator = SABRModelCalibratorAlphaNuRho(tau, forward, strikes, volatilities, weights, vol_type, beta=beta,
                                                    init_guess=initial_guess)
@@ -51,7 +51,7 @@ class SABRMarketData(object):
     def calibrate_from_eur_opt_price(asof: datetime, expiry: datetime, spot: float, forward: float, bond: float,
                                      strikes: np.array, prices: np.array, opt_types: np.array, vol_type: VolType,
                                      beta: float = 1.0, initial_guess: tuple = (0.2, 0.4, -0.25)):
-        tau = (expiry - asof) / datetime(365.25)  # Act/365.25
+        tau = (expiry - asof) / timedelta(365.25)  # Act/365.25
         # convert prices into volatilities
         volatilities = np.zeros(np.shape(strikes))
         for idx, strike in enumerate(strikes):

@@ -77,7 +77,7 @@ class EventDataSABR(object):
                 raise NotImplementedError('in event pricer payoff type (%s) is not implemented yet' % payoff_type)
         return prices
 
-    def check_cross_instruments(self, expiry: datetime, strikes: np.array, opt_types: np.array, payoff_types: np.array):
+    def calc_prices_cross_event(self, expiry: datetime, strikes: np.array, opt_types: np.array, payoff_types: np.array):
         md_pre, md_post = self.get_md_cross_event(expiry)
 
         prices_pre = self.calc_prices(md_pre, strikes, opt_types, payoff_types)
