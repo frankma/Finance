@@ -19,7 +19,8 @@ class EventDataParser(object):
     @staticmethod
     def read_events_from_csv(path: str):
         df = pd.read_csv(path, parse_dates=[1, 5], date_parser=EventDataParser.__date_parser)
-        df.index = df['ticker'] + '_' + df['asof'].astype(str) + '_' + df['exp'].astype(str)
+        df['ID'] = df['ticker'] + '_' + df['asof'].astype(str) + '_' + df['exp'].astype(str)
+        df.index = df['ticker'] + '_' + df['exp'].astype(str)
 
         columns = list(df.columns)
         ks = []
@@ -29,19 +30,19 @@ class EventDataParser(object):
         strikes_name = ['strike' + '_' + v for v in ks]
         vols_name = ['volatility' + '_' + v for v in ks]
 
-        pd_out = pd.DataFrame(index=df.index)
+        df_out = pd.DataFrame(index=df.index)
+        df_out['model'] = pd.Series(index=df.index)
         for idx, row in df.iterrows():
             asof, expiry = row['asof'], row['exp']
             spot, forward, bond = row['spot'], row['fwd'], row['bond']
-            strikes = np.array(row[strikes_name])
-            volatilities = np.array(row[vols_name])
+            strikes = np.array(row[strikes_name]).astype(float)
+            volatilities = np.array(row[vols_name]).astype(float)
             vol_type = VolType.black
-            pd_out[idx] = SABRMarketData.calibrate_from_vol(asof, expiry, spot, forward, bond, strikes, volatilities,
-                                                            vol_type, beta=1.0)
+            df_out['model'].loc[idx] = SABRMarketData.calibrate_from_vol(asof, expiry, spot, forward, bond, strikes,
+                                                                         volatilities, vol_type, beta=1.0)
+        return df_out
+
+    @staticmethod
+    def read_dual_events_from_csv(path_pre: str, path_post: str):
 
         pass
-
-
-if __name__ == '__main__':
-    p = './data/sample_2w_pre.csv'
-    EventDataParser.read_events_from_csv(p)
