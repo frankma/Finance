@@ -1,7 +1,9 @@
 import logging
+
 import numpy as np
 import pandas as pd
 
+from src.Algorithms.VolatilityCrush.EventDataSABR import EventDataSABR
 from src.SABRModel.SABRMarketData import SABRMarketData
 from src.Utils.VolType import VolType
 
@@ -20,7 +22,7 @@ class EventDataParser(object):
         return pd.datetime.strptime(date_string, date_format)
 
     @staticmethod
-    def read_events_from_csv(path: str):
+    def load_data(path: str):
         df = pd.read_csv(path, parse_dates=[1, 5], date_parser=EventDataParser.__date_parser)
         df['ID'] = df['ticker'] + '_' + df['asof'].astype(str) + '_' + df['exp'].astype(str)
         df.index = df['ticker']
@@ -45,6 +47,14 @@ class EventDataParser(object):
         return df.loc[:, ['asof', 'exp', 'model']].copy()
 
     @staticmethod
-    def read_dual_events_from_csv(path_pre: str, path_post: str):
-
-        pass
+    def load_data_cross_events(path_pre: str, path_post: str):
+        df_pre = EventDataParser.load_data(path_pre)
+        df_post = EventDataParser.load_data(path_post)
+        keys_union = df_pre.index.intersection(df_post.index)
+        df = pd.DataFrame(index=keys_union)
+        df['EventDataSABR'] = pd.Series(index=keys_union)
+        for key in keys_union:
+            md_pre = [df_pre.loc[key, 'model']]
+            md_post = [df_post.loc[key, 'model']]
+            df.loc[key, 'EventDataSABR'] = EventDataSABR(md_pre, md_post)
+        return df

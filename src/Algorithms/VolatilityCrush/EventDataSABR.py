@@ -13,40 +13,34 @@ __author__ = 'frank.ma'
 class EventDataSABR(object):
     def __init__(self, md_pre: list, md_post: list):
         # pre event data sorting and cleaning
-        expiries_pre = []
-        for idx, item in enumerate(md_pre):
+        self.md_pre = self.__initial_check(md_pre)
+        self.asof_pre = next(iter(self.md_pre.values())).asof
+        expiries_pre = list(self.md_pre.keys())
+        # post event data sorting and cleaning
+        self.md_post = self.__initial_check(md_post)
+        self.asof_post = next(iter(self.md_post.values())).asof
+        expiries_post = list(self.md_post.keys())
+        # find the common expires across event for later reference
+        self.expiries = list(set(expiries_pre).intersection(expiries_post))
+        pass
+
+    @staticmethod
+    def __initial_check(md: list):
+        expiries = []
+        asof = None
+        for idx, item in enumerate(md):
             # restrict instance in the list
             if not isinstance(item, SABRMarketData):
                 raise ValueError('item %i in market data pre event is not instance of SABRMarketData' % idx)
             # restrict pre event asof date
             if idx == 0:
-                self.asof_pre = item.asof
+                asof = item.asof
             else:
-                if self.asof_pre != item.asof:
+                if asof != item.asof:
                     raise ValueError('unexpected pre event asof date (%s) at position (%i)' % (item.asof, idx))
             # log expiries
-            expiries_pre += [item.expiry]
-        self.md_pre = dict(zip(expiries_pre, md_pre))
-
-        # post event data sorting and cleaning
-        expiries_post = []
-        for idx, item in enumerate(md_post):
-            # restrict instance in the list
-            if not isinstance(item, SABRMarketData):
-                raise ValueError('item %i in market data post event is not instance of SABRMarketData' % idx)
-            # restrict pre event asof date
-            if idx == 0:
-                self.asof_post = item.asof
-            else:
-                if self.asof_post != item.asof:
-                    raise ValueError('unexpected post event asof date (%s) at position (%i)' % (item.asof, idx))
-            # log expiries
-            expiries_post += [item.expiry]
-        self.md_post = dict(zip(expiries_post, md_post))
-
-        # find the common expires across event for later reference
-        self.expiries = list(set(expiries_pre).intersection(expiries_post))
-        pass
+            expiries += [item.expiry]
+        return dict(zip(expiries, md))
 
     def get_md_cross_event(self, expiry: datetime):
         if expiry not in self.expiries:
