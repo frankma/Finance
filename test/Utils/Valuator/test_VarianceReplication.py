@@ -4,6 +4,8 @@ from unittest import TestCase
 
 import numpy as np
 
+from src.Utils.OptionType import OptionType
+from src.Utils.Valuator.Black76 import Black76Vec
 from src.Utils.Valuator.VarianceReplication import VarianceReplication
 
 __author__ = 'frank.ma'
@@ -117,6 +119,29 @@ class TestVarianceReplication(TestCase):
         vr = VarianceReplication(tau, f, b, np.array(k_p), np.array(v_p), np.array(k_c), np.array(v_c))
         variance = vr.calc_variance()
         self.assertAlmostEqual(0.018837995, variance, places=3)
+
+        logger.info('%s passes' % sys._getframe().f_code.co_name)
+        pass
+
+    def test_flat_vol(self):
+        logger.info('%s starts' % sys._getframe().f_code.co_name)
+
+        tau = 5.0  # 30.0
+        b = 0.88
+        fwd = 150.0
+        flat_vols = np.linspace(0.1, 1.0, num=10)
+
+        for flat_vol in flat_vols:
+            scale = fwd * flat_vol * np.sqrt(tau)
+            strikes = np.linspace(0.00001 * scale, 100.0 * scale, num=10 ** 6)
+            prices_call = Black76Vec.price(fwd, strikes, tau, flat_vol, b, OptionType.call)
+            prices_put = Black76Vec.price(fwd, strikes, tau, flat_vol, b, OptionType.put)
+
+            rp = VarianceReplication(tau, fwd, b, strikes, prices_put, strikes, prices_call)
+            var = rp.calc_variance()
+            std = np.sqrt(var)
+            self.assertAlmostEqual(std, flat_vol, places=4, msg='replication failed at vol %2.f' % flat_vol)
+            logger.info('%.2f\t%.12f\t%.2e' % (flat_vol, std, float(std / flat_vol - 1.0)))
 
         logger.info('%s passes' % sys._getframe().f_code.co_name)
         pass
