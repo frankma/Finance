@@ -1,3 +1,5 @@
+import logging
+
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import norm
@@ -9,6 +11,8 @@ from src.Utils.Valuator.Black76 import Black76Vec
 from src.Utils.Valuator.VarianceReplication import VarianceReplication
 
 __author__ = 'frank.ma'
+
+logger = logging.getLogger(__name__)
 
 
 class SimulatorSABR(object):

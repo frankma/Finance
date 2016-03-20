@@ -1,3 +1,5 @@
+import logging
+
 from datetime import datetime
 
 import numpy as np
@@ -8,6 +10,8 @@ from src.Utils.Valuator.BAW import BAW
 from src.Utils.Valuator.Black76 import Black76
 
 __author__ = 'frank.ma'
+
+logger = logging.getLogger(__name__)
 
 
 class EventDataSABR(object):
