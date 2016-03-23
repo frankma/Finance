@@ -29,7 +29,7 @@ class TestEventDataParser(TestCase):
         logger.info('%s starts' % sys._getframe().f_code.co_name)
         path_pre = './Data/sample_2w_pre.csv'
         path_post = './Data/sample_2w_post.csv'
-        EventDataParser.load_data_cross_events(path_pre, path_post)
+        df = EventDataParser.load_data_cross_events(path_pre, path_post)
 
         logger.info('%s passes' % sys._getframe().f_code.co_name)
         pass
