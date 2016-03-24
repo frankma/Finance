@@ -74,3 +74,24 @@ class EventDataParser(object):
             df.loc[key, 'Nu_post'] = df_post.loc[key, 'model'].nu
             df.loc[key, 'Rho_post'] = df_post.loc[key, 'model'].rho
         return df
+
+    @staticmethod
+    def events_stat_analysis(path_pre: str, path_post: str):
+        df_pre = EventDataParser.load_data(path_pre)
+        df_post = EventDataParser.load_data(path_post)
+
+        keys_union = df_pre.index.intersection(df_post.index)
+        time_stamp = ['pre', 'post']
+        params = ['md', 'alpha', 'beta', 'nu', 'rho', 'fwd']
+        columns_pre = [c + "_" + time_stamp[0] for c in params]
+        columns_post = [c + "_" + time_stamp[1] for c in params]
+        columns = columns_pre + columns_post
+        df = pd.DataFrame(index=keys_union, columns=columns)
+        for key in keys_union:
+            md_pre = df_pre.loc[key, 'model']
+            md_post = df_post.loc[key, 'model']
+
+            df.loc[key, columns_pre] = (md_pre, md_pre.alpha, md_pre.beta, md_pre.nu, md_pre.rho, md_pre.forward)
+            df.loc[key, columns_post] = (md_post, md_post.alpha, md_post.beta, md_post.nu, md_post.rho, md_post.forward)
+
+        return df
