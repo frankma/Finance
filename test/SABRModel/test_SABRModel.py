@@ -276,9 +276,9 @@ class TestSABRModel(TestCase):
 
         fig = plt.figure()
         ax = Axes3D(fig)
-        ax.plot_wireframe(kk, tt, blk_vols, color='b', alpha=0.75)
-        ax.plot_wireframe(kk, tt, loc_vols, color='r', alpha=0.75)
-        ax.legend(['black vol', 'local vol'])
+        ax.plot_wireframe(kk, tt, blk_vols, color='b', alpha=0.75, label='black vol')
+        ax.plot_wireframe(kk, tt, loc_vols, color='r', alpha=0.75, label='local vol')
+        ax.legend(loc='best')
         plt.show()
 
         logger.info('%s passes' % sys._getframe().f_code.co_name)
@@ -341,10 +341,10 @@ class TestSABRModel(TestCase):
         den_num, bins_num = model.calc_fwd_den(forward)
         den_sp, bins_sp = model.calc_fwd_den_sp(forward)
 
-        plt.plot(bins_sim, den_sim)
-        plt.plot(bins_num, den_num)
-        plt.plot(bins_sp, den_sp)
-        plt.legend(['simulated', 'numerical', 'analytical'])
+        plt.plot(bins_sim, den_sim, label='simulated')
+        plt.plot(bins_num, den_num, label='numerical')
+        plt.plot(bins_sp, den_sp, label='analytical')
+        plt.legend(loc='best')
         plt.xlim([0.0, 2.5 * forward])
         plt.title('SABR model density functions')
         plt.show()
