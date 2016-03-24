@@ -299,31 +299,27 @@ class TestSABRModel(TestCase):
         strikes = np.linspace(0.04, 0.11, num=71)
 
         plt.subplot(2, 1, 1)
-        legends = []
         for forward in forwards:
             vols = model_nrm.calc_vol_vec(forward, strikes)
-            plt.plot(strikes, vols)
-            legends.append('f = %.3f' % forward)
+            plt.plot(strikes, vols, label='f = %.3f' % forward)
         bb = np.ones(strikes.__len__())
         for idx, strike in enumerate(strikes):
             bb[idx] = model_nrm.calc_vol(strike, strike)
-        plt.plot(strikes, bb, '--')
-        legends.append('Backbone')
-        plt.legend(legends)
+        plt.plot(strikes, bb, '--', label='Backbone')
+        plt.legend(loc='best')
+        plt.title('normal model')
         plt.ylim([0.08, 0.22])
 
         plt.subplot(2, 1, 2)
-        legends = []
         for forward in forwards:
             vols = model_lgn.calc_vol_vec(forward, strikes)
-            plt.plot(strikes, vols)
-            legends.append('f = %.3f' % forward)
+            plt.plot(strikes, vols, label='f = %.3f' % forward)
         bb = np.ones(strikes.__len__())
         for idx, strike in enumerate(strikes):
             bb[idx] = model_lgn.calc_vol(strike, strike)
-        plt.plot(strikes, bb, '--')
-        legends.append('Backbone')
-        plt.legend(legends)
+        plt.plot(strikes, bb, '--', label='Backbone')
+        plt.legend(loc='best')
+        plt.title('log-normal model')
         plt.ylim([0.08, 0.22])
 
         plt.show()
