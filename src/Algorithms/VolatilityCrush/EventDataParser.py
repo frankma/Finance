@@ -53,26 +53,10 @@ class EventDataParser(object):
         keys_union = df_pre.index.intersection(df_post.index)
         df = pd.DataFrame(index=keys_union)
         df['EventDataSABR'] = pd.Series(index=keys_union)
-        df['Alpha_pre'] = pd.Series(index=keys_union)
-        df['Beta_pre'] = pd.Series(index=keys_union)
-        df['Nu_pre'] = pd.Series(index=keys_union)
-        df['Rho_pre'] = pd.Series(index=keys_union)
-        df['Alpha_post'] = pd.Series(index=keys_union)
-        df['Beta_post'] = pd.Series(index=keys_union)
-        df['Nu_post'] = pd.Series(index=keys_union)
-        df['Rho_post'] = pd.Series(index=keys_union)
         for key in keys_union:
             md_pre = [df_pre.loc[key, 'model']]
             md_post = [df_post.loc[key, 'model']]
             df.loc[key, 'EventDataSABR'] = EventDataSABR(md_pre, md_post)
-            df.loc[key, 'Alpha_pre'] = df_pre.loc[key, 'model'].alpha
-            df.loc[key, 'Beta_pre'] = df_pre.loc[key, 'model'].beta
-            df.loc[key, 'Nu_pre'] = df_pre.loc[key, 'model'].nu
-            df.loc[key, 'Rho_pre'] = df_pre.loc[key, 'model'].rho
-            df.loc[key, 'Alpha_post'] = df_post.loc[key, 'model'].alpha
-            df.loc[key, 'Beta_post'] = df_post.loc[key, 'model'].beta
-            df.loc[key, 'Nu_post'] = df_post.loc[key, 'model'].nu
-            df.loc[key, 'Rho_post'] = df_post.loc[key, 'model'].rho
         return df
 
     @staticmethod
