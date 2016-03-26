@@ -3,8 +3,8 @@ import time as tm
 
 import numpy as np
 
-from src.MiniProjects.Maze.maze import Maze
-from src.MiniProjects.Maze.solver import MazeSolver
+from src.MiniProjects.Maze.Maze import Maze
+from src.MiniProjects.Maze.MazeSolver import MazeSolver
 
 __author__ = 'frank.ma'
 

@@ -1,7 +1,7 @@
 import logging
 
-from src.MiniProjects.Maze.maze import Maze
-from src.MiniProjects.Maze.solver_dfs import MazeSolverBFS
+from src.MiniProjects.Maze.Maze import Maze
+from src.MiniProjects.Maze.MazeSolverBFS import MazeSolverBFS
 
 __author__ = 'frank.ma'
 

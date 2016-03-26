@@ -2,7 +2,7 @@ import logging
 
 import numpy as np
 
-from src.MiniProjects.Maze.maze import Maze
+from src.MiniProjects.Maze.Maze import Maze
 
 __author__ = 'frank.ma'
 
