@@ -22,10 +22,10 @@ class EventDataParser(object):
         return pd.datetime.strptime(date_string, date_format)
 
     @staticmethod
-    def load_data(path: str):
-        df = pd.read_csv(path, parse_dates=[1, 5], date_parser=EventDataParser.__date_parser)
-        df['ID'] = df['ticker'] + '_' + df['asof'].astype(str) + '_' + df['exp'].astype(str)
-        df.index = df['ticker']
+    def load_data(path: str, date_indices: list=[2, 6]):
+        df = pd.read_csv(path, parse_dates=date_indices, date_parser=EventDataParser.__date_parser)
+        # df['ID'] = df['ticker'] + '_' + df['asof'].astype(str) + '_' + df['exp'].astype(str)
+        df.index = df['ID'] if 'ID' in df.columns else df['ticker']
 
         columns = list(df.columns)
         ks = []
@@ -60,11 +60,12 @@ class EventDataParser(object):
         return df
 
     @staticmethod
-    def events_stat_analysis(path_pre: str, path_post: str):
+    def events_stat_analysis(path_pre: str, path_post: str, filtration: str= ''):
         df_pre = EventDataParser.load_data(path_pre)
         df_post = EventDataParser.load_data(path_post)
 
         keys_union = df_pre.index.intersection(df_post.index)
+        keys_union = keys_union[[filtration.lower() in key.lower() for key in keys_union]]
         time_stamp = ['pre', 'post']
         params = ['md', 'alpha', 'beta', 'nu', 'rho', 'fwd']
         columns_pre = [c + "_" + time_stamp[0] for c in params]

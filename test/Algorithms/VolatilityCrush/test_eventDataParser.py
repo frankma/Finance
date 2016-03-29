@@ -37,12 +37,13 @@ class TestEventDataParser(TestCase):
 
     def test_event_stat_analysis(self):
         logger.info('%s starts' % sys._getframe().f_code.co_name)
+        data_src = ''  # 'sample_'
         horizons = ['2w', '1m']
         for horizon in horizons:
             logger.info('processing expiry of %s' % horizon)
-            path_pre = './Data/sample_%s_pre.csv' % horizon
-            path_post = './Data/sample_%s_post.csv' % horizon
-            df = EventDataParser.events_stat_analysis(path_pre, path_post)
+            path_pre = './Data/%s%s_pre.csv' % (data_src, horizon)
+            path_post = './Data/%s%s_post.csv' % (data_src, horizon)
+            df = EventDataParser.events_stat_analysis(path_pre, path_post, filtration='')
             # print(df.info())
             fig = plt.figure(horizon)
             for idx, name in enumerate(['alpha', 'nu', 'rho']):
