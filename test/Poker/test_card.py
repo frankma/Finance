@@ -1,8 +1,12 @@
+import logging
+
 from unittest import TestCase
 
-from src.MiniProjects.BlackJack.Card import Card, Rank, Suit
+from src.Poker.Card import Card, Rank, Suit
 
 __author__ = 'frank.ma'
+
+logger = logging.getLogger()
 
 
 class TestCard(TestCase):
