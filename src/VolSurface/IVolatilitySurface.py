@@ -1,5 +1,5 @@
-import datetime
 import logging
+from datetime import datetime
 
 __author__ = 'frank.ma'
 
@@ -10,5 +10,8 @@ class IVolatilitySurface(object):
     def __init__(self, asof: datetime):
         self.asof = asof
 
-    def get_volatility(self, expiry: datetime, strike: float):
+    def get_normal_vol(self, expiry: datetime, strike: float):
+        pass
+
+    def get_lognormal_vol(self, expiry: datetime, strike: float):
         pass

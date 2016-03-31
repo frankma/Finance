@@ -1,5 +1,5 @@
-import datetime
 import logging
+from datetime import datetime
 
 __author__ = 'frank.ma'
 
