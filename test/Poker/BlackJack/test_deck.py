@@ -22,24 +22,29 @@ class TestDeck(TestCase):
         # first draw a public card
         card = deck.draw()
         public_last = deck.view_public()[-1]
-        assert card.rank == public_last.rank and card.suit == public_last.suit, \
-            'mismatch between public card %s and drawn one %s.' % (card.__str__(), public_last.__str__())
+        err_msg = 'mismatch between public card %s and drawn one %s.' % (card.__str__(), public_last.__str__())
+        self.assertEqual(card.rank, public_last.rank, msg=err_msg)
+        self.assertEqual(card.suit, public_last.suit, msg=err_msg)
+
         card_nonpublic = deck.draw(False)
         public_last = deck.view_public()[-1]
-        assert card_nonpublic.rank != public_last.rank and card_nonpublic.suit != public_last.suit, \
-            'unexpected match between public card and nonpublic drawn one.'
+        err_msg = 'unexpected match between public card and nonpublic drawn one.'
+        self.assertNotEqual(card_nonpublic.rank, public_last.rank, msg=err_msg)
+        self.assertNotEqual(card_nonpublic.suit, public_last.suit, msg=err_msg)
         pass
 
     def test_reveal(self):
         deck = Deck.new_deck(1)
         card = deck.draw(False)
-        assert deck.public.__len__() == 0, 'no public card should be seen at this stage.'
-        assert deck.nonpublic.__len__() == 1, 'one nonpublic card should be expected.'
+        self.assertEqual(deck.public.__len__(), 0, msg='no public card should be seen at this stage.')
+        self.assertEqual(deck.nonpublic.__len__(), 1, msg='one nonpublic card should be expected.')
         non_public = deck.cards[deck.nonpublic][0]
-        assert non_public.rank == card.rank and non_public.suit == card.suit
+        self.assertEqual(non_public.rank, card.rank)
+        self.assertEqual(non_public.suit, card.suit)
         deck.reveal()
-        assert deck.nonpublic.__len__() == 0, 'no nonpublic card should be seen at this stage anymore.'
-        assert deck.public.__len__() == 1, 'one public should be expected.'
+        self.assertEqual(deck.nonpublic.__len__(), 0, msg='no nonpublic card should be seen at this stage anymore.')
+        self.assertEqual(deck.public.__len__(), 1, msg='one public should be expected.')
         pubic = deck.cards[deck.public][0]
-        assert pubic.rank == card.rank and pubic.suit == card.suit
+        self.assertEqual(pubic.rank, card.rank)
+        self.assertEqual(pubic.suit, card.suit)
         pass

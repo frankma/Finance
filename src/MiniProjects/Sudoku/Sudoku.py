@@ -26,10 +26,9 @@ class Sudoku():
         logger.info('Finished data loading, took %r sec.' % round(tm.time() - tic, 6))
         self.check_sudoku(self.sudoku)
 
-    def check_sudoku(self,
-                     sudoku: np.ndarray):
-        assert isinstance(sudoku, np.ndarray)
-        assert sudoku.shape == (9, 9), 'Expecting a 9 * 9 shape, but received %s.' % (sudoku.shape,)
+    def check_sudoku(self, sudoku: np.ndarray):
+        if sudoku.shape != (9, 9):
+            raise ValueError('Expecting a 9 * 9 shape, but received %s.' % (sudoku.shape,))
         for idx in range(9):
             row = sudoku[idx, :].tolist()
             col = sudoku[:, idx].tolist()
@@ -45,4 +44,5 @@ class Sudoku():
                      value_idx: int):
         # make a dictionary of inputs, note only check 1 to 9, bypass zeros
         array_dict = dict([(i, value_list.count(i)) for i in range(1, 10)])
-        assert max(array_dict.values()) < 2, 'Duplicated values found at %s %i %r' % (value_type, value_idx, value_list)
+        if max(array_dict.values()) > 2:
+            raise ValueError('Duplicated values found at %s %i %r' % (value_type, value_idx, value_list))

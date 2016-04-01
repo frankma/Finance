@@ -10,7 +10,8 @@ __author__ = 'frank.ma'
 class Deck(object):
     def __init__(self, cards: list):
         for card in cards:
-            assert isinstance(card, Card), 'unrecognized card entry, %s' % card.__str__()
+            if not isinstance(card, Card):
+                raise ValueError('unrecognized card entry, %s' % card.__str__())
         self.cards = np.array(cards)
         self.indices = list(range(cards.__len__()))  # anchor the cards but shuffle index of them
         self.public = []  # nothing is public at initiation
@@ -27,7 +28,8 @@ class Deck(object):
         pass
 
     def draw(self, public=True):
-        assert self.cur_idx < self.cards.__len__(), 'ran out of cards.'
+        if self.cur_idx > self.cards.__len__():
+            raise ValueError('ran out of cards.')
         idx = self.indices[self.cur_idx]
         card = self.cards[idx]
         if public:
@@ -39,7 +41,8 @@ class Deck(object):
 
     def reveal(self):
         # this always assume one non-public to be revealed
-        assert self.nonpublic.__len__() > 0, 'no non-public drawn is available.'
+        if self.nonpublic.__len__() < 0:
+            raise ValueError('no non-public drawn is available.')
         self.public.append(self.nonpublic.pop())
 
     def view_public(self):

@@ -48,9 +48,9 @@ class TestSABRModelCalibrator(TestCase):
         logger.info('nu\t%.6f\t%.6f\t%.2e' % (nu, model_cal.nu, model_cal.nu / nu - 1.0))
         logger.info('rho\t%.6f\t%.6f\t%.2e' % (rho, model_cal.rho, model_cal.rho / rho - 1.0))
 
-        assert abs(alpha / model_cal.alpha - 1.0) < 1e-4, 'alpha diff larger than 1e-4'
-        assert abs(nu / model_cal.nu - 1.0) < 1e-4, 'nu diff larger than 1e-4'
-        assert abs(rho / model_cal.rho - 1.0) < 1e-4, 'rho diff larger than 1e-4'
+        self.assertLess(abs(alpha / model_cal.alpha - 1.0), 1e-4, msg='alpha diff larger than 1e-4')
+        self.assertLess(abs(nu / model_cal.nu - 1.0), 1e-4, msg='nu diff larger than 1e-4')
+        self.assertLess(abs(rho / model_cal.rho - 1.0), 1e-4, msg='rho diff larger than 1e-4')
 
         perturbation = np.exp(np.random.normal(loc=0.0, scale=0.01, size=strikes.__len__()))
         vols_pert = vols * perturbation
@@ -109,9 +109,9 @@ class TestSABRModelCalibrator(TestCase):
         logger.info('nu\t%.6f\t%.6f\t%.2e' % (nu, model_cal.nu, model_cal.nu / nu - 1.0))
         logger.info('rho\t%.6f\t%.6f\t%.2e' % (rho, model_cal.rho, model_cal.rho / rho - 1.0))
 
-        assert abs(alpha / model_cal.alpha - 1.0) < 1e-4, 'alpha diff larger than 1e-4'
-        assert abs(nu / model_cal.nu - 1.0) < 1e-4, 'nu diff larger than 1e-4'
-        assert abs(rho / model_cal.rho - 1.0) < 1e-4, 'rho diff larger than 1e-4'
+        self.assertLess(abs(alpha / model_cal.alpha - 1.0), 1e-4, msg='alpha diff larger than 1e-4')
+        self.assertLess(abs(nu / model_cal.nu - 1.0), 1e-4, msg='nu diff larger than 1e-4')
+        self.assertLess(abs(rho / model_cal.rho - 1.0), 1e-4, msg='rho diff larger than 1e-4')
 
         # give a higher perturbation to check if ATM is aligned
         perturbation = np.exp(np.random.normal(loc=0.0, scale=0.05, size=strikes.__len__()))

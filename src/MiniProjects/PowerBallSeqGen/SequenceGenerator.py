@@ -26,7 +26,8 @@ class SequenceGenerator(object):
 
         numbers = np.array(list(density.keys()))
         frequencies = np.array(list(density.values()))
-        assert abs(sum(frequencies) - 1.0) <= 1e-12, 'density summation differs from one'
+        if abs(sum(frequencies) - 1.0) >= 1e-12:
+            raise ValueError('density summation differs from one')
 
         rand_gen = rv_discrete(values=(numbers, frequencies))
         draw = rand_gen.rvs()

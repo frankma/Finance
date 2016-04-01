@@ -38,8 +38,9 @@ class TestSABRModel(TestCase):
         imp_vols = model.calc_vol_vec(forward, strikes, vol_type=VolType.black)
         for idx, strike in enumerate(strikes):
             vol = model.calc_vol(forward, strike, vol_type=VolType.black)
-            assert abs(vol - imp_vols[idx]) < 1e-12, 'strike vectorization result differs from scalar calculation on' \
-                                                     ' strike %.2f with diff %.14f.' % (strike, (vol - imp_vols[idx]))
+            self.assertLess(abs(vol - imp_vols[idx]), 1e-12,
+                            'strike vectorization result differs from scalar calculation on' \
+                            ' strike %.2f with diff %.14f.' % (strike, (vol - imp_vols[idx])))
         # speed test
         tic = tm.time()
         for _ in range(10 ** 3):
@@ -72,8 +73,9 @@ class TestSABRModel(TestCase):
 
         for idx, forward in enumerate(forwards):
             vol = model.calc_vol(forward, strike, vol_type=VolType.black)
-            assert abs(vol - imp_vols[idx]) < 1e-12, 'forward vectorization result differs from scalar calculation on' \
-                                                     ' forward %.2f with diff %.14f.' % (forward, (vol - imp_vols[idx]))
+            self.assertLess(abs(vol - imp_vols[idx]), 1e-12,
+                            'forward vectorization result differs from scalar calculation on' \
+                            ' forward %.2f with diff %.14f.' % (forward, (vol - imp_vols[idx])))
         # speed test
         tic = tm.time()
         for _ in range(10 ** 3):
@@ -107,8 +109,8 @@ class TestSABRModel(TestCase):
         for idx, strike in enumerate(strikes):
             vol = model.calc_vol(forward, strike, vol_type=VolType.normal)
             diff = vol - norm_vols[idx]
-            assert abs(diff) < 1e-12, 'strike vectorization result differs from scalar calculation on' \
-                                      ' strike %.2f with diff %.14f' % (strike, diff)
+            self.assertLess(abs(diff), 1e-12, 'strike vectorization result differs from scalar calculation on' \
+                                              ' strike %.2f with diff %.14f' % (strike, diff))
 
         # speed test
         tic = tm.time()
@@ -143,8 +145,8 @@ class TestSABRModel(TestCase):
         for idx, forward in enumerate(forwards):
             vol = model.calc_vol(forward, strike, vol_type=VolType.normal)
             diff = vol - norm_vols[idx]
-            assert abs(diff) < 1e-12, 'forward vectorization result differs from scalar calculation on' \
-                                      ' forward %.2f with diff %.14f' % (forward, diff)
+            self.assertLess(abs(diff), 1e-12, 'forward vectorization result differs from scalar calculation on' \
+                                              ' forward %.2f with diff %.14f' % (forward, diff))
 
         # speed test
         tic = tm.time()
@@ -177,7 +179,7 @@ class TestSABRModel(TestCase):
         rel_diff = alpha_solved / alpha - 1.0
         logger.info('lognormal model black vol\n input\t solved \t rel diff\n %.6f\t%.6f\t%.4e'
                     % (alpha, alpha_solved, rel_diff))
-        assert abs(rel_diff) < 1e-12, 'solved alpha differs from input larger than one percent.'
+        self.assertLess(abs(rel_diff), 1e-12, 'solved alpha differs from input larger than one percent.')
 
         model_normal = SABRModelNormalApprox(tau, alpha, beta, nu, rho)
         norm_vol = model_normal.calc_vol(forward, forward)
@@ -185,7 +187,7 @@ class TestSABRModel(TestCase):
         rel_diff = alpha_solved / alpha - 1.0
         logger.info('lognormal model normal vol\n input\t solved \t rel diff\n %.6f\t%.6f\t%.4e'
                     % (alpha, alpha_solved, rel_diff))
-        assert abs(rel_diff) < 1e-12, 'solved alpha differs from input larger than one percent.'
+        self.assertLess(abs(rel_diff), 1e-12, 'solved alpha differs from input larger than one percent.')
 
         beta = 0.0
         forward = 0.05
@@ -195,7 +197,7 @@ class TestSABRModel(TestCase):
         rel_diff = alpha_solved / alpha - 1.0
         logger.info('normal model black vol\n input\t solved \t rel diff\n %.6f\t%.6f\t%.4e'
                     % (alpha, alpha_solved, rel_diff))
-        assert abs(rel_diff) < 1e-12, 'solved alpha differs from input larger than one percent.'
+        self.assertLess(abs(rel_diff), 1e-12, 'solved alpha differs from input larger than one percent.')
 
         model_normal = SABRModelNormalApprox(tau, alpha, beta, nu, rho)
         norm_vol = model_normal.calc_vol(forward, forward)
@@ -203,7 +205,7 @@ class TestSABRModel(TestCase):
         rel_diff = alpha_solved / alpha - 1.0
         logger.info('normal model normal vol\n input\t solved \t rel diff\n %.6f\t%.6f\t%.4e'
                     % (alpha, alpha_solved, rel_diff))
-        assert abs(rel_diff) < 1e-12, 'solved alpha differs from input larger than one percent.'
+        self.assertLess(abs(rel_diff), 1e-12, 'solved alpha differs from input larger than one percent.')
 
         logger.info('%s passes' % sys._getframe().f_code.co_name)
         pass
@@ -221,12 +223,12 @@ class TestSABRModel(TestCase):
         model_normal = SABRModelNormalApprox(tau, alpha, beta, nu, rho)
         model_normal_trans_lognormal = model_normal.get_model_lognormal_approx()
 
-        assert isinstance(model_normal_trans_lognormal, SABRModelLognormalApprox)
+        self.assertTrue(isinstance(model_normal_trans_lognormal, SABRModelLognormalApprox))
 
         for strike in strikes:
             vol_lognormal = model_lognormal.calc_vol(forward, strike)
             vol_lognormal_trans = model_normal_trans_lognormal.calc_vol(forward, strike)
-            assert abs(vol_lognormal - vol_lognormal_trans) < 1e-12, 'transformed model mismatch'
+            self.assertLess(abs(vol_lognormal - vol_lognormal_trans), 1e-12, 'transformed model mismatch')
 
         logger.info('%s passes' % sys._getframe().f_code.co_name)
         pass
@@ -244,12 +246,12 @@ class TestSABRModel(TestCase):
         model_lognormal_trans_normal = model_lognormal.get_model_normal_approx()
         model_normal = SABRModelNormalApprox(tau, alpha, beta, nu, rho)
 
-        assert isinstance(model_lognormal_trans_normal, SABRModelNormalApprox)
+        self.assertTrue(isinstance(model_lognormal_trans_normal, SABRModelNormalApprox))
 
         for strike in strikes:
             vol_normal = model_normal.calc_vol(forward, strike)
             vol_normal_trans = model_lognormal_trans_normal.calc_vol(forward, strike)
-            assert abs(vol_normal - vol_normal_trans) < 1e-12, 'transformed model mismatch'
+            self.assertLess(abs(vol_normal - vol_normal_trans), 1e-12, 'transformed model mismatch')
 
         logger.info('%s passes' % sys._getframe().f_code.co_name)
         pass

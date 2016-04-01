@@ -37,11 +37,14 @@ class Card(object):
     def read_str(card_str: str):
         # assume a string separated by space with the the sequence as rank then suit
         c_s = card_str.lower().split(sep=' ')
-        assert c_s.__len__() == 2, 'incorrect string input, expect 2 items, received %i.' % c_s.__len__()
-        assert c_s[0] in Card.rank_dict, 'incorrect rank input, expect one of %s, received %s.' % \
-                                         (Card.rank_dict.keys().__str__(), c_s[0])
-        assert c_s[1] in Card.suit_dict, 'incorrect rank input, expect one of %s, received %s.' % \
-                                         (Card.suit_dict.keys().__str__(), c_s[1])
+        if c_s.__len__() != 2:
+            raise ValueError('incorrect string input, expect 2 items, received %i.' % c_s.__len__())
+        if not c_s[0] in Card.rank_dict:
+            raise ValueError('incorrect rank input, expect one of %s, received %s.' % \
+                             (Card.rank_dict.keys().__str__(), c_s[0]))
+        if not c_s[1] in Card.suit_dict:
+            raise ValueError('incorrect rank input, expect one of %s, received %s.' % \
+                             (Card.suit_dict.keys().__str__(), c_s[1]))
         rank = Rank(Card.rank_dict[c_s[0]])
         suit = Suit(Card.suit_dict[c_s[1]])
         return Card(rank, suit)
