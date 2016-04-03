@@ -5,7 +5,7 @@ import numpy as np
 
 from src.SABRModel.SABRModel import SABRModel
 from src.SABRModel.SABRModelCalibrator import SABRModelCalibratorAlphaNuRho
-from src.Utils.VolType import VolType
+from src.Utils.Types.VolType import VolType
 from src.VolSurface.IVolatilitySurface import IVolatilitySurface
 
 __author__ = 'frank.ma'

@@ -2,9 +2,9 @@ import logging
 
 import numpy as np
 
-from src.Utils.OptionType import OptionType
 from src.Utils.Solver.Brent import Brent
 from src.Utils.Solver.IVariateFunction import IUnivariateFunction
+from src.Utils.Types.OptionType import OptionType
 
 __author__ = 'frank.ma'
 

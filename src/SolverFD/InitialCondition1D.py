@@ -1,9 +1,9 @@
 import logging
 
 import numpy as np
-
-from src.Utils.OptionType import OptionType
 from src.Utils.PayoffType import PayoffType
+
+from src.Utils.Types.OptionType import OptionType
 
 __author__ = 'frank.ma'
 

@@ -7,7 +7,7 @@ import numpy as np
 
 from src.SABRModel.SABRModel import SABRModelLognormalApprox
 from src.SABRModel.SABRModelCalibrator import SABRModelCalibratorAlphaNuRho, SABRModelCalibratorNuRho
-from src.Utils.VolType import VolType
+from src.Utils.Types.VolType import VolType
 
 __author__ = 'frank.ma'
 

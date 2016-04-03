@@ -1,6 +1,6 @@
 import numpy as np
 
-from src.Utils import OptionType
+from src.Utils.Types import OptionType
 from src.Utils.Valuator.BSM import BSMVec
 
 __author__ = 'frank.ma'

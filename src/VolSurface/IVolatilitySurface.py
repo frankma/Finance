@@ -3,7 +3,7 @@ from datetime import datetime
 
 import numpy as np
 
-from src.Utils.VolType import VolType
+from src.Utils.Types.VolType import VolType
 
 __author__ = 'frank.ma'
 

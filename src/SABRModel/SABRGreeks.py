@@ -1,9 +1,9 @@
 import numpy as np
+from src.Utils.VolType import VolType
 
 from src.SABRModel.SABRModel import SABRModelLognormalApprox
-from src.Utils.OptionType import OptionType
+from src.Utils.Types.OptionType import OptionType
 from src.Utils.Valuator.Black76 import Black76Vec
-from src.Utils.VolType import VolType
 
 __author__ = 'frank.ma'
 

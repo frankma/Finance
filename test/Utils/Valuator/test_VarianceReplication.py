@@ -4,7 +4,7 @@ from unittest import TestCase
 
 import numpy as np
 
-from src.Utils.OptionType import OptionType
+from src.Utils.Types.OptionType import OptionType
 from src.Utils.Valuator.Black76 import Black76Vec
 from src.Utils.Valuator.VarianceReplication import VarianceReplication
 

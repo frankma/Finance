@@ -4,10 +4,10 @@ from math import log, exp, sqrt
 import numpy as np
 from scipy.stats import norm
 
-from src.Utils import OptionType
 from src.Utils.Solver.Brent import Brent
 from src.Utils.Solver.IVariateFunction import IUnivariateFunction
 from src.Utils.Solver.NewtonRaphson import NewtonRaphson
+from src.Utils.Types import OptionType
 
 __author__ = 'frank.ma'
 

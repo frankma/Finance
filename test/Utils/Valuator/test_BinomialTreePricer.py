@@ -4,7 +4,7 @@ from unittest import TestCase
 
 import numpy as np
 
-from src.Utils.OptionType import OptionType
+from src.Utils.Types.OptionType import OptionType
 from src.Utils.Valuator.BAW import BAW
 from src.Utils.Valuator.BSM import BSM
 from src.Utils.Valuator.BinomialTreePricer import BinomialTreePricer

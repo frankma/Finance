@@ -1,7 +1,7 @@
 import numpy as np
 
 from src.SolverFD.TriDiagonalMatrix import TriDiagonalMatrix
-from src.Utils.OptionType import OptionType
+from src.Utils.Types.OptionType import OptionType
 from src.Utils.Valuator.BSM import BSM
 
 __author__ = 'frank.ma'

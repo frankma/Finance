@@ -2,7 +2,7 @@ import logging
 from datetime import datetime
 
 from src.Quote.Quote import Quote
-from src.Utils.OptionType import OptionType
+from src.Utils.Types.OptionType import OptionType
 
 __author__ = 'frank.ma'
 

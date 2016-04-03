@@ -5,7 +5,7 @@ import pandas as pd
 
 from src.Algorithms.VolatilityCrush.EventDataSABR import EventDataSABR
 from src.SABRModel.SABRMarketData import SABRMarketData
-from src.Utils.VolType import VolType
+from src.Utils.Types.VolType import VolType
 
 __author__ = 'frank.ma'
 

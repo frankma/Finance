@@ -6,7 +6,7 @@ import numpy as np
 from scipy.stats import norm
 
 from src.Utils.FXQuotesConverter import FXQuotesConverter
-from src.Utils.OptionType import OptionType
+from src.Utils.Types.OptionType import OptionType
 from src.Utils.Valuator.BSM import BSM
 
 __author__ = 'frank.ma'

@@ -7,7 +7,7 @@ import numpy as np
 
 from src.SABRModel.SABRModel import SABRModelLognormalApprox
 from src.Utils.Extrapolator.PolynomialExtrapolator import PolynomialExtrapolator
-from src.Utils.OptionType import OptionType
+from src.Utils.Types.OptionType import OptionType
 from src.Utils.Valuator.Black76 import Black76, Black76Vec
 
 __author__ = 'frank.ma'

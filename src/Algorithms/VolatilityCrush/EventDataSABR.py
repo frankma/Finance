@@ -1,11 +1,10 @@
 import logging
-
 from datetime import datetime
 
 import numpy as np
 
 from src.SABRModel.SABRMarketData import SABRMarketData
-from src.Utils.PayoffType import PayoffType
+from src.Utils.Types.PayoffType import PayoffType
 from src.Utils.Valuator.BAW import BAW
 from src.Utils.Valuator.Black76 import Black76
 

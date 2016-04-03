@@ -4,7 +4,7 @@ from scipy.stats import skew, kurtosis
 from src.MiniProjects.DeltaHedging.SingleVariableDeltaHedging import SingleVariableDeltaHedging
 from src.MiniProjects.DeltaHedging.SingleVariableDeltaHedgingValuator import SingleVariableDeltaHedgingValuator
 from src.SolverMC.SingleVariableSimulator import SingleVariableSimulator
-from src.Utils.OptionType import OptionType
+from src.Utils.Types.OptionType import OptionType
 
 __author__ = 'frank.ma'
 

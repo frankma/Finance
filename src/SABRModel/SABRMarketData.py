@@ -4,9 +4,9 @@ import numpy as np
 
 from src.SABRModel.SABRModel import SABRModelLognormalApprox, SABRModelNormalApprox
 from src.SABRModel.SABRModelCalibrator import SABRModelCalibratorAlphaNuRho
+from src.Utils.Types.VolType import VolType
 from src.Utils.Valuator.Black76 import Black76
 from src.Utils.Valuator.NormalModel import NormalModel
-from src.Utils.VolType import VolType
 
 __author__ = 'frank.ma'
 
