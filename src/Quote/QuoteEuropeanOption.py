@@ -10,8 +10,9 @@ logger = logging.getLogger(__name__)
 
 
 class QuoteEuropeanOption(Quote):
-    def __init__(self, asof: datetime, expiry: datetime, strike: float, opt_type: OptionType, bid: float, ask: float):
-        super().__init__(asof, bid, ask)
+    def __init__(self, asof: datetime, snap_time: datetime, expiry: datetime, strike: float, opt_type: OptionType,
+                 bid: float, ask: float):
+        super().__init__(asof, snap_time, bid, ask)
         self.expiry = expiry
         self.strike = strike
         self.opt_type = opt_type
