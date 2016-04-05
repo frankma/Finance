@@ -5,7 +5,7 @@ import copy
 __author__ = 'frank.ma'
 
 
-class SequenceGenerator(object):
+class RdmDiscMutExcVec(object):
     def __init__(self, density: dict):
         self.density = density
 
@@ -17,7 +17,9 @@ class SequenceGenerator(object):
         return sequence
 
     @staticmethod
-    def draw_seq(density_input, size=5, seq=[]):
+    def draw_seq(density_input, size=5, seq=None):
+        if seq is None:
+            seq = []
         density = copy.deepcopy(density_input)
 
         if seq.__len__() >= size:
@@ -37,5 +39,5 @@ class SequenceGenerator(object):
         norm_fact = sum(list(density.values()))
         for key in density:
             density[key] /= norm_fact
-        SequenceGenerator.draw_seq(density, size, seq)
+        RdmDiscMutExcVec.draw_seq(density, size, seq)
         pass
