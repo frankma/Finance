@@ -29,3 +29,17 @@ class TestSimpleLinearRegression(TestCase):
         self.assertAlmostEqual(beta, -10 / 12.0)
         logger.info('%s passes' % sys._getframe().f_code.co_name)
         pass
+
+    def test_regress_np(self):
+        logger.info('%s starts' % sys._getframe().f_code.co_name)
+        rnd_x = np.random.randint(-10, 10, size=100)
+        rnd_y = np.random.randint(-20, 20, size=100)
+        x = np.cumsum(rnd_x)
+        y = np.cumsum(rnd_y)
+        alpha_sf, beta_sf = SimpleLinearRegression.regress(x, y)
+        alpha_np, beta_np = SimpleLinearRegression.regress_np(x, y)
+        # TODO: rewrite unite test
+        print(alpha_sf, alpha_np)
+        print(beta_sf, beta_np)
+        logger.info('%s passes' % sys._getframe().f_code.co_name)
+        pass
