@@ -1,9 +1,9 @@
 import logging
 import sys
-
-import numpy as np
-
 from unittest import TestCase
+
+import matplotlib.pyplot as plt
+import numpy as np
 
 from src.Utils.Solver.SimpleLinearRegression import SimpleLinearRegression
 
@@ -26,20 +26,44 @@ class TestSimpleLinearRegression(TestCase):
         y = np.linspace(12.0, -12.0)
         alpha, beta = SimpleLinearRegression.regress(x, y)
         self.assertAlmostEqual(alpha, 0.0)
-        self.assertAlmostEqual(beta, -10 / 12.0)
+        self.assertAlmostEqual(beta, -12 / 10.0)
+        logger.info('%s passes' % sys._getframe().f_code.co_name)
+        pass
+
+    def test_regress_visual(self):
+        logger.info('%s starts' % sys._getframe().f_code.co_name)
+        alpha = 0.5
+        beta = 2.5
+        err = 0.2
+        x = np.array(np.linspace(1, 9))
+        y = alpha + beta * x + np.random.normal(size=x.__len__()) * err
+
+        slr = SimpleLinearRegression(x, y)
+
+        plt.scatter(x, y)
+        plt.plot([x.min(), x.max()], [slr.predict(x.min()), slr.predict(x.max())])
+        plt.show()
+
+        # comment out for just visual check in plots
+        # self.assertAlmostEqual(alpha, slr.alpha, places=1)
+        # self.assertAlmostEqual(beta, slr.beta, places=1)
+
         logger.info('%s passes' % sys._getframe().f_code.co_name)
         pass
 
     def test_regress_np(self):
         logger.info('%s starts' % sys._getframe().f_code.co_name)
-        rnd_x = np.random.randint(-10, 10, size=100)
-        rnd_y = np.random.randint(-20, 20, size=100)
-        x = np.cumsum(rnd_x)
-        y = np.cumsum(rnd_y)
-        alpha_sf, beta_sf = SimpleLinearRegression.regress(x, y)
-        alpha_np, beta_np = SimpleLinearRegression.regress_np(x, y)
-        # TODO: rewrite unite test
-        print(alpha_sf, alpha_np)
-        print(beta_sf, beta_np)
+        alpha = 0.01
+        beta = 2.1
+        err = 1.0
+        x = np.array(np.linspace(1, 9))
+        y = alpha + beta * x + np.random.normal(size=x.__len__()) * err
+
+        interception_loc, slope_loc = SimpleLinearRegression.regress(x, y)
+        interception_np, slope_np = SimpleLinearRegression.regress_np(x, y)
+
+        self.assertAlmostEqual(interception_loc, interception_np, places=12, msg='interception reconciliation failed')
+        self.assertAlmostEqual(slope_loc, slope_np, places=12, msg='slope reconciliation failed')
+
         logger.info('%s passes' % sys._getframe().f_code.co_name)
         pass

@@ -14,7 +14,7 @@ class SimpleLinearRegression(object):
         if n != dependent.__len__():
             raise ValueError('expect same length of inputs')
         xy = independent * dependent
-        xx = dependent * dependent
+        xx = independent * independent
         x_mean = np.average(independent)
         y_mean = np.average(dependent)
         slope = (np.average(xy) - x_mean * y_mean) / (np.average(xx) - x_mean * x_mean)
