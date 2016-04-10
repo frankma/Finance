@@ -4,7 +4,7 @@
 
 \title{SABR Model}
 \author{Frank Ma}
-\date{Initial Creation: July 2015 \\ Last Update: February 2016}
+\date{Initial Creation: July 2015 \\ Last Update: April 2016}
 
 \begin{document}
 
@@ -113,18 +113,18 @@ Before deriving the derivatives of black volatility against strike, a few interm
 \begin{subequations}
     \begin{align}
         \frac{d \zeta}{d K} &= -\frac{\nu}{\alpha K} \\
-        \frac{\partial^2 \zeta}{\partial K^2} &= \frac{\nu}{\alpha K^2}\\
-        \frac{\partial \chi}{\partial \zeta} &= \left(1 - 2 \rho \zeta + \zeta^2\right)^{-\frac{1}{2}}\\
-        \frac{\partial^2 \chi}{\partial \zeta^2} &= -\left(1 - 2 \rho \zeta + \zeta^2\right)^{-\frac{3}{2}} \left(\zeta - \rho\right)
+        \frac{d^2 \zeta}{d K^2} &= \frac{\nu}{\alpha K^2}\\
+        \frac{d \chi}{d \zeta} &= \left(1 - 2 \rho \zeta + \zeta^2\right)^{-\frac{1}{2}}\\
+        \frac{d^2 \chi}{d \zeta^2} &= -\left(1 - 2 \rho \zeta + \zeta^2\right)^{-\frac{3}{2}} \left(\zeta - \rho\right)
     \end{align}
 \end{subequations}
 
 Further, define function $ G = \frac{\zeta}{\chi\left(\zeta\right)} $ and $ S = \left(1 - 2 \rho \zeta + \zeta^2\right)^{\frac{1}{2}} $ and find the derivatives of function $ G $ against $ \zeta $ as the following.
 \begin{subequations}
     \begin{align}
-        \frac{\partial S}{\partial \zeta} &= S^{-1} \left(\zeta - \rho\right) \\
+        \frac{d S}{d \zeta} &= S^{-1} \left(\zeta - \rho\right) \\
         \frac{\partial G}{\partial \zeta} &= \frac{\chi S - \zeta}{\chi^2 S} \\
-        \frac{\partial^2 G}{\partial \zeta^2} &= \frac{\chi^2 S \left(\frac{1}{S} S + \chi \frac{1}{S} \left(\zeta - \rho\right) - 1\right) - \left(\chi S - \zeta\right) \left(2 \chi \frac{1}{S} S + \chi^2 \frac{1}{S} \left(\zeta - \rho\right)\right)}{\chi^4 S^2} \nonumber \\
+        \frac{d^2 G}{d \zeta^2} &= \frac{\chi^2 S \left(\frac{1}{S} S + \chi \frac{1}{S} \left(\zeta - \rho\right) - 1\right) - \left(\chi S - \zeta\right) \left(2 \chi \frac{1}{S} S + \chi^2 \frac{1}{S} \left(\zeta - \rho\right)\right)}{\chi^4 S^2} \nonumber \\
         &= \frac{-2 \chi S^2 + 2 S \zeta + \zeta \chi \left(\zeta - \rho\right)}{\chi^3 S^3} \nonumber \\
         &= \frac{-2 \chi \left(1 - 2\rho \zeta + \zeta^2\right) + 2 S \zeta + \zeta^2 \chi - \rho \chi \zeta}{\chi^3 S^3} \nonumber \\
         &= \frac{\left(-\zeta^2 + 3 \rho \zeta - 2\right) \chi + 2 S \zeta}{\chi^3 S^3}
@@ -134,9 +134,9 @@ Further, define function $ G = \frac{\zeta}{\chi\left(\zeta\right)} $ and $ S = 
 The derivatives of black volatility against ttm and strike when $ \beta $ equals to one are as below.
 \begin{subequations}
     \begin{align}
-        \frac{\partial \sigma_{B}^{\beta=1}}{\partial T} &= \alpha \frac{\zeta}{\chi \left(\zeta\right)} \left(\frac{\alpha \rho \nu}{4} + \frac{\nu^2 \left(2 - 3 \rho^2\right)}{24}\right) \label{dSigdT} \\
-        \frac{\partial \sigma_{B}^{\beta=1}}{\partial K} &= -\frac{\nu}{K} \frac{\partial G}{\partial \zeta} \left(1 + \left(\frac{\alpha \rho \nu}{4} + \frac{\nu^2 \left(2 - 3 \rho^2\right)}{24}\right) T\right) \label{dSigdK} \\
-        \frac{\partial^2 \sigma_{B}^{\beta=1}}{\partial K^2} &= \left(\frac{\nu}{K^2} \frac{\partial G}{\partial K} - \frac{\nu}{\alpha K^2} \frac{\partial^2 G}{\partial K^2}\right) \left(1 + \left(\frac{\alpha \rho \nu}{4} + \frac{\nu^2 \left(2 - 3 \rho^2\right)}{24}\right) T\right) \label{dSig2dK2}
+        \frac{d \sigma_{B}^{\beta=1}}{\partial T} &= \alpha \frac{\zeta}{\chi \left(\zeta\right)} \left(\frac{\alpha \rho \nu}{4} + \frac{\nu^2 \left(2 - 3 \rho^2\right)}{24}\right) \label{dSigdT} \\
+        \frac{d \sigma_{B}^{\beta=1}}{\partial K} &= -\frac{\nu}{K} \frac{\partial G}{\partial \zeta} \left(1 + \left(\frac{\alpha \rho \nu}{4} + \frac{\nu^2 \left(2 - 3 \rho^2\right)}{24}\right) T\right) \label{dSigdK} \\
+        \frac{d^2 \sigma_{B}^{\beta=1}}{d K^2} &= \left(\frac{\nu}{K^2} \frac{\partial G}{\partial K} - \frac{\nu}{\alpha K^2} \frac{\partial^2 G}{\partial K^2}\right) \left(1 + \left(\frac{\alpha \rho \nu}{4} + \frac{\nu^2 \left(2 - 3 \rho^2\right)}{24}\right) T\right) \label{dSig2dK2}
     \end{align}
 \end{subequations}
 
@@ -146,8 +146,8 @@ The following formulas expand till the third order.
 \begin{subequations}
     \begin{align}
         G^{K \approx F} &= 1 - \frac{1}{2} \rho \zeta + \left(-\frac{1}{4} \rho^2 + \frac{1}{6}\right) \zeta^2 \\
-        \frac{\partial G^{K \approx F}}{\partial K} &= -\frac{1}{2} \rho  + 2 \left(-\frac{1}{4} \rho^2 + \frac{1}{6}\right) \zeta - \frac{1}{8} \left(6 \rho^2 - 5\right) \rho \zeta^2 \\
-        \frac{\partial^2 G^{K \approx F}}{\partial K^2} &= 2 \left(-\frac{1}{4} \rho^2 + \frac{1}{6}\right) - \frac{1}{4} \left(6 \rho^2 - 5\right) \rho \zeta + 12 \left(-\frac{5}{16} \rho^4 + \frac{1}{3} \rho^2 - \frac{17}{360}\right) \zeta^2
+        \frac{d G^{K \approx F}}{d K} &= -\frac{1}{2} \rho  + 2 \left(-\frac{1}{4} \rho^2 + \frac{1}{6}\right) \zeta - \frac{1}{8} \left(6 \rho^2 - 5\right) \rho \zeta^2 \\
+        \frac{d^2 G^{K \approx F}}{d K^2} &= 2 \left(-\frac{1}{4} \rho^2 + \frac{1}{6}\right) - \frac{1}{4} \left(6 \rho^2 - 5\right) \rho \zeta + 12 \left(-\frac{5}{16} \rho^4 + \frac{1}{3} \rho^2 - \frac{17}{360}\right) \zeta^2
     \end{align}
 \end{subequations}
 
@@ -170,21 +170,21 @@ Then chain rule finds the density function as below.
 In above formula \ref{d2U_per_dK2} of the forward density function, terms $ \frac{\partial U}{\partial \sigma} $, $ \frac{\partial^2 U}{\partial \sigma^2} $, $ \frac{\partial^2 U}{\partial K \partial \sigma} $ and $ \frac{\partial^2 U}{\partial K^2} $ correspond to pre-discounted black formula greeks $ Vega^T $, $ Vomma^T $, $ Vanna_{K}^T $ and $ Gamma_{K}^T $.
 \begin{subequations}
     \begin{align}
-        \frac{\partial U}{\partial \sigma} &= F_{t}^{T} \phi(d_1) \sqrt{\tau} \\
-        \frac{\partial^2 U}{\partial \sigma^2} &= F_{t}^{T} \phi(d_1) \sqrt{\tau} \cdot \frac{d_1 d_2}{\sigma} \\
-        \frac{\partial^2 U}{\partial K \partial \sigma} &= F_{t}^{T} \phi(d_1) \cdot \frac{d_1}{K \sigma} \\
-        \frac{\partial^2 U}{\partial K^2} &= \frac{\phi(d_2)}{K \sigma \sqrt{\tau}}
+        \frac{d U}{d \sigma} &= F_{t}^{T} \phi(d_1) \sqrt{\tau} \\
+        \frac{d^2 U}{d \sigma^2} &= F_{t}^{T} \phi(d_1) \sqrt{\tau} \cdot \frac{d_1 d_2}{\sigma} \\
+        \frac{d^2 U}{d K d \sigma} &= F_{t}^{T} \phi(d_1) \cdot \frac{d_1}{K \sigma} \\
+        \frac{d^2 U}{d K^2} &= \frac{\phi(d_2)}{K \sigma \sqrt{\tau}}
     \end{align}
 \end{subequations}
 
-Two terms on the derivative of black volatility against strike $ \frac{\partial \sigma}{\partial K} $ and $ \frac{\partial^2 \sigma}{\partial K^2} $ could be implied from SABR model.
-In the reduced form of log-normal volatility approximation as formula \ref{SABR_LogNormal_Beta_1}, derivatives of black implied volatility against strike $ \frac{\partial \sigma}{\partial K} $ and $ \frac{\partial^2 \sigma}{\partial K^2} $ can be found in formula \ref{dSigdK} and \ref{dSig2dK2}.
+Two terms on the derivative of black volatility against strike $ \frac{d \sigma}{d K} $ and $ \frac{d^2 \sigma}{d K^2} $ could be implied from SABR model.
+In the reduced form of log-normal volatility approximation as formula \ref{SABR_LogNormal_Beta_1}, derivatives of black implied volatility against strike $ \frac{d \sigma}{d K} $ and $ \frac{d^2 \sigma}{d K^2} $ can be found in formula \ref{dSigdK} and \ref{dSig2dK2}.
 
 
 \section{Parameter Estimation and Model Calibration}
 
 For any given expiry, the model has four parameters need to be calibrated.
-From model structure and parameters experimentation, we find strong relationships between parameters and the dynamics of the implied volatility surface.
+From model structure and parameters experimentation, we find strong
 
 
 \begin{thebibliography}{9}
