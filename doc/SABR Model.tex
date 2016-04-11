@@ -48,7 +48,7 @@ A semi-analytic approximation of log-normal volatility is given as below.
     \end{align}
 \end{subequations}
 
-Under the special case when $ \beta = 1 $, the underlying is modeled as Log-Normal process and the approximation could be reduced to the below.
+Under the special case where $ \beta = 1 $, the underlying is modeled as Log-Normal process and the approximation could be reduced to the below.
 \begin{subequations} \label{SABR_LogNormal_Beta_1}
     \begin{align}
         \sigma_B^{\beta = 1}{(F, K)} &= \alpha \frac{\zeta}{\chi(\zeta)} \left(1 + \left(\frac{\alpha \nu \rho}{4} + \frac{\nu^2 \left(2 - 3 \rho^2\right)}{24}\right) T \right) \\
@@ -80,7 +80,7 @@ The normal volatility of underlying can be approximated as below.
     \end{align}
 \end{subequations}
 
-Under special case when $ \beta = 0 $, the underlying is modeled as Normal process and the approximation could be reduced to the below.
+Under the special case where $ \beta = 0 $, the underlying is modeled as Normal process and the approximation could be reduced to the below.
 \begin{subequations}
     \begin{align}
         \sigma_N^{\beta=0} &\approx \alpha \cdot \frac{\zeta}{\chi(\zeta)} \cdot \left(1 + \frac{\nu^2 \left(2 - 3 \rho^2\right)}{24} T \right) \\
@@ -95,10 +95,6 @@ Therefore, the volatility requires a different and meaningful approximation as b
 \begin{equation}
     \zeta = \frac{\nu}{\alpha} \left(F - K\right)
 \end{equation}
-
-\section{Sensitivities}
-
-
 
 \section{Local Volatility}
 
@@ -134,8 +130,8 @@ Further, define function $ G = \frac{\zeta}{\chi\left(\zeta\right)} $ and $ S = 
 The derivatives of black volatility against ttm and strike when $ \beta $ equals to one are as below.
 \begin{subequations}
     \begin{align}
-        \frac{d \sigma_{B}^{\beta=1}}{\partial T} &= \alpha \frac{\zeta}{\chi \left(\zeta\right)} \left(\frac{\alpha \rho \nu}{4} + \frac{\nu^2 \left(2 - 3 \rho^2\right)}{24}\right) \label{dSigdT} \\
-        \frac{d \sigma_{B}^{\beta=1}}{\partial K} &= -\frac{\nu}{K} \frac{\partial G}{\partial \zeta} \left(1 + \left(\frac{\alpha \rho \nu}{4} + \frac{\nu^2 \left(2 - 3 \rho^2\right)}{24}\right) T\right) \label{dSigdK} \\
+        \frac{d \sigma_{B}^{\beta=1}}{d T} &= \alpha \frac{\zeta}{\chi \left(\zeta\right)} \left(\frac{\alpha \rho \nu}{4} + \frac{\nu^2 \left(2 - 3 \rho^2\right)}{24}\right) \label{dSigdT} \\
+        \frac{d \sigma_{B}^{\beta=1}}{d K} &= -\frac{\nu}{K} \frac{\partial G}{\partial \zeta} \left(1 + \left(\frac{\alpha \rho \nu}{4} + \frac{\nu^2 \left(2 - 3 \rho^2\right)}{24}\right) T\right) \label{dSigdK} \\
         \frac{d^2 \sigma_{B}^{\beta=1}}{d K^2} &= \left(\frac{\nu}{K^2} \frac{\partial G}{\partial K} - \frac{\nu}{\alpha K^2} \frac{\partial^2 G}{\partial K^2}\right) \left(1 + \left(\frac{\alpha \rho \nu}{4} + \frac{\nu^2 \left(2 - 3 \rho^2\right)}{24}\right) T\right) \label{dSig2dK2}
     \end{align}
 \end{subequations}
@@ -150,6 +146,20 @@ The following formulas expand till the third order.
         \frac{d^2 G^{K \approx F}}{d K^2} &= 2 \left(-\frac{1}{4} \rho^2 + \frac{1}{6}\right) - \frac{1}{4} \left(6 \rho^2 - 5\right) \rho \zeta + 12 \left(-\frac{5}{16} \rho^4 + \frac{1}{3} \rho^2 - \frac{17}{360}\right) \zeta^2
     \end{align}
 \end{subequations}
+
+
+\section{Greeks and Sensitivities}
+
+\subsection{Theta}
+Theta $ \frac{d V}{d t} $ measures the instantaneous sensitivity of option prices against time. Given the definition that $ t = T^* - \tau $.
+
+\subsection{Delta}
+Delta $ \frac{d V}{d F} $ measures the instantaneous sensitivity of option price against forward.
+
+\subsection{Gamma}
+Gamma $ \frac{d^2 V}{d F^2} $ is a second order derivative of option price against forward or the first derivaitive of delta against forward.
+
+
 
 
 \section{Analytic Density Function}
@@ -167,7 +177,7 @@ Then chain rule finds the density function as below.
     &= \frac{\partial^2 U}{\partial K^2} + 2 \frac{\partial^2 U}{\partial K \partial \sigma} \frac{\partial \sigma}{\partial K} + \frac{\partial^2 U}{\partial \sigma^2} \left(\frac{\partial \sigma}{\partial K}\right)^2 + \frac{\partial U}{\partial \sigma} \frac{\partial^2 \sigma}{\partial K^2} \label{d2U_per_dK2}
 \end{align}
 
-In above formula \ref{d2U_per_dK2} of the forward density function, terms $ \frac{\partial U}{\partial \sigma} $, $ \frac{\partial^2 U}{\partial \sigma^2} $, $ \frac{\partial^2 U}{\partial K \partial \sigma} $ and $ \frac{\partial^2 U}{\partial K^2} $ correspond to pre-discounted black formula greeks $ Vega^T $, $ Vomma^T $, $ Vanna_{K}^T $ and $ Gamma_{K}^T $.
+In formula \ref{d2U_per_dK2} of the forward density function, terms $ \frac{d U}{d \sigma} $, $ \frac{d^2 U}{d \sigma^2} $, $ \frac{d^2 U}{d K d \sigma} $ and $ \frac{d^2 U}{d K^2} $ correspond to pre-discounted black formula greeks $ Vega^T $, $ Vomma^T $, $ Vanna_{K}^T $ and $ Gamma_{K}^T $.
 \begin{subequations}
     \begin{align}
         \frac{d U}{d \sigma} &= F_{t}^{T} \phi(d_1) \sqrt{\tau} \\
