@@ -3,9 +3,9 @@ from math import log
 
 import numpy as np
 from numpy.polynomial.polynomial import polyroots
-from src.Utils.VolType import VolType
 
 from src.Utils.Types.OptionType import OptionType
+from src.Utils.Types.VolType import VolType
 from src.Utils.Valuator.Black76 import Black76Vec
 from src.Utils.Valuator.NormalModel import NormalModelVec
 
@@ -205,15 +205,27 @@ class SABRModelLognormalApprox(SABRModel):
         is_atm = np.abs(forward - strikes) < self.abs_tol
         is_not_atm = np.logical_not(is_atm)
         d_black_d_t = np.ones(strikes.__len__())
-
         z = self._calc_z(forward, strikes)
         x = self._calc_x(z)
         # use expansion for atm ones which has overflow issue
         d_black_d_t[is_atm] = 1.0 - 0.5 * self.rho * z[is_atm] + (-(self.rho ** 2) / 4.0 + 1.0 / 6.0) * (z[is_atm] ** 2)
         d_black_d_t[is_not_atm] *= z[is_not_atm] / x[is_not_atm]
         d_black_d_t *= self.alpha * (self.__calc_const() - 1.0) / self.t  # reverse calculation to keep commonality
-
         return d_black_d_t
+
+    def calc_d_black_d_f(self, forward: float, strikes: np.array) -> np.array:
+        d_black_d_k = self.nu / forward * self.__calc_d_z_per_x_d_z(forward, strikes)
+        d_black_d_k *= self.__calc_const()
+
+        return d_black_d_k
+
+    def calc_d2_black_d_f2(self, forward: float, strikes: np.array) -> np.array:
+        forward_sq = forward ** 2
+        d2_black_d_k2 = (-self.nu / forward_sq * self.__calc_d_z_per_x_d_z(forward, strikes) +
+                         self.nu ** 2 / self.alpha / forward_sq * self.__calc_d2_z_per_x_d_z2(forward, strikes))
+        d2_black_d_k2 *= self.__calc_const()
+
+        return d2_black_d_k2
 
     def calc_d_black_d_k(self, forward: float, strikes: np.array) -> np.array:
         d_black_d_k = -self.nu * self.__calc_d_z_per_x_d_z(forward, strikes) / strikes

@@ -39,12 +39,19 @@ class TestSABRGreeks(TestCase):
             self.assertAlmostEqual(float(den), gamma_k[kdx], places=6)
         plt.plot(strikes, gamma_k, 'x')
         plt.plot(bins, density, '-')
-        # plt.show()
+        plt.show()
         logger.info('%s passes' % sys._getframe().f_code.co_name)
         pass
 
-    def test_pde(self):
+    def test_pde_f(self):
         logger.info('%s starts' % sys._getframe().f_code.co_name)
 
         logger.info('%s passes' % sys._getframe().f_code.co_name)
         pass
+
+    def test_pde_k(self):
+        logger.info('%s starts' % sys._getframe().f_code.co_name)
+
+        logger.info('%s passes' % sys._getframe().f_code.co_name)
+        pass
+
