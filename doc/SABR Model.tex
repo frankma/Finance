@@ -116,7 +116,7 @@ Before deriving the derivatives of black volatility against strike, a few interm
 \end{subequations}
 
 Further, define function $ G = \frac{\zeta}{\chi\left(\zeta\right)} $ and $ S = \left(1 - 2 \rho \zeta + \zeta^2\right)^{\frac{1}{2}} $ and find the derivatives of function $ G $ against $ \zeta $ as the following.
-\begin{subequations}
+\begin{subequations} \label{d(z_per_xz)dz}
     \begin{align}
         \frac{d S}{d \zeta} &= S^{-1} \left(\zeta - \rho\right) \\
         \frac{d G}{d \zeta} &= \frac{\chi S - \zeta}{\chi^2 S} \\
@@ -132,7 +132,7 @@ The derivatives of black volatility against ttm and strike when $ \beta $ equals
     \begin{align}
         \frac{d \sigma_{B}^{\beta=1}}{d T} &= \alpha \frac{\zeta}{\chi \left(\zeta\right)} \left(\frac{\alpha \rho \nu}{4} + \frac{\nu^2 \left(2 - 3 \rho^2\right)}{24}\right) \label{dSigdT} \\
         \frac{d \sigma_{B}^{\beta=1}}{d K} &= -\frac{\nu}{K} \frac{\partial G}{\partial \zeta} \left(1 + \left(\frac{\alpha \rho \nu}{4} + \frac{\nu^2 \left(2 - 3 \rho^2\right)}{24}\right) T\right) \label{dSigdK} \\
-        \frac{d^2 \sigma_{B}^{\beta=1}}{d K^2} &= \left(\frac{\nu}{K^2} \frac{\partial G}{\partial K} - \frac{\nu}{\alpha K^2} \frac{\partial^2 G}{\partial K^2}\right) \left(1 + \left(\frac{\alpha \rho \nu}{4} + \frac{\nu^2 \left(2 - 3 \rho^2\right)}{24}\right) T\right) \label{dSig2dK2}
+        \frac{d^2 \sigma_{B}^{\beta=1}}{d K^2} &= \left(\frac{\nu}{K^2} \frac{\partial G}{\partial \zeta} + \frac{\nu^2}{\alpha K^2} \frac{\partial^2 G}{\partial \zeta^2}\right) \left(1 + \left(\frac{\alpha \rho \nu}{4} + \frac{\nu^2 \left(2 - 3 \rho^2\right)}{24}\right) T\right) \label{dSig2dK2}
     \end{align}
 \end{subequations}
 
@@ -151,15 +151,34 @@ The following formulas expand till the third order.
 \section{Greeks and Sensitivities}
 
 \subsection{Theta}
-Theta $ \frac{d V}{d t} $ measures the instantaneous sensitivity of option prices against time. Given the definition that $ t = T^* - \tau $.
+Theta $ \frac{d V}{d t} $ measures the instantaneous sensitivity of option prices against time. Given the definition that $ t = T^* - \tau $, $ \frac{d \sigma}{d t} = -\frac{d \sigma}{d \tau}$.
+\begin{align}
+    \frac{d V}{d t} &= \frac{\partial V}{\partial t} + \frac{\partial V}{\partial \sigma} \frac{\partial \sigma}{\partial t} \nonumber \\
+    &= \frac{\partial V}{\partial t} - \frac{\partial V}{\partial \sigma} \frac{\partial \sigma}{\partial \tau}
+\end{align}
 
 \subsection{Delta}
 Delta $ \frac{d V}{d F} $ measures the instantaneous sensitivity of option price against forward.
+\begin{align}
+    \frac{d V}{d F} &= \frac{\partial V}{\partial F} + \frac{\partial V}{\partial \sigma} \frac{\partial \sigma}{\partial F}
+\end{align}
+
+Under the special case where volatility is Log-Normal type with $ \beta = 1 $, the term $ \frac{\partial \sigma}{\partial F} $ has relatively manageable analytic form. Reintroduce the notions $ \zeta $, $ \chi $, $ G $ and $ S $ used in formula \ref{d(z_per_xz)dz}, we get the following equation.
+\begin{align}
+    \frac{d \sigma_{B}^{\beta = 1}}{d F} &= \frac{\nu}{F} \frac{\partial G}{\partial \zeta} \left(1 + \left(\frac{\alpha \nu \rho}{4} + \frac{\nu \left(2 - 3 \rho^2\right)}{24}\right) T \right)
+\end{align}
 
 \subsection{Gamma}
-Gamma $ \frac{d^2 V}{d F^2} $ is a second order derivative of option price against forward or the first derivaitive of delta against forward.
+Gamma $ \frac{d^2 V}{d F^2} $ measures second order derivative of option price against forward or the first derivative of delta against forward.
+\begin{align}
+    \frac{d^2 V}{d F^2} &= \frac{\partial^2 V}{\partial F^2} + \frac{\partial^2 V}{\partial F \partial \sigma} \frac{\partial \sigma}{\partial F} + \frac{\partial^2 V}{\partial F \partial \sigma} \frac{\partial \sigma}{\partial F} + \frac{\partial^2 V}{\partial \sigma^2} \left(\frac{\partial \sigma}{\partial F}\right)^2 + \frac{\partial V}{\partial \sigma} \frac{\partial^2 \sigma}{\partial F^2} \nonumber \\
+    &= \frac{\partial^2 V}{\partial F^2} + 2 \frac{\partial^2 V}{\partial F \partial \sigma} \frac{\partial \sigma}{\partial F} + \frac{\partial^2 V}{\partial \sigma^2} \left(\frac{\partial \sigma}{\partial F}\right)^2 + \frac{\partial V}{\partial \sigma} \frac{\partial^2 \sigma}{\partial F^2}
+\end{align}
 
-
+Similar to the Delta in above, under the special case where volatility is Log-Normal type with $ \beta = 1 $, the term $ \frac{\partial^2 \sigma}{\partial F^2} $ has relatively manageable analytic form. Reintroduce the notions $ \zeta $, $ \chi $, $ G $ and $ S $ used in formula \ref{d(z_per_xz)dz}, we get the following equation.
+\begin{align}
+    \frac{d^2 \sigma_{B}^{\beta = 1}}{d F^2} &= \left(-\frac{\nu}{F^2} \frac{\partial G}{\partial \zeta} + \frac{\nu^2}{\alpha F^2} \frac{\partial^2 G}{\partial \zeta^2}\right) \left(1 + \left(\frac{\alpha \nu \rho}{4} + \frac{\nu \left(2 - 3 \rho^2\right)}{24}\right) T\right)
+\end{align}
 
 
 \section{Analytic Density Function}
