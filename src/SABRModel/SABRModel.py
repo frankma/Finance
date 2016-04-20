@@ -204,7 +204,7 @@ class SABRModelLognormalApprox(SABRModel):
     def calc_d_black_d_t(self, forward: float, strikes: np.array) -> np.array:
         is_atm = np.abs(forward - strikes) < self.abs_tol
         is_not_atm = np.logical_not(is_atm)
-        d_black_d_t = np.ones(strikes.__len__())
+        d_black_d_t = np.ones(np.shape(strikes))
         z = self._calc_z(forward, strikes)
         x = self._calc_x(z)
         # use expansion for atm ones which has overflow issue
@@ -245,7 +245,7 @@ class SABRModelLognormalApprox(SABRModel):
         # calculate first order partial derivative (d (z/(x(z))))/(d z)
         is_not_atm = np.abs(forward - strikes) > 1e-12
         is_atm = np.logical_not(is_not_atm)
-        dg_dz = np.ones(strikes.__len__())  # g denotes the function of z / x(z)
+        dg_dz = np.ones(np.shape(strikes))  # g denotes the function of z / x(z)
 
         z = self._calc_z(forward, strikes)
         x = self._calc_x(z)
@@ -261,7 +261,7 @@ class SABRModelLognormalApprox(SABRModel):
         # calculate second order partial derivative (d^2 (z/x(z)))/(d z^2)
         is_not_atm = np.abs(forward - strikes) > 1e-12
         is_atm = np.logical_not(is_not_atm)
-        d2g_dz2 = np.ones(strikes.__len__())  # g denotes the function of z / x(z)
+        d2g_dz2 = np.ones(np.shape(strikes))  # g denotes the function of z / x(z)
 
         z = self._calc_z(forward, strikes)
         x = self._calc_x(z)
