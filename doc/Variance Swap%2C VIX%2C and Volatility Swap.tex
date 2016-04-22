@@ -1,0 +1,119 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+
+\title{Variance Swap, VIX, and Volatility Swap}
+\author{Frank Ma}
+\date{Creation: January 2015 \\ Last Update: April 2016}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+    This document introduces the valuation of Variance Swap, VIX and Volatility Swap. Basic pricing formulas are provided along with some derivations.
+\end{abstract}
+
+
+\section{Introduction}
+
+Volatility instruments are designed to trade on the magnitude of the underlying instrument price changes while barely exposed to the prices levels. A more mathematical definition is that the payoff of a volatility instrument only links to the second moment of an underlying while immunizes to first moments.
+
+Common volatility instruments include Variance Swap and Volatility Swap. In addition, VIX, a widely known volatility index published by CBOE, tracks one month implied volatility of the options on S\&P500 index. VIX index can not be traded, but the futures on VIX are actively traded in the market.
+
+\section{Variance Swap}
+
+As its name indicates, variance swap has two legs. Funding leg pays a fixed rate usually denoted as $ \sigma_{strike}^2 $ while the structured leg pays floating rate tracking the annualized realized variance of an underlying as $ \sigma_{realized}^2 $.
+
+\begin{subequations}
+\begin{align}
+    Payoff_T &= N_{var} \left(\sigma_{realized}^2 - \sigma_{strike}^2\right) \\
+    \sigma_{realized}^2 &= \frac{252}{T} \sum_{i=1}^{T}{\left[\ln{\frac{S_{i}}{S_{i-1}}}\right]^2}
+\end{align}
+\end{subequations}
+
+To price the variance swap, we start from basic and build up the expectations step by step. The standard one factor underlying SDE can be find as.
+
+\begin{equation} \label{SDE S}
+    \frac{1}{S} dS = \mu dt + \sigma dW
+\end{equation}
+
+Apply Ito's Lemma to $ d\ln{S} $ and get
+
+\begin{equation} \label{SDE lnS}
+    d\ln{S} = \left(\mu - \frac{1}{2} \sigma^2 \right) dt + \sigma dW
+\end{equation}
+
+The differences between equation \ref{SDE S} and \ref{SDE lnS} cancel out the randomness part and all the equation can be solvable through a ODE as the following.
+
+\begin{equation}
+    \frac{1}{S} dS - d\ln{S} = \frac{1}{2} \sigma^2 dt
+\end{equation}
+
+An integration from time zero till $ T $ gives as
+
+\begin{align}
+    \sigma^2\left(0, T\right) &= \frac{2}{T} \left(\int_0^T{\frac{1}{S} dS} - \int_0^T{d\ln{S}}\right) \nonumber \\
+    &= \frac{2}{T} \left(\int_0^T{\frac{1}{S} dS} - \ln{\frac{S_T}{S_0}}\right)
+\end{align}
+
+Take a risk-neutral expectation of both side of equation
+
+\begin{equation} \label{Expectation of variance}
+    \mathrm{E}^{\mathrm{Q}}{\left[\sigma^2(0, T)\right]} = \frac{2}{T} \left( \mathrm{E}^{\mathrm{Q}}{\left[\int_0^T{\frac{1}{S} dS}\right]} - \mathrm{E}^{\mathrm{Q}}{\left[\ln{\frac{S_T}{S_0}}\right]} \right)
+\end{equation}
+
+F. Rouah \cite{Payoff Function Decomposition} provided a pyaoff decomposition method to address the log contract expectation issue. In general, for any function $ f(S) $ that is twice differentiable, we can write the following.
+
+\begin{align}
+    f(S) &= f(\kappa) + f'(\kappa) (S - \kappa) + \nonumber \\
+    & \int_{-\infty}^{\kappa}{f''(K)(K - S)^{+} dK} + \int_{\kappa}^{\infty}{f''(K)(S - K)^{+} dK}
+\end{align}
+
+Specifically to this log payoff $ \ln{\frac{S_T}{S_0}} $ decomposition, first order derivative is $ \frac{1}{S_T} $ and the second order derivative is $ -\frac{1}{S_T^2} $. The the expectation of the log contract can be decomposed to the following. Also, we choose forward $ F_0^T $ as the $ \kappa $ term.
+
+\begin{align} \label{Expectation of log contract}
+    \mathrm{E}^{\mathrm{Q}}{\left[\ln{\frac{S_T}{S_0}}\right]} &= \mathrm{E}^{\mathrm{Q}}{\left[\ln{\frac{F_0^T}{S_0}} + \frac{1}{F_0^T} \left(S_T - F_0^T\right)\right]} - \nonumber \\ 
+    & \mathrm{E}^{\mathrm{Q}}{\left[\int_{0}^{F_0^T}{\frac{1}{K^2} \left(K - S_T\right)^+ dK} - \int_{F_0^T}^{\infty}{\frac{1}{K^2} \left(S_T - K\right)^+ dK}\right]} \nonumber \\
+    &= r T - \int_{0}^{F_0^T}{\frac{1}{K^2} \mathrm{E}^{\mathrm{Q}}{\left[\left(K - S_T\right)^+\right]} dK} - \int_{F_0^T}^{\infty}{\frac{1}{K^2} \mathrm{E}^{\mathrm{Q}}{\left[\left(S_T - K\right)^+\right]} dK} \nonumber \\
+    &= rT - \left(\int_{0}^{F_0^T}{\frac{1}{K^2} P_T^T dK} + \int_{F_0^T}^{\infty}{\frac{1}{K^2} C_T^T dK} \right)
+\end{align}
+
+Under the risk-neutral measures, the expectation of $ \int_0^T{\frac{1}{S} dS} $ reduces to $ r T $. The equation \ref{Expectation of variance} can be reorganized given the derivation in equation \ref{Expectation of log contract} as the following.
+
+\begin{align} \label{Expectation of variance derived}
+    \mathrm{E}^{\mathrm{Q}}{\left[\sigma^2(0, T)\right]} &= \frac{2}{T} \left(r T - r T + \left(\int_{0}^{F_0^T}{\frac{1}{K^2} P_T^T dK} + \int_{F_0^T}^{\infty}{\frac{1}{K^2} C_T^T dK} \right) \right) \nonumber \\
+    &= \frac{2}{T} \left( \int_{0}^{F_0^T}{\frac{1}{K^2} P_T^T dK} + \int_{F_0^T}^{\infty}{\frac{1}{K^2} C_T^T dK} \right)
+\end{align}
+
+From equation \ref{Expectation of variance derived}, we can see that under the risk neutral expectation, the forward looking variance of an underlying is defined as integrals of undiscounted out-of-money calls and puts weighted by the strike square.
+
+
+\section{VIX}
+
+
+\section{Volatility Swap}
+
+
+
+\begin{thebibliography}{9}
+
+\bibitem{The CBOE Volatility Index - VIX}
+\textit{The CBOE Volatility Index - VIX}
+The Chicago Board Options Exchange, August, 2014.
+
+\bibitem{Payoff Function Decomposition}
+Fabrice Douglas Rouah
+\textit{Payoff Function Decomposition}
+www.frouah.com
+
+\bibitem{Variance Swap}
+Fabrice Douglas Rouah
+\textit{Variance Swap}
+www.frouah.com
+
+
+\end{thebibliography}
+
+
+\end{document}
