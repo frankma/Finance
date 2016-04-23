@@ -1,0 +1,51 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+\title{Unbiased Sample Variance}
+\author{GuangY. Ma}
+\date{Creation: July 2015 \\ Last Update: July 2015}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+
+Sample, as its name indicating, is observed fractions of the whole random space. From statistical point of view, drawing samples and estimate the population is quite crucial as under most situations, population space is actually not directly observable.
+
+\section{Population variance estimation}
+
+
+
+\subsection{Sample variance}
+
+Naturally, the variance of sample can be find through the standard definition as the following
+
+\begin{align}
+    \sigma_s^2 &= \frac{1}{n} \sum_1^n {(x_i - \bar{x})^2} \label{sample variance} \\
+    \bar{x} &= \frac{1}{n} \sum_1^n {x_i} \label{sample mean}
+\end{align}
+
+To estimate the variance of population, most intuitive candidate will be the sample variance defined in equation \ref{sample variance}. The measure the quality of such estimation, one need to put the expectation of the variance estimator to scrutiny
+
+\begin{align} \label{biased sample variance}
+    \mathbb{E}\left[\sigma_s^2\right] &= \mathbb{E} \left[\frac{1}{n} \sum_1^n {(x_i - \bar{x})^2}\right] \nonumber \\
+    &= \mathbb{E} \left[\frac{1}{n} \sum_1^n{\left(\left(x_i - \mu\right) - \left(\bar{x} - \mu\right)\right)^2}\right] \nonumber \\
+    &= \mathbb{E} \left[\frac{1}{n} \sum_1^n{\left(x_i - \mu\right)^2} - 2 \left(\bar{x} - \mu\right) \sum_1^n{\left(x_i - \mu\right)}   + \left(\bar{x} - \mu\right)^2 \sum_1^n{1}\right] \nonumber \\
+    &= \mathbb{E} \left[\frac{1}{n} \sum_1^n{(x_i - \mu)^2}\right] - \mathbb{E} \left[(\bar{x} - \mu)^2\right] \nonumber \\
+    &= \sigma_p^2 - \mathbb{E} \left[(\bar{x} - \mu)^2\right]
+\end{align}
+
+Note in equation \ref{biased sample variance} the term $ \mathbb{E} \left[(\bar{x} - \mu)^2\right] $ is the expectation of the difference between sample mean and population mean. This expectation must be strictly larger than zero, therefore the sample variance is systematical underestimate the population variance.
+
+\subsection{Adjusted sample variance as unbiased estimator of population variance}
+
+\begin{align}
+    s^2 &= \frac{n}{n - 1} \sigma_s^2
+\end{align}
+
+
+
+\end{document}
