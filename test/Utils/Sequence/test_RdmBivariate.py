@@ -39,6 +39,7 @@ class TestRdmBivariate(TestCase):
         pdf = RdmBivariate.pdf(x_1, x_2, rho=-0.45)
         xx_1, xx_2 = np.meshgrid(x_1, x_2)
         fig = plt.figure()
+        Axes3D
         ax = fig.add_subplot(111, projection='3d')
         ax.plot_wireframe(xx_1, xx_2, pdf)
         plt.show()
