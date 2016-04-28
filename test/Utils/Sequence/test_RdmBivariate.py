@@ -1,10 +1,9 @@
 import logging
 import sys
-
 from unittest import TestCase
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 
 from src.Utils.Sequence.RdmBivariate import RdmBivariate
