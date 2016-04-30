@@ -26,5 +26,15 @@ class PayoffDisplay(object):
         k_min = min(self.strikes)
         k_max = max(self.strikes)
         rgn = k_max - k_min
-        s = np.linspace(k_min - 0.5 * rgn, k_max + 0.5 * rgn, num=200)
+        s = np.array(np.linspace(k_min - 0.5 * rgn, k_max + 0.5 * rgn, num=200))
+        payoffs = np.zeros(np.shape(s))
+        for strike, opt_type, position in zip(self.strikes, self.opt_types, self.positions):
+            payoff = self.payoff(strike, opt_type, position, s)
+            payoffs += payoff
+            plt.plot(s, payoff, '--', label=('%.1f %s %.2f' % (position, opt_type.name, strike)))
+        plt.plot(s, payoffs, label='total')
+        plt.legend(loc='best')
+        plt.grid()
+        plt.show()
         pass
+

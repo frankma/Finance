@@ -35,5 +35,10 @@ class TestPayoffDisplay(TestCase):
 
     def test_display(self):
         logger.info('%s starts' % sys._getframe().f_code.co_name)
+        strikes = [95.0, 100.0, 105.0]
+        opt_types = [OptionType.call, OptionType.call, OptionType.call]
+        positions = [1, -2, 1]
+        dis = PayoffDisplay(strikes, opt_types, positions)
+        dis.display()
         logger.info('%s passes' % sys._getframe().f_code.co_name)
         pass
