@@ -1,9 +1,9 @@
 import logging
 import sys
-import numpy as np
-import matplotlib.pyplot as plt
-
 from unittest import TestCase
+
+import matplotlib.pyplot as plt
+import numpy as np
 
 from src.Utils.PayoffDisplay import PayoffDisplay
 from src.Utils.Types.OptionType import OptionType
@@ -31,6 +31,11 @@ class TestPayoffDisplay(TestCase):
         plt.plot(s, payoff)
         plt.show()
         logger.info('%s passes' % sys._getframe().f_code.co_name)
+        pass
+
+    def test_aggregate(self):
+        logger.info('%s starts' % sys._getframe().f_code.co_name)
+        logger.info('%s starts' % sys._getframe().f_code.co_name)
         pass
 
     def test_display(self):
