@@ -10,7 +10,7 @@ __author__ = 'frank.ma'
 logger = logging.getLogger(__name__)
 
 
-class PayoffDisplay(object):
+class PayoffAggregator(object):
     def __init__(self, strikes: list, opt_types: list, positions: list):
         self.strikes = strikes
         self.opt_types = opt_types
