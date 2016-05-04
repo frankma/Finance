@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from src.SABRModel.SABRGreeks import SABRGreeks
-from src.SABRModel.SABRModel import SABRModelLognormalApprox
+from src.SABRModel.SABRModelLognormalApprox import SABRModelLognormalApprox
 from src.Utils.Interpolator.LinearInterpolator1D import LinearInterpolator1D
 from src.Utils.Types.OptionType import OptionType
 from src.Utils.Valuator.Black76 import Black76
@@ -92,4 +92,3 @@ class TestSABRGreeks(TestCase):
 
         logger.info('%s passes' % sys._getframe().f_code.co_name)
         pass
-

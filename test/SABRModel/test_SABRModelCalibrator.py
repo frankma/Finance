@@ -5,8 +5,8 @@ from unittest import TestCase
 import matplotlib.pyplot as plt
 import numpy as np
 
-from src.SABRModel.SABRModel import SABRModelLognormalApprox
 from src.SABRModel.SABRModelCalibrator import SABRModelCalibratorAlphaNuRho, SABRModelCalibratorNuRho
+from src.SABRModel.SABRModelLognormalApprox import SABRModelLognormalApprox
 from src.Utils.Types.VolType import VolType
 
 __author__ = 'frank.ma'

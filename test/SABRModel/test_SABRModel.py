@@ -7,7 +7,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 
-from src.SABRModel.SABRModel import SABRModelLognormalApprox, SABRModelNormalApprox
+from src.SABRModel.SABRModelLognormalApprox import SABRModelLognormalApprox
+from src.SABRModel.SABRModelNormalApprox import SABRModelNormalApprox
 from src.Utils.Types.VolType import VolType
 
 __author__ = 'frank.ma'
