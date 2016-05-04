@@ -1,6 +1,6 @@
 import numpy as np
 
-from src.SABRModel.SABRModel import SABRModelLognormalApprox
+from src.SABRModel.SABRModelLognormalApprox import SABRModelLognormalApprox
 from src.Utils.Types.OptionType import OptionType
 from src.Utils.Types.VolType import VolType
 from src.Utils.Valuator.Black76 import Black76Vec

@@ -3,7 +3,9 @@ import logging
 import numpy as np
 import scipy.optimize as opt
 
-from src.SABRModel.SABRModel import SABRModel, SABRModelLognormalApprox, SABRModelNormalApprox
+from src.SABRModel.SABRModel import SABRModel
+from src.SABRModel.SABRModelLognormalApprox import SABRModelLognormalApprox
+from src.SABRModel.SABRModelNormalApprox import SABRModelNormalApprox
 from src.Utils.Types.VolType import VolType
 
 __author__ = 'frank.ma'
