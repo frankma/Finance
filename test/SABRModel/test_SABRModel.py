@@ -211,52 +211,6 @@ class TestSABRModel(TestCase):
         logger.info('%s passes' % sys._getframe().f_code.co_name)
         pass
 
-    def test_get_model_lognormal_approx(self):
-        logger.info('%s starts' % sys._getframe().f_code.co_name)
-        # model switch from normal to lognormal
-        # expect to see high precision between transformed and original
-        tau = 0.25
-        alpha, beta, nu, rho = 0.22, 1.0, 0.55, -0.33
-        forward = 150.0
-        strikes = np.linspace(100.0, 200.0, num=11)
-
-        model_lognormal = SABRModelLognormalApprox(tau, alpha, beta, nu, rho)
-        model_normal = SABRModelNormalApprox(tau, alpha, beta, nu, rho)
-        model_normal_trans_lognormal = model_normal.get_model_lognormal_approx()
-
-        self.assertTrue(isinstance(model_normal_trans_lognormal, SABRModelLognormalApprox))
-
-        for strike in strikes:
-            vol_lognormal = model_lognormal.calc_vol(forward, strike)
-            vol_lognormal_trans = model_normal_trans_lognormal.calc_vol(forward, strike)
-            self.assertLess(abs(vol_lognormal - vol_lognormal_trans), 1e-12, 'transformed model mismatch')
-
-        logger.info('%s passes' % sys._getframe().f_code.co_name)
-        pass
-
-    def test_get_model_normal_approx(self):
-        logger.info('%s starts' % sys._getframe().f_code.co_name)
-        # model switch from  lognormal to normal
-        # expect to see high precision between transformed and original
-        tau = 0.25
-        alpha, beta, nu, rho = 0.22, 1.0, 0.55, -0.33
-        forward = 150.0
-        strikes = np.linspace(100.0, 200.0, num=11)
-
-        model_lognormal = SABRModelLognormalApprox(tau, alpha, beta, nu, rho)
-        model_lognormal_trans_normal = model_lognormal.get_model_normal_approx()
-        model_normal = SABRModelNormalApprox(tau, alpha, beta, nu, rho)
-
-        self.assertTrue(isinstance(model_lognormal_trans_normal, SABRModelNormalApprox))
-
-        for strike in strikes:
-            vol_normal = model_normal.calc_vol(forward, strike)
-            vol_normal_trans = model_lognormal_trans_normal.calc_vol(forward, strike)
-            self.assertLess(abs(vol_normal - vol_normal_trans), 1e-12, 'transformed model mismatch')
-
-        logger.info('%s passes' % sys._getframe().f_code.co_name)
-        pass
-
     def test_calc_loc_vol_vec(self):
         logger.info('%s starts' % sys._getframe().f_code.co_name)
         # test the local vol calculation

@@ -6,7 +6,7 @@ import numpy as np
 from datetime import datetime, timedelta
 
 from src.Algorithms.VolatilityCrush.SimulatorSABR import SimulatorSABR
-from src.SABRModel.SABRModel import SABRModelLognormalApprox
+from src.SABRModel.SABRModelLognormalApprox import SABRModelLognormalApprox
 
 __author__ = 'frank.ma'
 
