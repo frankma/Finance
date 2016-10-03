@@ -38,7 +38,7 @@ class LinearInterpolator1D(IInterpolator1D):
                     return self.y[-1] + (v - self.x[-2]) / (self.x[-1] - self.x[-2]) * (self.y[-1] - self.y[-2])
             else:
                 i = 0
-                while v < self.x[i]:
+                while v > self.x[i]:
                     i += 1
                 return self.y[i] + (v - self.x[i]) / (self.x[i + 1] - self.x[i]) * (self.y[i + 1] - self.y[i])
 
