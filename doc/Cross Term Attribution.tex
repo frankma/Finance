@@ -6,7 +6,7 @@
 
 \title{Cross Term Attribution}
 \author{Frank Ma}
-\date{Initial Creation: Nov 2017 \\ Last Update: Nov 2017}
+\date{Initial Creation: Nov 2017 \\ Last Update: Dec 2017}
 
 \begin{document}
 
@@ -14,7 +14,11 @@
 
 
 \section{Introduction}
-In theory, one cannot truly decomposes the compound cross term to a linear combination of the contributing risk factors $ x_i $. In practice, however, cross terms are normally broken down and reassigned to contribution factors for simplicity. Multiple approaches are used in practice to allocate cross terms. This paper defines an objective approach to satisfy the needs.
+Post attribution of profit and loss of a security by its contribution risk factors, there is a residual term left. By nature, this residual term is a compound term co-contributed by the uni-variate risk factors. The residuals are expected to be significant when the co-variances among factors are non-negligible and the shocks of risk factors are significantly large.
+
+To practitioners, the challenge is to further breakdown the cross term into contributing factors. Most feasible attribution methods require subjective judgments at certain stage of the processing as the fundamental issue is to attribute non-linear term with a linear combination of contributing factors.
+
+In this study, we introduce an optimization based cross term attribution approach to curtail subjective judgment. The method first assigns arbitrary weights on cross term for each factor then formulates a cost function which aggregates the squared fractions of attributed cross terms to corresponding contributing sources. The optimal cross term weight assignment is found when the cost function is minimized.
 
 
 \section{Valuation Decomposition}
@@ -28,30 +32,30 @@ Taylor's theorem finds the decomposition of changes of asset value to contributi
 \end{equation}
 Define uni-variate pricing shocks per risk factor as below
 \begin{equation}
-    \Delta_V^{x_i} = \frac{\partial V}{\partial x_i} \Delta_{x_i} + \frac{1}{2} \frac{\partial^2 V}{\partial x_i^2} \Delta_{x_i}^{2} + \mathcal{O}\left(\Delta_{x_i}^{3}\right)
+    \Delta_{V_{x_i}} = \frac{\partial V}{\partial x_i} \Delta_{x_i} + \frac{1}{2} \frac{\partial^2 V}{\partial x_i^2} \Delta_{x_i}^{2} + \mathcal{O}\left(\Delta_{x_i}^{3}\right)
 \end{equation}
 Then the cross term $ \mathcal{O}\left(\Delta_{x_i} \cdot \Delta_{x_j}\right) $ denoted as $ \varepsilon $ is backed out as the following
 \begin{equation}
-    \varepsilon = \Delta_V - \sum^m{\Delta_V^{x_i}}
+    \varepsilon = \Delta_V - \sum^m{\Delta_{V_{x_i}}}
 \end{equation}
 
 
 \section{Residual Attribution}
-The challenge here is to attribute this none-linear term to each contributing factors $ x_i $ through a linear combination. In this study, we manage to find optimal weights $ \omega_i $ proportional to the cross term $ \varepsilon $ contributed by factor $ x_i $. This attribution is justified through a cost function $ \mathcal{F} $. Note this cost function is normalized by factor shocks $ \Delta_{V}^{x_i} $ across all $ n $ valuation scenarios.
+The challenge here is to attribute this none-linear term to each contributing factors $ x_i $ through a linear combination. In this study, we manage to find optimal weights $ \omega_i $ proportional to the cross term $ \varepsilon $ contributed by factor $ x_i $. This attribution is justified through a cost function $ \mathcal{F} $. Note this cost function is normalized by factor shocks $ \Delta_{V_{x_i}} $ across all $ n $ valuation scenarios.
 \begin{subequations}
     \begin{align}
-        \varepsilon_i &= \omega_i \varepsilon \\
-        \mathcal{F} &= \sum^n{\sum^m\left(\frac{\varepsilon_i}{\Delta_{V}^{x_i}}\right)^2} \\
+        \varepsilon_i^k &= \omega_i \varepsilon^k \\
+        \mathcal{F} &= \sum_{k}^{n}{\sum_{i}^{m}\left(\frac{\varepsilon_i^k}{\Delta_{V_{x_i}}^k}\right)^2} \\
         \sum^m{\omega_i} &= 1
     \end{align}
 \end{subequations}
 The contribution of cross term must be optimized if the total cost is minimized. Noticed this must be a constrained optimization, we embed the weight constrain into the cost function and rearrange the formula to the following.
 \begin{equation}
-    \mathcal{F} = \sum^{m-1}{\left(\omega_i^2 \sum^n{\left(\frac{\varepsilon}{\Delta_{V}^{x_i}}\right)^2}\right)} + \left(1 - \sum^{m-1}{\omega_i} \right)^2 \sum^n{\left(\frac{\varepsilon}{\Delta_{V}^{x_m}}\right)^2}
+    \mathcal{F} = \sum_{i}^{m-1}{\left(\omega_i^2 \sum_{k}^n{\left(\frac{\varepsilon^k}{\Delta_{V_{x_i}}^k}\right)^2}\right)} + \left(1 - \sum_{i}^{m-1}{\omega_i} \right)^2 \sum_{k}^n{\left(\frac{\varepsilon^k}{\Delta_{V_{x_m}}^k}\right)^2}
 \end{equation}
 To simplify the above equation, define $ \eta_i $
 \begin{equation}
-    \eta_i = \sum^n{\left(\frac{\varepsilon}{\Delta_V^{x_i}}\right)^2}
+    \eta_i = \sum_{k}^{n}{\left(\frac{\varepsilon^{k}}{\Delta_{V_{x_i}}^{k}}\right)^2}
 \end{equation}
 The cost function is arranged as below
 \begin{equation}
@@ -59,11 +63,11 @@ The cost function is arranged as below
 \end{equation}
 To minimize the cost function, we find the first derivatives of $ \mathcal{F} $ against $ \omega_i $ as below.
 \begin{equation}
-    \frac{\partial \mathcal{F}}{\partial \omega_i} = 2 \omega_i \eta_i - 2 \left(1 - \sum^{m - 1}{\omega_i}\right)\eta_m
+    \frac{\partial \mathcal{F}}{\partial \omega_i} = 2 \omega_i \eta_i - 2 \left(1 - \sum^{m - 1}{\omega_j}\right)\eta_m
 \end{equation}
 The optimization results of $ \omega_i $ is found through solving a system of formulas where $ \frac{\partial \mathcal{F}}{\partial \omega_i} \equiv 0 $
 \begin{equation}
-    \omega_i \eta_i + \sum^{m - 1}{\omega_i} \eta_m = \eta_m, \forall \omega_i \in [1, m - 1]
+    \omega_i \eta_i + \sum^{m - 1}{\omega_j} \eta_m = \eta_m, \forall i \in [1, m - 1]
 \end{equation}
 Concisely, in the matrix expression
 \begin{equation}
@@ -89,7 +93,7 @@ Work out each component separately in details to find the following
         &= \frac{1}{\sum^{m}{\frac{1}{\eta_i}}} \\
         \boldsymbol{H}^{-1} \cdot \boldsymbol{1} \cdot \boldsymbol{1}^{T} \cdot \boldsymbol{H}^{-1} \cdot \boldsymbol{1} \cdot \eta_m &= \left| \begin{matrix} \frac{1}{\eta_1^2} + \frac{1}{\eta_1 \eta_2} + \dots + \frac{1}{\eta_1 \eta_{m - 1}} \\ \frac{1}{\eta_2 \eta_1} + \frac{1}{\eta_{2}^{2} +} \dots + \frac{1}{\eta_2 \eta_{m - 1}}  \\ \vdots \\ \frac{1}{\eta_{m - 1} \eta_1} + \frac{1}{\eta_{m - 1} \eta_2} + \dots + \frac{1}{\eta_{m - 1}^{2}} \end{matrix} \right| \cdot \eta_m \nonumber \\
         &= \left| \begin{matrix}\frac{1}{\eta_1} \left(\sum^{m - 1}{\frac{1}{\eta_i}}\right) \\ \frac{1}{\eta_2} \left(\sum^{m - 1}{\frac{1}{\eta_i}}\right) \\ \vdots \\ \frac{1}{\eta_{m - 1}} \left(\sum^{m - 1}{\frac{1}{\eta_i}}\right) \end{matrix} \right| \cdot \eta_m \nonumber \\
-        &= \left| \begin{matrix} \frac{\eta_m}{\eta_1} \\ \frac{\eta_m}{\eta_2} \\ \vdots \\ \frac{\eta_m}{\eta_{m - 1}} \end{matrix} \right| \cdot \sum^{m - 1}{\frac{1}{\eta_i}} \cdot \eta_m
+        &= \left| \begin{matrix} \frac{1}{\eta_1} \\ \frac{1}{\eta_2} \\ \vdots \\ \frac{1}{\eta_{m - 1}} \end{matrix} \right| \cdot \sum^{m - 1}{\frac{1}{\eta_i}} \cdot \eta_m
     \end{align}
 \end{subequations}
 Exam all components together to work out the weights as the following
@@ -97,27 +101,25 @@ Exam all components together to work out the weights as the following
     \boldsymbol{\Omega} &= \left| \begin{matrix} \frac{1}{\eta_1} \\ \frac{1}{\eta_2} \\ \vdots \\ \frac{1}{\eta_{m - 1}} \end{matrix} \right| \cdot \eta_m \cdot \left(1 - \frac{\sum^{m - 1}{\frac{1}{\eta_i}}}{\sum^{m}{\frac{1}{\eta_i}}} \right) \nonumber \\
     &= \left| \begin{matrix} \frac{1}{\eta_1} \\ \frac{1}{\eta_2} \\ \vdots \\ \frac{1}{\eta_{m - 1}} \end{matrix} \right| \cdot \frac{1}{\sum^{m}{\frac{1}{\eta_i}}}
 \end{align}
-Note for the summation of reciprocals can be expanded as below
-\begin{align}
-    \sum^{m}{\frac{1}{\eta_i}} &= \frac{\eta_2 \eta_3 \dots \eta_m + \eta_3 \eta_4 \dots \eta_m + \dots + \eta_1 \eta_2 \dots \eta_{m - 1}}{\eta_1 \eta_2 \dots \eta_m} \nonumber \\
-     &= \frac{\sum_{i = 1}^{m}{\prod_{j = 1, j \neq i}^{m}{\eta_j}}}{\prod^{m}_{j = 1}{\eta_j}}
-\end{align}
 To find out the embedded weight $ \omega_m $, we revisit the weight constrain and find
 \begin{align}
     \omega_m &= 1 - \frac{\sum^{m - 1}{\frac{1}{\eta_i}}}{\sum^{m}{\frac{1}{\eta_i}}} \nonumber \\
-    &= \frac{\prod^{m}_{j \neq m}{\eta_j}}{\sum^{m}_{i=1}{\prod^{m}_{j \neq i}{\eta_j}}}
+    &= \frac{1}{\eta_m} \cdot \frac{1}{\sum^m{\frac{1}{\eta_i}}}
 \end{align}
-Observed a generic form of weights in above solution holds for each $ \omega_i $ as 
+Observed a generic form of weights in above solution holds for each $ \omega_i $ as
 \begin{equation}
-    \omega_i = \frac{\prod^{m}_{j \neq i}{\eta_j}}{\sum^{m}_{i = 1}{\prod^{m}_{j \neq i}{\eta_j}}}
+    \omega_i = \frac{\frac{1}{\eta_i}}{\sum_{j}^{m}{\frac{1}{\eta_j}}}
 \end{equation}
 The full spectrum of weights $ \boldsymbol{\Omega}_{m \times 1} $ is formulated as
-\begin{equation}
-    \boldsymbol{\Omega}_{m \times 1} = \left| \begin{matrix} \frac{\prod_{j \neq 1}^{m}{\eta_j}}{\sum_{i = 1}^{m}{\prod_{j = 1, j \neq i}^{m}{\eta_j}}} \\ \\ \frac{\prod_{j \neq 2}^{m}{\eta_j}}{\sum_{i = 1}^{m}{\prod_{j = 1, j \neq i}^{m}{\eta_j}}} \\ \vdots \\ \frac{\prod_{j \neq m - 1}^{m}{\eta_j}}{\sum_{i = 1}^{m}{\prod_{j = 1, j \neq i}^{m}{\eta_j}}} \\ \\ \frac{\prod_{j \neq m}^{m}{\eta_j}}{\sum_{i = 1}^{m}{\prod_{j = 1, j \neq i}^{m}{\eta_j}}} \end{matrix} \right|_{m \times 1}
-\end{equation}
+\begin{subequations}
+    \begin{align}
+        \boldsymbol{\Omega}_{m \times 1} &= \left| \begin{matrix} \frac{1}{\eta_1} \\ \frac{1}{\eta_2} \\ \vdots \\ \frac{1}{\eta_{m - 1}} \\ \frac{1}{\eta_m} \end{matrix} \right|_{m \times 1} \cdot \sum^m{\frac{1}{\eta_i}} \\
+        \eta_i &= \sum_{k}^{n}{\left(\frac{\Delta_V^k - \sum_j^m{\Delta_{V_{x_j}}^{k}}}{\Delta_{V_{x_i}}^{k}}\right)^2}
+    \end{align}
+\end{subequations}
 
 
 \section{Computation Complexity}
-There are three sections of calculation blocks. The first one is to compute $ \eta $ which requires iteration through all scenarios and factors. The complexity is $ \boldsymbol{O}(m \times n) $. The second work is to find optimal weights $ \Omega $. The work load is $ \boldsymbol{O}(m) $ as the computation actually resembles running products. The last piece is to attribute cross terms per scenario per factor. This section is as straightforward as $ \boldsymbol{O}(n \times m) $. That leaves the overall computation complexity as of $ \boldsymbol{O}(n \times m) $.
+This method of cross term attribution has three computation intensive parts. The first part is to work out the $ \eta $ by iterating through all scenarios and factors. The process has a computational complexity of $ \boldsymbol{O}(m \times n) $. The second one is to find the weights $ \boldsymbol{\Omega} $. The algorithm itself is a linear process with a computational complexity of $ \boldsymbol{O}(m) $. The last part is to attribute cross term to each factor per scenario. This work has a computational complexity of $ \boldsymbol{O}(m \times n) $. Therefore, the overall process has a computation complexity of $ \boldsymbol{O}(m \times n) $.
 
 \end{document}
