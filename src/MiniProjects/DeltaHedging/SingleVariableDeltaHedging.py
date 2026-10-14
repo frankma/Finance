@@ -1,5 +1,5 @@
 import numpy as np
-import matplotlib.pylab as plt
+import matplotlib.pyplot as plt
 from scipy.stats import norm
 
 from src.MiniProjects.DeltaHedging.SingleVariableDeltaHedgingValuator import SingleVariableDeltaHedgingValuator
@@ -57,7 +57,7 @@ class SingleVariableDeltaHedging(object):
         std = np.std(value)
         bins = np.linspace(-5.0, 5.0, num=101)
         norms = norm.pdf(bins, mean, std)
-        plt.hist(value, bins, normed=True)
+        plt.hist(value, bins, density=True)
         plt.plot(bins, norms)
         plt.title('hedged value at ttm of %r' % self.tau)
         plt.xlim([bins[0], bins[-1]])

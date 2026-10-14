@@ -45,7 +45,7 @@ class SABRMarketData(object):
                                                    init_guess=initial_guess)
         model = calibrator.calibrate()
         alpha, nu, rho = model.alpha, model.nu, model.rho
-        return SABRMarketData(asof, expiry, spot, forward, tau, bond, alpha, beta, nu, rho, strikes, volatilities,
+        return SABRMarketData(asof, expiry, spot, forward, bond, tau, alpha, beta, nu, rho, strikes, volatilities,
                               vol_type)
 
     @staticmethod

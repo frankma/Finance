@@ -198,3 +198,21 @@ class TestBlack76Vec(TestCase):
                                    msg='backward pde parity failed for put with strike %f' % k)
         logger.info('%s passes' % sys._getframe().f_code.co_name)
         pass
+
+    def test_vec_delta_matches_scalar(self):
+        logger.info('%s starts' % sys._getframe().f_code.co_name)
+        forward = 110.
+        strikes = np.linspace(80., 140., num=13)
+        ttm = 0.75
+        sigmas = 0.0001 * ((strikes - forward) ** 2) + 0.25
+        bond = 0.92
+        for opt_type in [OptionType.call, OptionType.put]:
+            deltas = Black76Vec.delta(forward, strikes, ttm, sigmas, bond, opt_type)
+            deltas_k = Black76Vec.delta_k(forward, strikes, ttm, sigmas, bond, opt_type)
+            for idx, k in enumerate(strikes):
+                self.assertAlmostEqual(deltas[idx], Black76.delta(forward, k, ttm, sigmas[idx], bond, opt_type),
+                                       places=12, msg='vectorized delta differs from scalar at strike %f' % k)
+                self.assertAlmostEqual(deltas_k[idx], Black76.delta_k(forward, k, ttm, sigmas[idx], bond, opt_type),
+                                       places=12, msg='vectorized delta_k differs from scalar at strike %f' % k)
+        logger.info('%s passes' % sys._getframe().f_code.co_name)
+        pass

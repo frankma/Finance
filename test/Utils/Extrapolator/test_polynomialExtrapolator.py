@@ -5,7 +5,7 @@ from unittest import TestCase
 import matplotlib.pyplot as plt
 import numpy as np
 
-from src.SABRModel.SABRModel import SABRModelLognormalApprox
+from src.SABRModel.SABRModelLognormalApprox import SABRModelLognormalApprox
 from src.Utils.Extrapolator.PolynomialExtrapolator import PolynomialExtrapolator
 from src.Utils.Types.OptionType import OptionType
 from src.Utils.Valuator.Black76 import Black76, Black76Vec

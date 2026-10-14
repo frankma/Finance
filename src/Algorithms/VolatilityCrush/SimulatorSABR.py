@@ -67,7 +67,7 @@ class SimulatorSABR(object):
                                model_post: SABRModelLognormalApprox, forward_post: float, r_post: float, q_post: float,
                                opt_types: list, strikes: list, positions: list):
         n_trades = opt_types.__len__()
-        if n_trades != strikes.__len__() != positions.__len__():
+        if not n_trades == len(strikes) == len(positions):
             raise ValueError('expect same shape of option, strike and position')
         value = 0.0
         s_pre = forward_pre / np.exp((r_pre - q_pre) * model_pre.t)

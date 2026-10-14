@@ -1,4 +1,5 @@
 import logging
+import os
 import sys
 from unittest import TestCase
 
@@ -8,6 +9,8 @@ import matplotlib.pyplot as plt
 from src.Algorithms.VolatilityCrush.EventDataParser import EventDataParser
 
 __author__ = 'frank.ma'
+
+DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data')
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -22,7 +25,7 @@ logger.addHandler(sh)
 class TestEventDataParser(TestCase):
     def test_read_events_from_csv(self):
         logger.info('%s starts' % sys._getframe().f_code.co_name)
-        path = './Data/sample_2w_pre.csv'
+        path = os.path.join(DATA_DIR, 'sample_2w_pre.csv')
         df = EventDataParser.load_data(path)
         print(df.info)
         logger.info('%s passes' % sys._getframe().f_code.co_name)
@@ -30,8 +33,8 @@ class TestEventDataParser(TestCase):
 
     def test_read_dual_events_from_csv(self):
         logger.info('%s starts' % sys._getframe().f_code.co_name)
-        path_pre = './Data/sample_2w_pre.csv'
-        path_post = './Data/sample_2w_post.csv'
+        path_pre = os.path.join(DATA_DIR, 'sample_2w_pre.csv')
+        path_post = os.path.join(DATA_DIR, 'sample_2w_post.csv')
         df = EventDataParser.load_data_cross_events(path_pre, path_post)
         print(df.info())
         logger.info('%s passes' % sys._getframe().f_code.co_name)
@@ -43,8 +46,8 @@ class TestEventDataParser(TestCase):
         horizons = ['1m']  # ['2w', '1m']
         for horizon in horizons:
             logger.info('processing expiry of %s' % horizon)
-            path_pre = './Data/%s%s_pre.csv' % (data_src, horizon)
-            path_post = './Data/%s%s_post.csv' % (data_src, horizon)
+            path_pre = os.path.join(DATA_DIR, '%s%s_pre.csv' % (data_src, horizon))
+            path_post = os.path.join(DATA_DIR, '%s%s_post.csv' % (data_src, horizon))
             df = EventDataParser.events_stat_analysis(path_pre, path_post, filtration='yhoo')
             plt.figure(horizon)
             for idx, name in enumerate(['alpha', 'nu', 'rho']):
@@ -69,13 +72,13 @@ class TestEventDataParser(TestCase):
             ret = fwd_post / fwd_pre
             plt.plot(list(ret), 'o', alpha=1.0)
             for ndx, ticker in enumerate(df.index):
-                ax.annotate(ticker, (ndx, ret[ndx]), alpha=0.4, color='k')
+                ax.annotate(ticker, (ndx, ret.iloc[ndx]), alpha=0.4, color='k')
             plt.plot([0, df.__len__()], [1.0, 1.0], c='k', alpha=0.5)
             plt.title('fwd return')
 
             rel_strikes = np.linspace(0.6, 1.4, num=21)
             f, axes = plt.subplots(4, 4, sharey=True)
-            f.canvas.set_window_title('%s implied vol' % horizon)
+            f.canvas.manager.set_window_title('%s implied vol' % horizon)
             for idx, key in enumerate(df.index):
                 model_pre = df.loc[key, 'md_pre'].model
                 fwd_pre = df.loc[key, 'fwd_pre']

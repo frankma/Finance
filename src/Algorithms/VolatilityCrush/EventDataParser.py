@@ -17,13 +17,8 @@ class EventDataParser(object):
         pass
 
     @staticmethod
-    def __date_parser(date_string, date_format=None):
-        date_format = '%Y/%m/%d' if date_format is None else date_format
-        return pd.datetime.strptime(date_string, date_format)
-
-    @staticmethod
-    def load_data(path: str, date_indices: list=[2, 6]):
-        df = pd.read_csv(path, parse_dates=date_indices, date_parser=EventDataParser.__date_parser)
+    def load_data(path: str, date_indices: tuple = (2, 6), date_format: str = '%Y/%m/%d'):
+        df = pd.read_csv(path, parse_dates=list(date_indices), date_format=date_format)
         # df['ID'] = df['ticker'] + '_' + df['asof'].astype(str) + '_' + df['exp'].astype(str)
         df.index = df['ID'] if 'ID' in df.columns else df['ticker']
 
@@ -52,7 +47,7 @@ class EventDataParser(object):
         df_post = EventDataParser.load_data(path_post)
         keys_union = df_pre.index.intersection(df_post.index)
         df = pd.DataFrame(index=keys_union)
-        df['EventDataSABR'] = pd.Series(index=keys_union)
+        df['EventDataSABR'] = pd.Series(index=keys_union, dtype=object)
         for key in keys_union:
             md_pre = [df_pre.loc[key, 'model']]
             md_post = [df_post.loc[key, 'model']]

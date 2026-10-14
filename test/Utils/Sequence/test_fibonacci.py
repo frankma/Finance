@@ -32,6 +32,6 @@ class TestFibonacci(TestCase):
         seq = Fibonacci.generate_list(num)
         for idx in range(2, num):
             value = Fibonacci.generate_nth(idx)
-            self.assertEquals(seq[idx - 1], value, 'value disagree on methods list %i and scalar %i' % (seq[idx], value))
+            self.assertEqual(seq[idx - 1], value, 'value disagree on methods list %i and scalar %i' % (seq[idx], value))
         logger.info('%s passes' % sys._getframe().f_code.co_name)
         pass
