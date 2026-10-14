@@ -35,7 +35,7 @@ class SABRModelCalibratorAlphaNuRho(SABRModelCalibrator):
         super().__init__()
         self.t = t
         self.forward = forward
-        if strikes.__len__() != vols.__len__() != weights:
+        if not len(strikes) == len(vols) == len(weights):
             raise ValueError('strikes, vol and weights inputs mismatch in length.')
         if strikes.__len__() < 3:
             raise ValueError('minimum of three quotes need to be passed into calibrator.')
@@ -77,7 +77,7 @@ class SABRModelCalibratorNuRho(SABRModelCalibrator):
         self.t = t
         self.forward = forward
         self.vol_atm = vol_atm
-        if strikes.__len__() != vols.__len__() != weights:
+        if not len(strikes) == len(vols) == len(weights):
             raise ValueError('strikes, vol and weights inputs mismatch in length.')
         if strikes.__len__() < 3:
             raise ValueError('minimum of three quotes need to be passed into calibrator.')

@@ -35,7 +35,7 @@ class SABRModel(object):
             # use lognormal transform to avoid negative volatility
             sigmas *= np.exp(-0.5 * (self.nu ** 2) * dt + self.nu * rands[:, 1] * sqrt_dt)
         # 2nd, analyse the density
-        freq, bins = np.histogram(forwards, bins=bins, normed=True)
+        freq, bins = np.histogram(forwards, bins=bins, density=True)
         bins_mid = 0.5 * (bins[:-1] + bins[1:])
         return freq, bins_mid
 

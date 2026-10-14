@@ -28,7 +28,7 @@ class TestRealNumberTransformer(TestCase):
         upper_bound = 4.0
 
         rnt_none = RealNumberTransformer(None, None)
-        self.assertEquals(1.0, rnt_none.uc_to_c(1.0))
+        self.assertEqual(1.0, rnt_none.uc_to_c(1.0))
 
         rnt_abs = RealNumberTransformer(lower_bound, upper_bound, 'abs')
         rnt_tan = RealNumberTransformer(lower_bound, upper_bound, 'tan')
@@ -75,7 +75,7 @@ class TestRealNumberTransformer(TestCase):
         upper_bound = 4.0 + 1e-4
 
         rnt_none = RealNumberTransformer(None, None)
-        self.assertEquals(1.0, rnt_none.c_to_uc(1.0))
+        self.assertEqual(1.0, rnt_none.c_to_uc(1.0))
 
         rnt_abs = RealNumberTransformer(lower_bound, upper_bound, 'abs')
         rnt_tan = RealNumberTransformer(lower_bound, upper_bound, 'tan')

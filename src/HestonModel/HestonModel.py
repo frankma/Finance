@@ -34,6 +34,6 @@ class HestonModel(object):
             variances += self.kappa * (self.theta - variances) * dt + self.nu * volatilities * rands[:, 1] * sqrt_dt
 
         # 2nd, analyse density
-        freq, bins = np.histogram(spots, bins, normed=True)
+        freq, bins = np.histogram(spots, bins, density=True)
         bins_mid = 0.5 * (bins[:-1] + bins[1:])
         return freq, bins_mid

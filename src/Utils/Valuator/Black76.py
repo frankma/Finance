@@ -161,13 +161,13 @@ class Black76Vec(Black76):
     def delta(f: np.array, k: np.array, tau: float, sig: np.array, b: float, opt_type: OptionType) -> np.array:
         eta = opt_type.value
         d1 = Black76Vec.calc_d1(f, k, tau, sig)
-        return eta * b * norm.pdf(eta * d1)
+        return eta * b * norm.cdf(eta * d1)
 
     @staticmethod
     def delta_k(f: np.array, k: np.array, tau: float, sig: np.array, b: float, opt_type: OptionType) -> np.array:
         eta = opt_type.value
         d2 = Black76Vec.calc_d2(f, k, tau, sig)
-        return -eta * b * norm.pdf(eta * d2)
+        return -eta * b * norm.cdf(eta * d2)
 
     @staticmethod
     def vega(f: np.array, k: np.array, tau: float, sig: np.array, b: float) -> np.array:

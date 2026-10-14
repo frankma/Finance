@@ -28,7 +28,7 @@ class TriDiagonalMatrix(object):
     @staticmethod
     def create(lower: np.array or list, center: np.array or list, upper: np.array or list) -> np.matrix:
         n = center.__len__()
-        if lower.__len__() != upper.__len__() != n - 1:
+        if not len(lower) == len(upper) == n - 1:
             raise ValueError('invalid length of lower, center and upper vector, expect (n - 1, n, n - 1) shape')
         matrix = np.zeros((n, n), dtype=float)
         # header set

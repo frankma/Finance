@@ -43,6 +43,6 @@ class LinearInterpolator1D(IInterpolator1D):
                 return self.y[i] + (v - self.x[i]) / (self.x[i + 1] - self.x[i]) * (self.y[i + 1] - self.y[i])
 
     def calc(self, v: float):
-        if (v < self.x[0] or v > self.x[0]) and self.ex == 'lin':
+        if (v < self.x[0] or v > self.x[-1]) and self.ex == 'linear':
             logger.warning('requested linear extrapolation while only flat extrapolation is applied.')
-        return np.interp([v], self.x, self.y)
+        return float(np.interp(v, self.x, self.y))

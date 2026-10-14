@@ -28,7 +28,7 @@ class Deck(object):
         pass
 
     def draw(self, public=True):
-        if self.cur_idx > self.cards.__len__():
+        if self.cur_idx >= len(self.cards):
             raise ValueError('ran out of cards.')
         idx = self.indices[self.cur_idx]
         card = self.cards[idx]
@@ -41,7 +41,7 @@ class Deck(object):
 
     def reveal(self):
         # this always assume one non-public to be revealed
-        if self.nonpublic.__len__() < 0:
+        if not self.nonpublic:
             raise ValueError('no non-public drawn is available.')
         self.public.append(self.nonpublic.pop())
 

@@ -30,10 +30,10 @@ class SABRGreeks(object):
     def delta(f: float, k: np.array, tau: float, b: float, opt_type: OptionType,
               model: SABRModelLognormalApprox) -> np.array:
         SABRGreeks.__check_model(model)
-        sig = model.calc_vol(f, k, vol_type=VolType.black)
+        sig = model.calc_vol_vec(f, k, vol_type=VolType.black)
         delta = Black76Vec.delta(f, k, tau, sig, b, opt_type)
         vega = Black76Vec.vega(f, k, tau, sig, b)
-        d_black_d_f = model.calc_d_black_d_k(f, k)
+        d_black_d_f = model.calc_d_black_d_f(f, k)
         return delta + vega * d_black_d_f
 
     @staticmethod

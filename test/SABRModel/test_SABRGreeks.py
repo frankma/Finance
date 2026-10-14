@@ -56,13 +56,13 @@ class TestSABRGreeks(TestCase):
         model = SABRModelLognormalApprox(tau, alpha, beta, nu, rho)
         opt_type = OptionType.call
         sigma = model.calc_vol(forward, strike)
-        theta_sabr = SABRGreeks.theta(forward, strike, tau, b, opt_type, model)
+        theta_sabr = SABRGreeks.theta(forward, strike, tau, b, opt_type, model).item()
         theta_black = Black76.theta(forward, strike, tau, sigma, b, opt_type)
         logger.info('THETA sabr %.6f black %.6f' % (theta_sabr, theta_black))
-        delta_sabr = SABRGreeks.delta(forward, strike, tau, b, opt_type, model)
+        delta_sabr = SABRGreeks.delta(forward, strike, tau, b, opt_type, model).item()
         delta_black = Black76.delta(forward, strike, tau, sigma, b, opt_type)
         logger.info('DELTA sabr %.6f black %.6f' % (delta_sabr, delta_black))
-        gamma_sabr = SABRGreeks.gamma(forward, strike, tau, b, model)
+        gamma_sabr = SABRGreeks.gamma(forward, strike, tau, b, model).item()
         gamma_black = Black76.gamma(forward, strike, tau, sigma, b)
         logger.info('GAMMA sabr %.6f black %.6f' % (gamma_sabr, gamma_black))
 
@@ -80,13 +80,13 @@ class TestSABRGreeks(TestCase):
         model = SABRModelLognormalApprox(tau, alpha, beta, nu, rho)
         opt_type = OptionType.call
         sigma = model.calc_vol(forward, strike)
-        theta_sabr = SABRGreeks.theta(forward, strike, tau, b, opt_type, model)
+        theta_sabr = SABRGreeks.theta(forward, strike, tau, b, opt_type, model).item()
         theta_black = Black76.theta(forward, strike, tau, sigma, b, opt_type)
         logger.info('THETA sabr %.6f black %.6f' % (theta_sabr, theta_black))
-        delta_k_sabr = SABRGreeks.delta_k(forward, strike, tau, b, opt_type, model)
+        delta_k_sabr = SABRGreeks.delta_k(forward, strike, tau, b, opt_type, model).item()
         delta_k_black = Black76.delta_k(forward, strike, tau, sigma, b, opt_type)
         logger.info('DELTA_K sabr %.6f black %.6f' % (delta_k_sabr, delta_k_black))
-        gamma_k_sabr = SABRGreeks.gamma_k(forward, strike, tau, b, model)
+        gamma_k_sabr = SABRGreeks.gamma_k(forward, strike, tau, b, model).item()
         gamma_k_black = Black76.gamma_k(forward, strike, tau, sigma, b)
         logger.info('GAMMA_K sabr %.6f black %.6f' % (gamma_k_sabr, gamma_k_black))
 

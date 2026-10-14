@@ -23,7 +23,7 @@ class RdmDiscMutExcVec(object):
         density = copy.deepcopy(density_input)
 
         if seq.__len__() >= size:
-            seq = seq.sort()
+            seq.sort()
             return
 
         numbers = np.array(list(density.keys()))

@@ -31,7 +31,7 @@ class TestRdmDiscExcVec(TestCase):
         n_sets = 20
         for _ in range(n_sets):
             seq = sg.draw(size=5)
-            pb = np.random.randint(1, 27, size=1)
+            pb = np.random.randint(1, 27)
             logger.debug('%s; %i' % (seq, pb))
         logger.info('%s passes' % sys._getframe().f_code.co_name)
         pass

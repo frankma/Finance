@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 class PolynomialExtrapolator(object):
-    """
+    r"""
     Extrapolator adopts polynomial function with formula of
     x^{lam} * e^{\sum_0^n{beta_i * x^{eta * i}}}, where eta ~ -1 or 1
     """
