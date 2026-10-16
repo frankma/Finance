@@ -1,3 +1,5 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SABR Smile Lab</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -91,6 +93,14 @@ main { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 .tip { position: absolute; pointer-events: none; background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 6px 8px; font: 12px var(--font-mono); font-variant-numeric: tabular-nums; white-space: nowrap; box-shadow: 0 4px 14px rgba(0, 0, 0, .12); z-index: 2; }
 .tip div { display: flex; gap: 10px; justify-content: space-between; }
 .tip .k { color: var(--muted); }
+.card.wide { grid-column: 1 / -1; }
+.surf-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
+.colorbar { display: flex; align-items: center; gap: 8px; font: 12px var(--font-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.colorbar .ramp { width: 140px; height: 8px; border-radius: 4px; background: linear-gradient(90deg, #440154, #3b528b, #21918c, #5ec962, #fde725); }
+.surface { position: relative; width: 100%; height: clamp(300px, 44vw, 460px); cursor: grab; touch-action: pan-y; border-radius: 6px; }
+.surface:active { cursor: grabbing; }
+.surface:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.surface canvas { display: block; width: 100%; height: 100%; }
 footer { margin-top: 20px; font-size: 12px; color: var(--muted); max-width: 90ch; }
 footer code { font-family: var(--font-mono); font-size: 11.5px; }
 </style>
@@ -161,6 +171,20 @@ footer code { font-family: var(--font-mono); font-size: 11.5px; }
     <main>
       <div class="stats" id="stats"></div>
       <div class="grid">
+        <section class="card wide">
+          <div class="surf-head">
+            <h2>Implied vol surface</h2>
+            <div class="surf-head">
+              <div class="colorbar"><span id="cbLo"></span><span class="ramp" aria-hidden="true"></span><span id="cbHi"></span></div>
+              <div class="seg" role="group" aria-label="Surface vol type">
+                <button type="button" id="sfB">σ_B</button>
+                <button type="button" id="sfN">σ_N</button>
+              </div>
+            </div>
+          </div>
+          <p>σ(K, T) across expiries with α, β, ρ and ν held constant, so T enters only through Hagan's time correction. The highlighted line is the current expiry. Drag or use the arrow keys to rotate; double-click to reset.</p>
+          <div class="surface" id="c-surf" tabindex="0" role="img" aria-label="3D implied volatility surface over strike and expiry"><canvas></canvas></div>
+        </section>
         <section class="card">
           <h2>Implied Black vol smile</h2>
           <p>Hagan's lognormal expansion. The dashed line keeps α and β but sets ν = 0, so the gap between them is what stochastic vol adds.</p>
@@ -541,6 +565,154 @@ footer code { font-family: var(--font-mono); font-size: 11.5px; }
       : `<span><i class="${it.dash ? 'dash' : ''}" style="border-color:${it.color}"></i>${it.name}</span>`).join('');
   }
 
+  // ---------- 3D surface ----------
+  const VIRIDIS = [[68, 1, 84], [59, 82, 139], [33, 145, 140], [94, 201, 98], [253, 231, 37]];
+  function ramp(u) {
+    u = Math.min(1, Math.max(0, u)) * (VIRIDIS.length - 1);
+    const i = Math.min(VIRIDIS.length - 2, Math.floor(u)), f = u - i, a = VIRIDIS[i], b = VIRIDIS[i + 1];
+    return `rgb(${a.map((v, j) => Math.round(v + (b[j] - v) * f)).join(',')})`;
+  }
+  const VIEW0 = { yaw: -0.65, pitch: 0.5 };
+  const surf = { yaw: VIEW0.yaw, pitch: VIEW0.pitch, kind: 'B', data: null, raf: 0 };
+
+  function computeSurface(p, F, kMin, kMax, xfmt, nUnit, nLab) {
+    const tMax = Math.min(30, Math.max(2, 2 * p.T)), tMin = Math.min(0.05, p.T);
+    const Ks = linspace(kMin, kMax, 41);
+    const Ts = linspace(0, 1, 30).map(u => tMin * Math.pow(tMax / tMin, u));
+    const zB = Ts.map(t => Ks.map(K => blackVol({ ...p, T: t }, F, K)));
+    const zN = Ts.map(t => Ks.map(K => normalVol({ ...p, T: t }, F, K) * nUnit));
+    const cur = { B: Ks.map(K => blackVol(p, F, K)), N: Ks.map(K => normalVol(p, F, K) * nUnit) };
+    surf.data = { Ks, Ts, zB, zN, cur, tCur: p.T, kMin, kMax, tMin, tMax, xfmt, nLab };
+  }
+
+  function drawSurface() {
+    const d = surf.data, box = $('c-surf'); if (!d) return;
+    const canvas = box.querySelector('canvas'), dpr = window.devicePixelRatio || 1;
+    const W = box.clientWidth, H = box.clientHeight;
+    canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+    const ctx = canvas.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+    const css = getComputedStyle(document.documentElement), tok = n => css.getPropertyValue(n).trim();
+    const C = { muted: tok('--muted'), rule: tok('--rule'), ink: tok('--ink'), accent: tok('--accent'), panel: tok('--panel') };
+
+    const Z = surf.kind === 'B' ? d.zB : d.zN, cur = d.cur[surf.kind];
+    let lo = Infinity, hi = -Infinity;
+    Z.forEach(row => row.forEach(v => { if (isFinite(v)) { lo = Math.min(lo, v); hi = Math.max(hi, v); } }));
+    if (!isFinite(lo)) return;
+    if (hi - lo < 1e-12) { hi = lo + 1e-6; }
+    const fmtZ = surf.kind === 'B' ? (v => (v * 100).toFixed(1) + '%') : (v => sig(v, 3));
+    $('cbLo').textContent = fmtZ(lo); $('cbHi').textContent = fmtZ(hi);
+
+    // model space: x = strike, y = expiry, both in [-1, 1]; z = vol in [0, 1]
+    const mx = K => -1 + 2 * (K - d.kMin) / (d.kMax - d.kMin);
+    const my = t => -1 + 2 * (t - d.tMin) / (d.tMax - d.tMin);
+    const mz = v => (v - lo) / (hi - lo);
+    const cyw = Math.cos(surf.yaw), syw = Math.sin(surf.yaw), cp = Math.cos(surf.pitch), sp = Math.sin(surf.pitch);
+    const raw = (x, y, z) => {
+      const xr = x * cyw - y * syw, yr = x * syw + y * cyw;
+      return { X: xr, Y: -(z * 0.9 * cp + yr * sp), D: yr * cp - z * 0.9 * sp };
+    };
+    // fit the bounding box into the canvas, leaving room for labels
+    const corners = [];
+    for (const x of [-1, 1]) for (const y of [-1, 1]) for (const z of [0, 1]) corners.push(raw(x, y, z));
+    const bx0 = Math.min(...corners.map(c => c.X)), bx1 = Math.max(...corners.map(c => c.X));
+    const by0 = Math.min(...corners.map(c => c.Y)), by1 = Math.max(...corners.map(c => c.Y));
+    const padX = Math.min(70, W * 0.14), padY = 34;
+    const S = Math.min((W - 2 * padX) / (bx1 - bx0), (H - 2 * padY) / (by1 - by0));
+    const ox = W / 2 - S * (bx0 + bx1) / 2, oy = H / 2 - S * (by0 + by1) / 2;
+    const P = (x, y, z) => { const r = raw(x, y, z); return { x: ox + S * r.X, y: oy + S * r.Y, d: r.D }; };
+
+    ctx.font = '11px "IBM Plex Mono", ui-monospace, monospace';
+    ctx.lineJoin = 'round';
+    const line = (a, b, color, w) => { ctx.strokeStyle = color; ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); };
+
+    // floor: pick the edges nearest the viewer for tick labels
+    const nearY = P(0, -1, 0).d < P(0, 1, 0).d ? -1 : 1;
+    const nearX = P(-1, 0, 0).d < P(1, 0, 0).d ? -1 : 1;
+    const floorC = P(0, 0, 0);
+    const kTicks = niceTicks(d.kMin, d.kMax, 5).filter(v => v >= d.kMin && v <= d.kMax);
+    const tTicks = niceTicks(d.tMin, d.tMax, 5).filter(v => v >= d.tMin && v <= d.tMax);
+    kTicks.forEach(k => line(P(mx(k), -1, 0), P(mx(k), 1, 0), C.rule, 1));
+    tTicks.forEach(t => line(P(-1, my(t), 0), P(1, my(t), 0), C.rule, 1));
+    [[-1, -1, 1, -1], [1, -1, 1, 1], [1, 1, -1, 1], [-1, 1, -1, -1]].forEach(([x0, y0, x1, y1]) => line(P(x0, y0, 0), P(x1, y1, 0), C.muted, 1));
+
+    // vertical axis at the floor corner furthest left on screen
+    const cornerXY = [[-1, -1], [1, -1], [1, 1], [-1, 1]].sort((a, b) => P(a[0], a[1], 0).x - P(b[0], b[1], 0).x)[0];
+    const zTicks = niceTicks(lo, hi, 4).filter(v => v >= lo && v <= hi);
+    line(P(cornerXY[0], cornerXY[1], 0), P(cornerXY[0], cornerXY[1], 1), C.muted, 1);
+
+    // surface quads, painted far to near
+    const quads = [];
+    for (let j = 0; j < d.Ts.length - 1; j++) for (let i = 0; i < d.Ks.length - 1; i++) {
+      const v = [Z[j][i], Z[j][i + 1], Z[j + 1][i + 1], Z[j + 1][i]];
+      if (!v.every(isFinite)) continue;
+      const pts = [P(mx(d.Ks[i]), my(d.Ts[j]), mz(v[0])), P(mx(d.Ks[i + 1]), my(d.Ts[j]), mz(v[1])),
+                   P(mx(d.Ks[i + 1]), my(d.Ts[j + 1]), mz(v[2])), P(mx(d.Ks[i]), my(d.Ts[j + 1]), mz(v[3]))];
+      quads.push({ pts, depth: (pts[0].d + pts[1].d + pts[2].d + pts[3].d) / 4, u: mz((v[0] + v[1] + v[2] + v[3]) / 4) });
+    }
+    quads.sort((a, b) => b.depth - a.depth);
+    ctx.lineWidth = 0.5;
+    for (const q of quads) {
+      ctx.beginPath(); ctx.moveTo(q.pts[0].x, q.pts[0].y);
+      for (let n = 1; n < 4; n++) ctx.lineTo(q.pts[n].x, q.pts[n].y);
+      ctx.closePath();
+      ctx.fillStyle = ramp(q.u); ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,.18)'; ctx.stroke();
+    }
+
+    // current expiry slice
+    ctx.strokeStyle = C.panel; ctx.lineWidth = 5; ctx.beginPath();
+    d.Ks.forEach((K, i) => { const q = P(mx(K), my(d.tCur), mz(cur[i])); i ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y); });
+    ctx.stroke(); ctx.strokeStyle = C.accent; ctx.lineWidth = 2.5; ctx.stroke();
+
+    // labels, pushed outward from the floor centre
+    const label = (pt, text, align, push = 14) => {
+      let vx = pt.x - floorC.x, vy = pt.y - floorC.y; const n = Math.hypot(vx, vy) || 1;
+      ctx.fillStyle = C.muted; ctx.textAlign = align; ctx.textBaseline = 'middle';
+      ctx.fillText(text, pt.x + vx / n * push, pt.y + vy / n * push);
+    };
+    const side = pt => pt.x < floorC.x ? 'right' : 'left';
+    kTicks.forEach(k => { const q = P(mx(k), nearY, 0); label(q, d.xfmt(k), side(q)); });
+    tTicks.forEach(t => { const q = P(nearX, my(t), 0); label(q, fmtT(t), side(q)); });
+    zTicks.forEach(v => {
+      const q = P(cornerXY[0], cornerXY[1], mz(v));
+      line(q, { x: q.x - 5, y: q.y }, C.muted, 1);
+      ctx.fillStyle = C.muted; ctx.textAlign = 'right'; ctx.textBaseline = 'middle'; ctx.fillText(fmtZ(v), q.x - 8, q.y);
+    });
+    ctx.font = '12px "IBM Plex Sans", system-ui, sans-serif';
+    const kMid = P(0, nearY, 0), tMid = P(nearX, 0, 0), zTop = P(cornerXY[0], cornerXY[1], 1);
+    label(kMid, 'Strike K', side(kMid), 34);
+    label(tMid, 'Expiry T', side(tMid), 40);
+    ctx.fillStyle = C.ink; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+    ctx.fillText(surf.kind === 'B' ? 'σ_B' : d.nLab, zTop.x, zTop.y - 8);
+  }
+
+  const redrawSurface = () => { cancelAnimationFrame(surf.raf); surf.raf = requestAnimationFrame(drawSurface); };
+  (() => {
+    const box = $('c-surf'); let drag = null;
+    box.addEventListener('pointerdown', e => { if (e.pointerType === 'touch') return; drag = { x: e.clientX, y: e.clientY }; box.setPointerCapture(e.pointerId); });
+    box.addEventListener('pointermove', e => {
+      if (!drag) return;
+      surf.yaw -= (e.clientX - drag.x) * 0.008;
+      surf.pitch = Math.min(1.45, Math.max(0.05, surf.pitch + (e.clientY - drag.y) * 0.006));
+      drag = { x: e.clientX, y: e.clientY }; redrawSurface();
+    });
+    const end = () => { drag = null; };
+    box.addEventListener('pointerup', end); box.addEventListener('pointercancel', end);
+    box.addEventListener('dblclick', () => { Object.assign(surf, VIEW0); redrawSurface(); });
+    box.addEventListener('keydown', e => {
+      const step = { ArrowLeft: [0.12, 0], ArrowRight: [-0.12, 0], ArrowUp: [0, -0.08], ArrowDown: [0, 0.08] }[e.key];
+      if (!step) return; e.preventDefault();
+      surf.yaw += step[0]; surf.pitch = Math.min(1.45, Math.max(0.05, surf.pitch + step[1])); redrawSurface();
+    });
+    const setKind = k => { surf.kind = k; $('sfB').classList.toggle('on', k === 'B'); $('sfN').classList.toggle('on', k === 'N'); redrawSurface(); };
+    $('sfB').addEventListener('click', () => setKind('B'));
+    $('sfN').addEventListener('click', () => setKind('N'));
+    setKind('B');
+    try { window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', redrawSurface); } catch (e) { /* older browsers */ }
+    new MutationObserver(redrawSurface).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(redrawSurface);
+  })();
+
   // ---------- compute & render ----------
   let mcCache = { key: '', res: null }, mcTimer = 0;
 
@@ -676,6 +848,9 @@ footer code { font-family: var(--font-mono); font-size: 11.5px; }
       ['Fly 90 / 110', (((v90 + v110) / 2 - atmB) * 100).toFixed(2) + ' vol'],
     ].map(([k, v]) => `<div class="stat"><span class="label">${k}</span><span class="v">${v}</span></div>`).join('')
       + `<div class="stat"><span class="label">Density${negMass > 0 ? ` · mass ${(negMass * 100).toFixed(2)}%` : ''}</span>${pill}</div>`;
+
+    computeSurface(p, F, kMin, kMax, xfmt, nUnit, nLab);
+    redrawSurface();
   }
 
   let rz = 0;
