@@ -26,11 +26,14 @@ class TestDeck(TestCase):
         self.assertEqual(card.rank, public_last.rank, msg=err_msg)
         self.assertEqual(card.suit, public_last.suit, msg=err_msg)
 
+        # a nonpublic draw must not show up among the public cards; two random cards may still share rank or suit
+        public_before = list(deck.public)
         card_nonpublic = deck.draw(False)
-        public_last = deck.view_public()[-1]
-        err_msg = 'unexpected match between public card and nonpublic drawn one.'
-        self.assertNotEqual(card_nonpublic.rank, public_last.rank, msg=err_msg)
-        self.assertNotEqual(card_nonpublic.suit, public_last.suit, msg=err_msg)
+        self.assertEqual(deck.public, public_before, msg='nonpublic draw changed the public cards.')
+        self.assertEqual(len(deck.nonpublic), 1, msg='one nonpublic card should be expected.')
+        drawn = deck.cards[deck.nonpublic[-1]]
+        self.assertEqual(drawn.rank, card_nonpublic.rank)
+        self.assertEqual(drawn.suit, card_nonpublic.suit)
         pass
 
     def test_reveal(self):
