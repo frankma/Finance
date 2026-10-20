@@ -107,10 +107,17 @@ mjx-container[display="true"] { overflow-x: auto; overflow-y: hidden; max-width:
 /* the page's own token names, mapped onto the paper theme */
 :root {
   --panel: var(--surface); --rule: var(--line);
-  --accent: var(--s1); --warm: var(--s4); --green: var(--s3); --neg: var(--tail);
-  --accent-soft: var(--oxford-soft); --neg-soft: var(--claret-soft); --warm-soft: var(--mandarin-soft);
+  --accent: var(--s1); --warm: var(--s2); --green: var(--s3); --neg: var(--critical);
+  --accent-soft: var(--oxford-soft); --neg-soft: color-mix(in srgb, var(--critical) 22%, transparent);
+  --warm-soft: color-mix(in srgb, var(--s2) 28%, transparent);
+  /* sequential ramp for the vol surface: one hue, oxford light to dark (low to high vol) */
+  --seq1: #d6e2ef; --seq2: #9ab8d8; --seq3: #5b8cc0; --seq4: #2f68a8; --seq5: #0f5499; --seq6: #0a3a6b;
   --font-display: var(--display); --font-body: var(--sans); --font-mono: var(--mono);
 }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --seq1: #0a3a6b; --seq2: #0f5499; --seq3: #2f68a8; --seq4: #5b8cc0; --seq5: #9ab8d8; --seq6: #d6e2ef; }
+}
+:root[data-theme="dark"] { --seq1: #0a3a6b; --seq2: #0f5499; --seq3: #2f68a8; --seq4: #5b8cc0; --seq5: #9ab8d8; --seq6: #d6e2ef; }
 * { box-sizing: border-box; }
 body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 14px; line-height: 1.45; }
 .wrap { max-width: 1320px; margin: 0 auto; padding-inline: 20px; padding-block: 24px 40px; }
@@ -150,12 +157,12 @@ main { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 .stat .label { text-transform: none; letter-spacing: .02em; font-size: 12.5px; }
 .stat .v { font-family: var(--font-mono); font-size: 17px; font-weight: 500; font-variant-numeric: tabular-nums; }
 .pill { display: inline-block; font: 600 12px var(--font-body); padding: 2px 8px; border-radius: 0; align-self: flex-start; margin-top: 2px; }
-.pill.ok { color: var(--green); border: 1px solid var(--green); }
+.pill.ok { color: var(--good-ink); border: 1px solid var(--good); }
 .pill.bad { color: var(--panel); background: var(--neg); border: 1px solid var(--neg); }
 .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 @media (max-width: 1100px) { .grid { grid-template-columns: minmax(0, 1fr); } }
 .card { background: var(--panel); border: 1px solid var(--rule); border-radius: 0; padding: 14px 14px 8px; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
-.card h2 { font-family: var(--font-display); font-weight: 600; font-size: 17px; margin: 0; }
+.card h2 { font: 600 15px/1.35 var(--sans); color: var(--ink); margin: 0; }
 .card p { margin: 0; color: var(--muted); font-size: 12.5px; max-width: 65ch; }
 .legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted); }
 .legend i { display: inline-block; width: 18px; height: 0; border-top: 2px solid; vertical-align: middle; margin-right: 6px; }
@@ -171,7 +178,7 @@ main { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 .card.wide { grid-column: 1 / -1; }
 .surf-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
 .colorbar { display: flex; align-items: center; gap: 8px; font: 12px var(--font-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
-.colorbar .ramp { width: 140px; height: 8px; background: linear-gradient(90deg, var(--s1), var(--s3), var(--s4), var(--s2)); }
+.colorbar .ramp { width: 140px; height: 8px; background: linear-gradient(90deg, var(--seq1), var(--seq2), var(--seq3), var(--seq4), var(--seq5), var(--seq6)); }
 .surface { position: relative; width: 100%; height: clamp(300px, 44vw, 460px); cursor: grab; touch-action: pan-y; }
 .surface:active { cursor: grabbing; }
 .surface:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
@@ -185,6 +192,7 @@ footer code { font-family: var(--font-mono); font-size: 11.5px; }
     <span class="eyebrow">Volatility models</span>
     <h1>SABR Smile Lab</h1>
     <div class="sde"><b>dF</b> = σ F<sup>β</sup> dW₁ &nbsp;·&nbsp; <b>dσ</b> = ν σ dW₂ &nbsp;·&nbsp; dW₁dW₂ = ρ dt &nbsp;·&nbsp; σ₀ = α</div>
+    <p class="lede">Move the SABR parameters and watch Hagan's smile, the implied density, the backbone and the vol surface respond.</p>
   </header>
 
   <div class="layout">
@@ -546,15 +554,15 @@ footer code { font-family: var(--font-mono); font-size: 11.5px; }
     svg += `<defs><clipPath id="${cid}"><rect x="${m.l}" y="${m.t}" width="${pw}" height="${ph}"/></clipPath></defs>`;
     for (const t of niceTicks(lo, hi, 5)) {
       const y = sy(t);
-      svg += `<line x1="${m.l}" x2="${m.l + pw}" y1="${y}" y2="${y}" style="stroke:var(--rule);stroke-width:1${t === 0 ? ';stroke:var(--muted);stroke-opacity:.6' : ''}"/>`;
+      svg += `<line x1="${m.l}" x2="${m.l + pw}" y1="${y}" y2="${y}" style="stroke:var(--grid);stroke-width:1${t === 0 ? ';stroke:var(--axis)' : ''}"/>`;
       svg += `<text x="${m.l - 8}" y="${y + 4}" text-anchor="end">${cfg.yfmt(t)}</text>`;
     }
     for (const t of niceTicks(x0, x1, Math.max(3, Math.floor(pw / 90)))) {
       const x = sx(t);
-      svg += `<line x1="${x}" x2="${x}" y1="${m.t + ph}" y2="${m.t + ph + 4}" style="stroke:var(--muted)"/>`;
+      svg += `<line x1="${x}" x2="${x}" y1="${m.t + ph}" y2="${m.t + ph + 4}" style="stroke:var(--axis)"/>`;
       svg += `<text x="${x}" y="${m.t + ph + 17}" text-anchor="middle">${cfg.xfmt(t)}</text>`;
     }
-    svg += `<line x1="${m.l}" x2="${m.l + pw}" y1="${m.t + ph}" y2="${m.t + ph}" style="stroke:var(--muted)"/>`;
+    svg += `<line x1="${m.l}" x2="${m.l + pw}" y1="${m.t + ph}" y2="${m.t + ph}" style="stroke:var(--axis)"/>`;
     svg += `<text class="axlab" x="${m.l + pw / 2}" y="${H - 4}" text-anchor="middle">${cfg.xlabel}</text>`;
     svg += `<text class="axlab" transform="translate(13 ${m.t + ph / 2}) rotate(-90)" text-anchor="middle">${cfg.ylabel}</text>`;
     svg += `<g clip-path="url(#${cid})">`;
@@ -642,7 +650,7 @@ footer code { font-family: var(--font-mono); font-size: 11.5px; }
   }
 
   // ---------- 3D surface ----------
-  // low to high vol: oxford, teal, mandarin, claret -- the theme's chart slots, read live so dark mode follows
+  // low to high vol along the one-hue oxford ramp (--seq1..6), read live so dark mode follows
   const hexRgb = h => { h = h.replace('#', ''); if (h.length === 3) h = [...h].map(c => c + c).join(''); return [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16)); };
   let STOPS = [];
   function ramp(u) {
@@ -670,8 +678,8 @@ footer code { font-family: var(--font-mono); font-size: 11.5px; }
     canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
     const ctx = canvas.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
     const css = getComputedStyle(document.documentElement), tok = n => css.getPropertyValue(n).trim();
-    const C = { muted: tok('--muted'), rule: tok('--line'), ink: tok('--ink'), accent: tok('--ink'), panel: tok('--surface') };
-    STOPS = ['--s1', '--s3', '--s4', '--s2'].map(n => hexRgb(tok(n)));
+    const C = { muted: tok('--muted'), grid: tok('--grid'), axis: tok('--axis'), ink: tok('--ink'), accent: tok('--claret'), panel: tok('--surface') };
+    STOPS = ['--seq1', '--seq2', '--seq3', '--seq4', '--seq5', '--seq6'].map(n => hexRgb(tok(n)));
     const mesh = hexRgb(C.panel);
 
     const Z = surf.kind === 'B' ? d.zB : d.zN, cur = d.cur[surf.kind];
@@ -711,14 +719,14 @@ footer code { font-family: var(--font-mono); font-size: 11.5px; }
     const floorC = P(0, 0, 0);
     const kTicks = niceTicks(d.kMin, d.kMax, 5).filter(v => v >= d.kMin && v <= d.kMax);
     const tTicks = niceTicks(d.tMin, d.tMax, 5).filter(v => v >= d.tMin && v <= d.tMax);
-    kTicks.forEach(k => line(P(mx(k), -1, 0), P(mx(k), 1, 0), C.rule, 1));
-    tTicks.forEach(t => line(P(-1, my(t), 0), P(1, my(t), 0), C.rule, 1));
-    [[-1, -1, 1, -1], [1, -1, 1, 1], [1, 1, -1, 1], [-1, 1, -1, -1]].forEach(([x0, y0, x1, y1]) => line(P(x0, y0, 0), P(x1, y1, 0), C.muted, 1));
+    kTicks.forEach(k => line(P(mx(k), -1, 0), P(mx(k), 1, 0), C.grid, 1));
+    tTicks.forEach(t => line(P(-1, my(t), 0), P(1, my(t), 0), C.grid, 1));
+    [[-1, -1, 1, -1], [1, -1, 1, 1], [1, 1, -1, 1], [-1, 1, -1, -1]].forEach(([x0, y0, x1, y1]) => line(P(x0, y0, 0), P(x1, y1, 0), C.axis, 1));
 
     // vertical axis at the floor corner furthest left on screen
     const cornerXY = [[-1, -1], [1, -1], [1, 1], [-1, 1]].sort((a, b) => P(a[0], a[1], 0).x - P(b[0], b[1], 0).x)[0];
     const zTicks = niceTicks(lo, hi, 4).filter(v => v >= lo && v <= hi);
-    line(P(cornerXY[0], cornerXY[1], 0), P(cornerXY[0], cornerXY[1], 1), C.muted, 1);
+    line(P(cornerXY[0], cornerXY[1], 0), P(cornerXY[0], cornerXY[1], 1), C.axis, 1);
 
     // surface quads, painted far to near
     const quads = [];
@@ -755,7 +763,7 @@ footer code { font-family: var(--font-mono); font-size: 11.5px; }
     tTicks.forEach(t => { const q = P(nearX, my(t), 0); label(q, fmtT(t), side(q)); });
     zTicks.forEach(v => {
       const q = P(cornerXY[0], cornerXY[1], mz(v));
-      line(q, { x: q.x - 5, y: q.y }, C.muted, 1);
+      line(q, { x: q.x - 5, y: q.y }, C.axis, 1);
       ctx.fillStyle = C.muted; ctx.textAlign = 'right'; ctx.textBaseline = 'middle'; ctx.fillText(fmtZ(v), q.x - 8, q.y);
     });
     ctx.font = '12px "IBM Plex Sans", system-ui, sans-serif';
@@ -886,7 +894,7 @@ footer code { font-family: var(--font-mono); font-size: 11.5px; }
 
     // backbone
     const fwds = [0.85, 1, 1.15].map(x => x * F);
-    const colors = ['var(--green)', 'var(--accent)', 'var(--warm)'];
+    const colors = ['var(--s1)', 'var(--s2)', 'var(--s3)'];
     const bbSeries = fwds.map((f, i) => ({ xs: Ks, ys: Ks.map(K => blackVol(p, f, K)), color: colors[i], width: 2, name: `F=${f.toFixed(dec)}`, tip: true }));
     bbSeries.push({ xs: Ks, ys: Ks.map(K => blackVol(p, K, K)), color: 'var(--ink)', dash: '6 4', width: 1.5, name: 'ATM', tip: true });
     legend('lg-bb', [...fwds.map((f, i) => ({ name: `F = ${f.toFixed(dec)}${i === 1 ? ' (base)' : ''}`, color: colors[i] })), { name: 'Backbone σ(K, K)', color: 'var(--ink)', dash: true }]);
