@@ -112,8 +112,9 @@ class SABRModelNormalApprox(SABRModel):
         coefficients = np.array([constant, linear, quadratic, cubic])
         solutions = polyroots(coefficients)
         solutions = solutions[np.isreal(solutions)].real  # only real solution is usable
+        solutions = solutions[solutions > 0.0]  # alpha is a volatility, so only positive roots qualify
         n_solutions = solutions.__len__()
-        if n_solutions < 1 or all(solutions < 0.0):
+        if n_solutions < 1:
             raise ValueError('cannot find alpha within real domain')
         elif n_solutions == 1:
             return solutions[0]
