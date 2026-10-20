@@ -211,6 +211,26 @@ class TestSABRModel(TestCase):
         logger.info('%s passes' % sys._getframe().f_code.co_name)
         pass
 
+    def test_solve_alpha_multiple_roots(self):
+        logger.info('%s starts' % sys._getframe().f_code.co_name)
+        # with beta below one, a small forward and a long expiry the ATM cubic has three positive roots
+        # (about 0.0289, 0.2396 and 0.4797 here); each reprices the ATM vol, but only the one near
+        # sigma_atm * F^(1 - beta) is the economically meaningful alpha
+        tau = 30.0
+        alpha, beta, nu, rho = 0.0289352, 0.5, 0.6, -0.6
+        forward = 0.03
+
+        model = SABRModelLognormalApprox(tau, alpha, beta, nu, rho)
+        black_vol = model.calc_vol(forward, forward)
+        alpha_solved = SABRModelLognormalApprox.solve_alpha(forward, black_vol, tau, beta, nu, rho)
+        self.assertAlmostEqual(alpha_solved, alpha, places=6,
+                               msg='solver picked a spurious root %.6f instead of %.6f' % (alpha_solved, alpha))
+        model_solved = SABRModelLognormalApprox(tau, alpha_solved, beta, nu, rho)
+        self.assertAlmostEqual(model_solved.calc_vol(forward, forward), black_vol, places=10)
+
+        logger.info('%s passes' % sys._getframe().f_code.co_name)
+        pass
+
     def test_calc_loc_vol_vec(self):
         logger.info('%s starts' % sys._getframe().f_code.co_name)
         # test the local vol calculation
