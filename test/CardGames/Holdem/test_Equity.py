@@ -4,7 +4,7 @@ from unittest import TestCase
 from src.CardGames.Core.Card import Card
 from src.CardGames.Holdem.Equity import call_ev, exact_equity, outs, pot_odds, simulate_equity
 from src.CardGames.Holdem.HandEvaluator import HandCategory
-from src.CardGames.Holdem.Rules import OMAHA, Rules
+from src.CardGames.Holdem.Rules import OMAHA
 
 __author__ = 'frank.ma'
 
