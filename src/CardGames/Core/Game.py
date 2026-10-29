@@ -26,6 +26,13 @@ class Game(ABC):
     def legal_moves(self, seat: int) -> List[Any]:
         pass
 
+    def is_legal(self, seat: int, move: Any) -> bool:
+        """
+        whether the seat may make the move; a game whose moves take a size from a range (a raise) overrides this, and
+        its legal_moves lists representative sizes only
+        """
+        return move in self.legal_moves(seat)
+
     @abstractmethod
     def apply(self, seat: int, move: Any) -> None:
         pass
@@ -61,7 +68,7 @@ def play_out(game: Game, strategies: list) -> List[float]:
         seat = game.current_seat()
         legal = game.legal_moves(seat)
         move = strategies[seat].decide(game.observation(seat), legal)
-        if move not in legal:
+        if not game.is_legal(seat, move):
             raise ValueError('seat %i chose %r, not among the legal moves %r.' % (seat, move, legal))
         game.apply(seat, move)
     return game.payoffs()
