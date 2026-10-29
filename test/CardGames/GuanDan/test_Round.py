@@ -5,7 +5,7 @@ from unittest import TestCase
 from src.CardGames.Core.Card import Card, Rank, standard_deck
 from src.CardGames.Core.Game import play_out
 from src.CardGames.Core.Player import RandomStrategy
-from src.CardGames.GuanDan.Combo import ComboType, interpret
+from src.CardGames.GuanDan.Combo import interpret
 from src.CardGames.GuanDan.Planner import plan_hand
 from src.CardGames.GuanDan.Round import PASS, Round, deal, partner, team
 
