@@ -5,7 +5,7 @@ from src.CardGames.BlackJack.BasicStrategy import BasicStrategy
 from src.CardGames.BlackJack.Counting import HI_LO, hi_lo_counter
 from src.CardGames.BlackJack.Round import Action, Round
 from src.CardGames.BlackJack.Rules import Rules
-from src.CardGames.Core.Card import Card, standard_deck
+from src.CardGames.Core.Card import Card, Rank, standard_deck
 from src.CardGames.Core.Game import play_out
 from src.CardGames.Core.Player import Strategy
 from src.CardGames.Core.Shoe import Shoe
@@ -87,7 +87,9 @@ class TestRound(TestCase):
         game = Round(shoe, Rules(), counter=counter)
         # the player sees T, 9 and 6: -1 + 0 + 1, and not the dealer's 5 until it is turned over
         self.assertEqual(counter.running_count, 0.0)
-        self.assertIs(game.observation(0).counter, counter)
+        observation = game.observation(0)
+        self.assertEqual((observation.running_count, observation.true_count), (0.0, 0.0))
+        self.assertEqual(dict(observation.unseen)[Rank.FIVE], 8, 'the face-down 5 still counts as unseen.')
         game.apply(0, Action.STAND)
         self.assertEqual(counter.n_seen, len(shoe.face_up))
         self.assertEqual(counter.running_count, sum(HI_LO[card.rank] for card in shoe.face_up))

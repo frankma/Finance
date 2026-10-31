@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from typing import List, Optional
 
 from src.CardGames.Core.Card import Card, Rank, standard_deck
-from src.CardGames.Core.Player import Strategy
+from src.CardGames.Core.Player import Advice, Advisor
 from src.CardGames.GuanDan.Combo import Combo, ComboType, group_value, is_wild
 from src.CardGames.GuanDan.Match import choose_return
 from src.CardGames.GuanDan.Planner import HandPlan, plan_hand
@@ -13,11 +13,10 @@ __author__ = 'frank.ma'
 
 
 @dataclass(frozen=True)
-class Candidate(object):
-    move: Optional[Combo]  # None passes
+class Candidate(Advice):
+    # move is a combination, or None to pass
     cost: float  # lower is better
     after: HandPlan  # the plan for what is left
-    reason: str
 
 
 def _unseen_max(observation: Observation) -> int:
@@ -30,14 +29,15 @@ def _cards(n: int) -> str:
     return '%i card%s' % (n, '' if n == 1 else 's')
 
 
-class PlannerStrategy(Strategy):
+class PlannerStrategy(Advisor):
     """
     the browser table's computer seat and coach: score every legal play (and passing) by the plan cost of the hand it
     leaves, plus adjustments for the trick and the card counts, and play the cheapest
 
     leading sheds the weakest shape, a bomb is kept back unless an opponent is close to going out, a partner's winning
     trick is not overtaken, a wild is spent only to finish or to make a bomb, and a low single or pair invites a
-    partner with one or two cards left
+    partner with one or two cards left; it reads only its own hand and the public play (card counts, cards played,
+    the trick), so what it treats as unseen is every card it has not seen, wherever those cards are
     """
 
     def rank(self, observation: Observation, legal_moves: List[Optional[Combo]]) -> List[Candidate]:
@@ -69,7 +69,7 @@ class PlannerStrategy(Strategy):
                                                                                              _cards(threat))
                 else:
                     reason = 'beating the %s would cost more than it gains' % o.target.describe()
-            candidates.append(Candidate(PASS, cost, base, reason))
+            candidates.append(Candidate(PASS, reason, cost, base))
 
         for move in plays:
             rest = list(hand)
@@ -128,14 +128,11 @@ class PlannerStrategy(Strategy):
                                else 'beats it, but splits a bigger group')
             if spends_wild:
                 why.append('it spends %s, which is costly' % ('both wild cards' if wilds > 1 else 'a wild card'))
-            candidates.append(Candidate(move, cost, after, '; '.join(why)))
+            candidates.append(Candidate(move, '; '.join(why), cost, after))
         return sorted(candidates, key=lambda c: c.cost)
 
     def advise(self, observation: Observation, legal_moves: List[Optional[Combo]]) -> Candidate:
         return self.rank(observation, legal_moves)[0]
-
-    def decide(self, observation: Observation, legal_moves: List[Optional[Combo]]) -> Optional[Combo]:
-        return self.advise(observation, legal_moves).move
 
     def choose_return(self, hand: List[Card], level: Rank, options: List[Card]) -> Card:
         return choose_return(hand, level)

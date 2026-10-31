@@ -3,7 +3,7 @@ from typing import Dict, List
 from src.CardGames.BlackJack.Hand import card_value
 from src.CardGames.BlackJack.Round import Action, Observation
 from src.CardGames.BlackJack.Rules import Rules
-from src.CardGames.Core.Player import Strategy
+from src.CardGames.Core.Player import Advice, Advisor, Strategy
 
 __author__ = 'frank.ma'
 
@@ -50,9 +50,18 @@ def _column(dealer_value: int) -> int:
     return 9 if dealer_value == 1 else dealer_value - 2
 
 
-class BasicStrategy(Strategy):
+_WORDS = {'H': 'hit', 'S': 'stand', 'D': 'double', 'B': 'double', 'R': 'surrender', 'Q': 'surrender', 'P': 'split'}
+_FALLBACK = {'D': 'hit', 'B': 'stand', 'R': 'hit', 'Q': 'stand'}
+
+
+def _card_word(value: int) -> str:
+    return 'an ace' if value == 1 else ('an 8' if value == 8 else 'a %i' % value)
+
+
+class BasicStrategy(Advisor):
     """
-    the standard total-dependent strategy for the given rules; it ignores the count and the composition of the hand
+    the standard total-dependent strategy for the given rules; it ignores the count and the composition of the hand,
+    and uses only the player's cards and the dealer's up card
     """
 
     def __init__(self, rules: Rules):
@@ -72,19 +81,32 @@ class BasicStrategy(Strategy):
                 return 'P'
         return self._total_code(observation)
 
-    def decide(self, observation: Observation, legal_moves: List[Action]) -> Action:
+    def advise(self, observation: Observation, legal_moves: List[Action]) -> Advice:
+        hand = observation.hand
+        up = _card_word(card_value(observation.dealer_up))
+        if hand.is_pair:
+            shape = 'a pair of %s' % ('aces' if card_value(hand.cards[0]) == 1 else '%is' % card_value(hand.cards[0]))
+        else:
+            shape = '%s %i' % ('soft' if hand.is_soft else 'hard', hand.total)
         code = self.code(observation)
-        if code == 'P' and Action.SPLIT in legal_moves:
-            return Action.SPLIT
-        if code == 'P':
+        steps = ['%s against %s: basic strategy says %s' % (shape, up, _WORDS[code])]
+        if code == 'P' and Action.SPLIT not in legal_moves:
             # splitting is no longer allowed, so play the pair as a total
             code = self._total_code(observation)
-        if code in ('R', 'Q') and Action.SURRENDER in legal_moves:
-            return Action.SURRENDER
-        if code in ('D', 'B') and Action.DOUBLE in legal_moves:
-            return Action.DOUBLE
-        move = Action.STAND if code in ('S', 'B', 'Q') else Action.HIT
-        return move if move in legal_moves else Action.STAND
+            steps.append('splitting is not allowed here, and as %s %i it says %s'
+                         % ('soft' if hand.is_soft else 'hard', hand.total, _WORDS[code]))
+        if code == 'P':
+            move = Action.SPLIT
+        elif code in ('R', 'Q') and Action.SURRENDER in legal_moves:
+            move = Action.SURRENDER
+        elif code in ('D', 'B') and Action.DOUBLE in legal_moves:
+            move = Action.DOUBLE
+        else:
+            move = Action.STAND if code in ('S', 'B', 'Q') else Action.HIT
+            move = move if move in legal_moves else Action.STAND
+            if code in _FALLBACK:
+                steps.append('%s is not allowed here, so %s' % (_WORDS[code], move.value))
+        return Advice(move, '; '.join(steps))
 
     def _total_code(self, observation: Observation) -> str:
         # the hard or soft table entry, ignoring whether the hand is a pair

@@ -1,7 +1,6 @@
 from unittest import TestCase
 
 from src.CardGames.BlackJack.BasicStrategy import BasicStrategy, MimicDealerStrategy
-from src.CardGames.BlackJack.Hand import Hand
 from src.CardGames.BlackJack.Round import Action, Observation
 from src.CardGames.BlackJack.Rules import Rules
 from src.CardGames.Core.Card import Card
@@ -13,7 +12,8 @@ NO_EXTRAS = [Action.STAND, Action.HIT]
 
 
 def decide(strategy, cards: str, dealer_up: str, legal=ALL) -> Action:
-    observation = Observation(Hand(Card.parse_many(cards)), Card.parse(dealer_up), 0, 1)
+    hand = tuple(Card.parse_many(cards))
+    observation = Observation(hand, False, Card.parse(dealer_up), 0, (hand,), Rules())
     return strategy.decide(observation, legal)
 
 
