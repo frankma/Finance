@@ -33,6 +33,10 @@ def deal(rng: Optional[random.Random] = None) -> List[List[Card]]:
 
 @dataclass(frozen=True)
 class Observation(object):
+    """
+    what a seat knows: its own hand and every public fact (the trick to beat, how many cards each seat holds, every
+    card played and who played or passed what, who is out), never the cards in another seat's hand
+    """
     seat: int
     hand: Tuple[Card, ...]
     level: Rank
@@ -40,6 +44,8 @@ class Observation(object):
     target_seat: Optional[int]
     counts: Tuple[int, ...]  # cards left in each seat's hand
     played: Tuple[Card, ...]  # every card played so far this hand
+    history: Tuple[Tuple[int, Optional[Combo]], ...] = ()  # (seat, combination or None for a pass), in order
+    out: Tuple[int, ...] = ()  # seats out so far, in finishing order
 
 
 @dataclass(frozen=True)
@@ -145,7 +151,8 @@ class Round(Game):
 
     def observation(self, seat: int) -> Observation:
         return Observation(seat, tuple(sort_hand(self.hands[seat], self.level)), self.level, self.target,
-                           self.target_seat, tuple(len(hand) for hand in self.hands), tuple(self.played))
+                           self.target_seat, tuple(len(hand) for hand in self.hands), tuple(self.played),
+                           tuple(self.history), tuple(self.out))
 
     def payoffs(self) -> List[float]:
         if self.result is None:

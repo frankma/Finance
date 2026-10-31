@@ -8,6 +8,12 @@ class Game(ABC):
     """
     turn-based card game with hidden information: one seat acts at a time, choosing among legal moves using only its
     own observation; each game supplies its rules by implementing these methods
+
+    fair play: the strategies and advisors here assist a player, they never cheat for one. A seat's observation is
+    everything that seat could legitimately know at the table (its own cards, the cards shown face up, every public
+    action, and what follows from those, such as which cards are still unseen) and nothing else: no other seat's
+    hidden cards, no face-down card, no undealt order. play_out hands a strategy only the observation and the legal
+    moves, and Fairness.assert_fair_play checks the rule for each game
     """
 
     @property
@@ -40,7 +46,9 @@ class Game(ABC):
     @abstractmethod
     def observation(self, seat: int) -> Any:
         """
-        what the seat may see: its own cards and the public ones, never another seat's hidden cards
+        what the seat may know, as an immutable snapshot (a frozen dataclass of tuples) so that a strategy can neither
+        reach into the game nor change it; it should hold every public fact, not only the cards, and never another
+        seat's hidden cards: two games that differ only in cards this seat cannot see give equal observations
         """
         pass
 

@@ -20,6 +20,10 @@ Quantitative finance and related topics in implementation.
 | [viz](viz) | Interactive pages, e.g. the [SABR smile lab](viz/sabr_smile_lab.html) |
 | [doc](doc) | LaTeX notes on the models |
 
+### Card games: fair play
+
+The card game strategies are there to assist a human player, not to cheat for one. Every assistant sees only what its seat could legitimately know at the table: its own cards, the cards shown, every public action, and what follows from those, such as which cards are still unseen. It never sees another player's hidden cards, a face-down card or the undealt order. Each game's observation is an immutable snapshot, and every game is tested with [`assert_fair_play`](src/CardGames/Core/Fairness.py): two tables that differ only in cards the seat cannot see must give the same view and the same advice.
+
 ## Running the tests
 
 ```bash

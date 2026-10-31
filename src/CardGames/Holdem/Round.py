@@ -34,6 +34,10 @@ class Move(object):
 
 @dataclass(frozen=True)
 class Observation(object):
+    """
+    what a seat knows: its own hole cards, the board, and every public fact at the table (stacks, bets, who is still
+    in, the button and each move made so far), never another seat's hole cards before they are shown
+    """
     seat: int
     hole: Tuple[Card, ...]
     board: Tuple[Card, ...]
@@ -48,6 +52,11 @@ class Observation(object):
     n_opponents: int  # opponents still in the hand
     big_blind: int
     rules: Rules
+    button: int = 0
+    stacks: Tuple[int, ...] = ()  # every seat's chips behind
+    bets: Tuple[int, ...] = ()  # every seat's bet on this street
+    in_hand: Tuple[bool, ...] = ()  # who has not folded
+    history: Tuple[Tuple[int, 'Street', 'Move'], ...] = ()  # (seat, street, move) for every move so far
 
 
 @dataclass(frozen=True)
@@ -107,6 +116,7 @@ class Round(Game):
         self.finished = False
         self.pots = []  # type: List[Pot]
         self.ranks = {}  # type: dict  # seat -> HandRank at showdown
+        self.history = []  # type: List[Tuple[int, Street, Move]]
 
         seated = lambda s: not s.out
         for _ in range(rules.n_hole):
@@ -213,6 +223,7 @@ class Round(Game):
                         other.acted = False
             self.current_bet = max(self.current_bet, move.to)
         s.acted = True
+        self.history.append((seat, self.street, move))
         s.faced = self.full_raises
         self._advance()
 
@@ -285,7 +296,9 @@ class Round(Game):
         return Observation(seat, tuple(s.hole), tuple(self.board), self.street, self.pot,
                            min(max(0, self.current_bet - s.bet), s.stack), s.bet, self.current_bet, s.stack,
                            sizes[0] if sizes else None, sizes[1] if sizes else None, n_opponents,
-                           self.rules.big_blind, self.rules)
+                           self.rules.big_blind, self.rules, self.button, tuple(self.stacks),
+                           tuple(other.bet for other in self.seats), tuple(other.in_hand for other in self.seats),
+                           tuple(self.history))
 
     def payoffs(self) -> List[float]:
         if not self.finished:

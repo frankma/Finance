@@ -15,17 +15,25 @@ class CardCounter(object):
     def __init__(self, composition: List[Card], tags: Optional[Dict[Rank, float]] = None):
         self.composition = Counter(composition)
         self.tags = dict(tags) if tags is not None else {}
-        self.seen = Counter()  # type: Counter
-        self.running_count = 0.0
+        self._n_cards = sum(self.composition.values())
+        self._by_rank = Counter()  # type: Counter
+        for card, n in self.composition.items():
+            self._by_rank[card.rank] += n
+        self.reset()
 
     def reset(self) -> None:
-        self.seen = Counter()
+        self.seen = Counter()  # type: Counter
+        self._seen_by_rank = Counter()  # type: Counter
+        self._n_seen = 0
         self.running_count = 0.0
 
     def see(self, card: Card) -> None:
         if self.seen[card] >= self.composition[card]:
             raise ValueError('%s seen more often than the composition holds it.' % card)
         self.seen[card] += 1
+        # tallies kept as cards are seen, so a per-decision snapshot stays cheap
+        self._seen_by_rank[card.rank] += 1
+        self._n_seen += 1
         self.running_count += self.tags.get(card.rank, 0.0)
 
     def see_many(self, cards: List[Card]) -> None:
@@ -34,20 +42,18 @@ class CardCounter(object):
 
     @property
     def n_seen(self) -> int:
-        return sum(self.seen.values())
+        return self._n_seen
 
     @property
     def n_unseen(self) -> int:
-        return sum(self.composition.values()) - self.n_seen
+        return self._n_cards - self._n_seen
 
     def unseen(self) -> List[Card]:
         return list((self.composition - self.seen).elements())
 
     def unseen_by_rank(self) -> Dict[Rank, int]:
-        by_rank = Counter()
-        for card, n in (self.composition - self.seen).items():
-            by_rank[card.rank] += n
-        return dict(by_rank)
+        return {rank: n - self._seen_by_rank[rank] for rank, n in self._by_rank.items()
+                if n > self._seen_by_rank[rank]}
 
     def true_count(self, cards_per_deck: int = 52) -> float:
         """

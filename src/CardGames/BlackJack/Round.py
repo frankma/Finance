@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from src.CardGames.BlackJack.Dealer import Dealer
 from src.CardGames.BlackJack.Hand import Hand, card_value
@@ -23,11 +23,28 @@ class Action(Enum):
 
 @dataclass(frozen=True)
 class Observation(object):
-    hand: Hand
+    """
+    what the player knows: the hand being played, every hand it holds after splits, the dealer's up card (never the
+    hole card), the rules, and, when counting, the count over every card shown since the shuffle
+    """
+    cards: Tuple[Card, ...]  # the hand being played
+    from_split: bool
     dealer_up: Card
     hand_index: int
-    n_hands: int
-    counter: Optional[CardCounter] = None  # what the player has seen of the shoe, for count-based play
+    hands: Tuple[Tuple[Card, ...], ...]
+    rules: Rules
+    running_count: Optional[float] = None  # None when nobody counts
+    true_count: Optional[float] = None
+    unseen: Optional[Tuple[Tuple[Rank, int], ...]] = None  # cards not yet shown, by rank
+
+    @property
+    def hand(self) -> Hand:
+        # a fresh copy to evaluate; changing it cannot touch the game
+        return Hand(list(self.cards), from_split=self.from_split)
+
+    @property
+    def n_hands(self) -> int:
+        return len(self.hands)
 
 
 class Round(Game):
@@ -146,7 +163,13 @@ class Round(Game):
         self.finished = True
 
     def observation(self, seat: int = 0) -> Observation:
-        return Observation(self.current_hand, self.dealer_up, self.active, len(self.hands), self.counter)
+        hand, counter = self.current_hand, self.counter
+        counts = {}
+        if counter is not None:
+            counts = dict(running_count=counter.running_count, true_count=counter.true_count(),
+                          unseen=tuple(sorted(counter.unseen_by_rank().items())))
+        return Observation(tuple(hand.cards), hand.from_split, self.dealer_up, self.active,
+                           tuple(tuple(h.cards) for h in self.hands), self.rules, **counts)
 
     def payoffs(self) -> List[float]:
         if not self.finished:
