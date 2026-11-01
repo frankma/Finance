@@ -31,6 +31,10 @@ class MonteCarloResult(object):
         std = float(values.std(ddof=1)) if values.size > 1 else 0.0  # unbiased sample variance
         return MonteCarloResult(float(values.mean()), std, int(values.size))
 
+    def to_dict(self) -> dict:
+        # plain numbers for JSON, e.g. a chart's data
+        return {'mean': float(self.mean), 'stderr': float(self.stderr), 'std': float(self.std), 'n': int(self.n)}
+
     def __str__(self):
         return '%.6f +/- %.6f (n = %i)' % (self.mean, self.stderr, self.n)
 

@@ -1,0 +1,96 @@
+/* paper-theme: salmon-paper financial-newspaper house style.
+   Tokens first (light, then dark twice: OS preference unless the host forces light, and host-forced dark),
+   then base elements. Page-specific CSS goes after this block and uses only these tokens. */
+:root {
+  /* surfaces and ink */
+  --bg: #fff1e5;        /* paper */
+  --surface: #fff7f0;   /* boxed exhibits, inputs, tiles */
+  --ink: #33302e;
+  --muted: #66605c;
+  --line: #ccc1b7;      /* hairline rules and borders */
+  --grid: #ecdccd;      /* chart gridlines */
+  --axis: #a39a92;      /* chart axis lines */
+  --code: #f2dfce;      /* wheat: code, table stripes, empty cells */
+  /* named accents (UI, not chart series) */
+  --claret: #990f3d; --claret-soft: #f4d6db;
+  --oxford: #0f5499; --oxford-soft: #d6e2ef;
+  --teal: #0d7680;   --teal-soft: #d4e7e3;
+  --mandarin: #cc5a0a; --mandarin-soft: #ffe2c8;
+  /* roles */
+  --label: var(--claret);      /* eyebrows, kicker labels */
+  --link: var(--oxford);
+  --accent: var(--oxford);     /* highlight in diagrams, selected state */
+  --accent-soft: var(--oxford-soft);
+  --tail: var(--claret);       /* losses, breaches, the bad outcome */
+  --tail-soft: var(--claret-soft);
+  --hedge: var(--teal);        /* gains, offsets, the good outcome */
+  --hedge-soft: var(--teal-soft);
+  /* categorical chart slots, in this order; validated on --bg and --surface (CVD, contrast, lightness) */
+  --s1: #0f5499; --s2: #990f3d; --s3: #0a8f9c; --s4: #cc5a0a; --s5: #6f45ad; --s6: #008a4c;
+  /* status: reserved, always with an icon or a word */
+  --good: #0b7a3e; --warning: #b36b00; --critical: #c00000;
+  --good-ink: #0b6b36; --warning-ink: #8a5300; --critical-ink: #a30000;
+  /* type */
+  --display: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+  --body: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+  --sans: 'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif;
+  --mono: 'IBM Plex Mono', 'SF Mono', Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1f1b19; --surface: #292421; --ink: #f2e6dc; --muted: #b3a69b; --line: #4a423c; --grid: #352f2b;
+    --axis: #6b625b; --code: #352f2b;
+    --claret: #ef7a9c; --claret-soft: #4a2130; --oxford: #7fb2e8; --oxford-soft: #1c2b3d;
+    --teal: #5fc3c9; --teal-soft: #1d3a3c; --mandarin: #ffa25c; --mandarin-soft: #4a3020;
+    --s1: #4f95e3; --s2: #c4456d; --s3: #22a3b2; --s4: #d9762a; --s5: #9b73d6; --s6: #3aad5c;
+    --good: #4cc27a; --warning: #e6a23c; --critical: #f0605a;
+    --good-ink: #4cc27a; --warning-ink: #e6a23c; --critical-ink: #f0605a;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #1f1b19; --surface: #292421; --ink: #f2e6dc; --muted: #b3a69b; --line: #4a423c; --grid: #352f2b;
+  --axis: #6b625b; --code: #352f2b;
+  --claret: #ef7a9c; --claret-soft: #4a2130; --oxford: #7fb2e8; --oxford-soft: #1c2b3d;
+  --teal: #5fc3c9; --teal-soft: #1d3a3c; --mandarin: #ffa25c; --mandarin-soft: #4a3020;
+  --s1: #4f95e3; --s2: #c4456d; --s3: #22a3b2; --s4: #d9762a; --s5: #9b73d6; --s6: #3aad5c;
+  --good: #4cc27a; --warning: #e6a23c; --critical: #f0605a;
+  --good-ink: #4cc27a; --warning-ink: #e6a23c; --critical-ink: #f0605a;
+  color-scheme: dark;
+}
+
+/* base */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body { background: var(--bg); color: var(--ink); font: 400 17px/1.6 var(--body); margin: 0; }
+h1, h2, h3 { font-family: var(--display); font-weight: 600; margin: 0; text-wrap: balance; }
+h1 { font-size: clamp(32px, 5vw, 48px); line-height: 1.08; letter-spacing: -0.01em; }
+h2 { font-size: 26px; line-height: 1.15; }
+h3 { font-size: 19px; line-height: 1.25; }
+p { margin: 0; }
+a { color: var(--link); }
+.eyebrow, .kicker { font: 600 12px/1.2 var(--sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--label); }
+.lede, .standfirst { font-size: 20px; line-height: 1.5; color: var(--muted); max-width: 60ch; }
+.rule-top { border-top: 4px solid var(--ink); padding-top: 10px; }
+code { font-family: var(--mono); font-size: 0.85em; background: var(--code); padding: 1px 5px; border-radius: 0; }
+pre { font-family: var(--mono); font-size: 13px; line-height: 1.55; background: var(--code); padding: 14px 16px; margin: 0; overflow-x: auto; }
+figure { margin: 0; }
+figcaption { font: 400 13.5px/1.5 var(--sans); color: var(--muted); }
+table { border-collapse: collapse; width: 100%; font: 400 14px/1.4 var(--sans); font-variant-numeric: tabular-nums; }
+th { font: 600 11.5px/1.2 var(--sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted);
+     text-align: left; padding: 7px 10px; border-bottom: 2px solid var(--ink); vertical-align: bottom; }
+td { padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+td.num, th.num { text-align: right; font-family: var(--mono); }
+button { font: 600 14px/1 var(--sans); padding: 10px 14px; border: 1px solid var(--line); border-radius: 0;
+         background: var(--surface); color: var(--ink); cursor: pointer; }
+button:hover:not(:disabled) { border-color: var(--ink); }
+button.primary, button[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--surface); }
+button:disabled { opacity: 0.4; cursor: default; }
+:focus-visible { outline: 2px solid var(--oxford); outline-offset: 2px; }
+input, select { font: 400 15px/1.2 var(--mono); color: var(--ink); background: var(--bg); border: 1px solid var(--line);
+                border-radius: 0; padding: 7px 8px; }
+footer { font: 400 13px/1.5 var(--sans); color: var(--muted); border-top: 1px solid var(--line); padding-top: 16px; }
+/* charts and diagrams stretch to their figure; never style bare `svg`, or MathJax formulas blow up in Safari */
+figure > svg, .fig-scroll > svg { display: block; width: 100%; height: auto; }
+mjx-container svg { display: inline; max-width: none; }
+mjx-container[display="true"] { overflow-x: auto; overflow-y: hidden; max-width: 100%; }
