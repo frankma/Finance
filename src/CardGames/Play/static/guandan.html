@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GuanDan Table</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="/static/theme.css">
+<link rel="stylesheet" href="/static/common.css">
+<style>
+.felt { gap: 14px; }
+.table { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) minmax(0, 1fr); grid-template-areas: ". north ." "west center east"; gap: 10px; }
+@media (max-width: 640px) { .table { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "north north" "west east" "center center"; } }
+.seat { border: 1px solid var(--line); background: var(--bg); padding: 8px 10px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.seat.to-act { border: 2px solid var(--oxford); padding: 7px 9px; }
+.seat.out { opacity: 0.6; }
+.seat-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 8px; }
+.seat-head b { font: 600 14px/1.2 var(--sans); }
+.count { font: 500 14px/1 var(--mono); font-variant-numeric: tabular-nums; }
+.tag { font: 600 11px/1 var(--sans); border: 1px solid var(--line); padding: 2px 5px; color: var(--muted); }
+.tag.mate { border-color: var(--teal); color: var(--teal); }
+.played { display: flex; flex-direction: column; gap: 4px; font: 400 12.5px/1.3 var(--sans); color: var(--muted); min-height: 20px; }
+.mini { display: flex; flex-wrap: wrap; gap: 2px; }
+.mini .card { width: 30px; height: 42px; font-size: 13px; padding: 2px 3px; flex-direction: row; justify-content: flex-start; gap: 1px; }
+.mini .card .s { font-size: 13px; align-self: flex-start; }
+.center { grid-area: center; border: 1px solid var(--line); background: var(--surface); padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.center .what { font: 600 15px/1.3 var(--sans); }
+.bomb { color: var(--claret); }
+/* your hand: one column per rank, the cards in it overlapping so each shows its corner */
+.hand { display: flex; flex-wrap: wrap; gap: 6px 4px; padding-top: 4px; }
+.col { display: flex; flex-direction: column; }
+.col .card { width: 44px; height: 62px; font-size: 16px; padding: 3px 4px; flex-direction: row; justify-content: flex-start; gap: 2px; cursor: pointer; user-select: none; }
+.col .card .s { font-size: 16px; align-self: flex-start; }
+.col .card + .card { margin-top: -38px; }
+.col .card.wild { border-color: var(--oxford); border-width: 2px; }
+.col .card.sel { background: var(--oxford-soft); border-color: var(--oxford); border-width: 2px; transform: translateY(-6px); }
+.col .card.opt { border-color: var(--teal); border-width: 2px; }
+.col .card:focus-visible { outline: 2px solid var(--oxford); outline-offset: 1px; }
+@media (max-width: 420px) { .col .card { width: 38px; height: 54px; font-size: 14px; } .col .card .s { font-size: 14px; } .col .card + .card { margin-top: -32px; } }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.result { font: 600 18px/1.3 var(--display); }
+.coach .alt { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 6px; font-size: 13.5px; }
+.coach button { padding: 5px 9px; font-size: 12.5px; }
+table.unseen { width: 100%; border-collapse: collapse; font: 400 13px/1.3 var(--sans); }
+table.unseen td { padding: 4px 0; border-bottom: 1px solid var(--line); }
+table.unseen td.num { text-align: right; font: 500 13px/1.3 var(--mono); font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div>
+      <span class="eyebrow">Card games · play</span>
+      <h1>GuanDan</h1>
+      <span class="small muted" id="rules"></span>
+    </div>
+    <nav class="links"><a href="/">Lobby</a><a href="/lab">Card Games Lab</a><a href="#" id="newSession">New match</a></nav>
+  </div>
+
+  <div class="layout">
+    <main class="box felt" aria-live="polite">
+      <div class="table">
+        <div style="grid-area:north" id="seat2"></div>
+        <div style="grid-area:west" id="seat3"></div>
+        <div class="center" id="center"></div>
+        <div style="grid-area:east" id="seat1"></div>
+      </div>
+      <div class="seat-head" style="justify-content:flex-start;gap:12px"><h2 style="font-size:20px">You</h2><span class="count" id="youCount"></span><span class="tag" id="youPlace" hidden></span><span class="result" id="result"></span></div>
+      <div class="played" id="youMove"></div>
+      <div class="hand" id="hand"></div>
+      <div class="actions" id="actions">
+        <button type="button" class="primary" id="play">Play<kbd>Enter</kbd></button>
+        <button type="button" id="pass">Pass<kbd>X</kbd></button>
+        <button type="button" id="clear">Clear<kbd>Esc</kbd></button>
+        <span class="small muted" id="selInfo"></span>
+      </div>
+      <div class="actions" id="choices" hidden></div>
+      <div class="actions" id="returnBar" hidden>
+        <span class="small" id="returnMsg"></span>
+        <button type="button" class="primary" id="returnBtn" disabled>Hand it back</button>
+      </div>
+      <div class="row" id="dealbar">
+        <button type="button" class="primary" id="deal">Deal the next hand<kbd>Enter</kbd></button>
+      </div>
+      <div class="row">
+        <button type="button" id="ask">Ask the coach<kbd>A</kbd></button>
+        <label class="check"><input type="checkbox" id="auto"> Show advice every turn</label>
+      </div>
+      <div class="coach" id="coach" hidden></div>
+      <p class="err" id="err" hidden></p>
+    </main>
+
+    <aside class="rail">
+      <div class="tiles">
+        <div class="tile"><span class="kicker">Your team</span><span class="v" id="lvYou"></span><span class="note">level</span></div>
+        <div class="tile"><span class="kicker">East &amp; West</span><span class="v" id="lvThem"></span><span class="note">level</span></div>
+        <div class="tile"><span class="kicker">Hands</span><span class="v" id="hands"></span><span class="note" id="won"></span></div>
+        <div class="tile"><span class="kicker">Playing</span><span class="v" id="level"></span><span class="note" id="declarer"></span></div>
+      </div>
+      <span class="small muted" id="followed"></span>
+      <div class="box" id="unseenBox" hidden>
+        <span class="kicker">Big cards you have not seen</span>
+        <table class="unseen" id="unseen"></table>
+        <span class="small muted">In the other three hands, your partner's included: you cannot tell whose.</span>
+      </div>
+      <div class="box">
+        <span class="kicker">Table log</span>
+        <ul class="log" id="log"></ul>
+      </div>
+      <div class="box fair-note">
+        <span class="kicker">What the coach knows</span>
+        <p>Your hand, the trick to beat, how many cards each seat holds, every card played and every pass. Never your partner's or your opponents' cards: the server never sends them to this page. The computer seats play by the same rule, your partner included, each from its own hand only.</p>
+      </div>
+    </aside>
+  </div>
+</div>
+<script src="/static/common.js"></script>
+<script>
+const GAME = 'guandan';
+let sid = null, view = null, advice = null, sel = new Set(), pick = null;
+
+function showError(e) { $('err').hidden = !e; $('err').textContent = e ? e.message || String(e) : ''; }
+const cap = s => s[0].toUpperCase() + s.slice(1);
+// how a card reads in a sentence: 'red joker', '10♥'
+const cardName = code => code === 'RJ' ? 'red joker' : code === 'BJ' ? 'black joker' : (RANK[code.slice(0, -1)] || code.slice(0, -1)) + SUIT[code.slice(-1)][0];
+const mini = codes => { const d = document.createElement('div'); d.className = 'mini'; drawCards(d, codes); return d; };
+
+async function start(fresh) {
+  sid = fresh ? null : prefs.get(GAME + '-session', null);
+  if (sid) {
+    try { view = await api('GET', `/api/${GAME}/${sid}`); return render(); } catch (e) { sid = null; }
+  }
+  const made = await api('POST', `/api/${GAME}/new`, {});
+  sid = made.id; prefs.set(GAME + '-session', sid); view = made.view; sel.clear(); render();
+}
+
+async function act(action, keep) {
+  showError(null);
+  try { view = await api('POST', `/api/${GAME}/${sid}/act`, action); advice = null; if (!keep) sel.clear(); pick = null; render(); }
+  catch (e) { if (e.status === 404) return start(true); showError(e); }
+}
+
+async function ask() {
+  try { advice = await api('GET', `/api/${GAME}/${sid}/advice`); renderAdvice(); } catch (e) { showError(e); }
+}
+
+// the hand indices holding these cards, one index per card, so a pair of the same card picks both copies
+function indicesOf(codes) {
+  const out = new Set();
+  codes.forEach(c => { const k = view.hand.findIndex((h, i) => h === c && !out.has(i)); if (k >= 0) out.add(k); });
+  return out;
+}
+
+function renderAdvice() {
+  const box = $('coach');
+  if (!advice || advice.kind === 'wait') { box.hidden = true; return; }
+  box.hidden = false;
+  if (advice.kind === 'return') {
+    box.innerHTML = `<b>Coach: hand back the ${advice.name}.</b> ${cap(advice.reason)}.<div class="alt"><button type="button" id="usePick">Select it</button></div>`;
+    $('usePick').onclick = () => toggle(view.hand.indexOf(advice.card));
+    return;
+  }
+  const line = (a, k) => `<div class="alt">${k ? `<span class="muted">Or ${a.move.desc}:</span> ${a.reason || ''}` : ''}
+    ${a.move.kind === 'play' ? `<button type="button" data-use="${k}">Select ${k ? 'these' : 'the coach\'s'} cards</button>` : ''}</div>`;
+  box.innerHTML = `<b>Coach: ${advice.move.kind === 'pass' ? 'pass' : 'play the ' + advice.move.desc}.</b> ${advice.reason ? cap(advice.reason) + '.' : ''}` +
+    line(advice, 0) + advice.alternatives.map((a, k) => line(a, k + 1)).join('');
+  const all = [advice, ...advice.alternatives];
+  box.querySelectorAll('[data-use]').forEach(b => b.onclick = () => { sel = indicesOf(all[+b.dataset.use].move.cards); renderHand(); });
+}
+
+function renderSeat(k) {
+  const s = view.seats[k], el = document.createElement('div');
+  el.className = 'seat' + (s.to_act ? ' to-act' : '') + (s.place ? ' out' : '');
+  const head = document.createElement('div'); head.className = 'seat-head';
+  head.innerHTML = `<b>${s.name}</b><span class="tag ${s.team === 'you' ? 'mate' : ''}">${s.team === 'you' ? 'your partner' : 'opponent'}</span>` +
+    `<span class="count">${s.place ? 'out ' + s.place : s.count + ' card' + (s.count === 1 ? '' : 's')}</span>`;
+  el.append(head, moveEl(s.move));
+  $('seat' + k).replaceChildren(el);
+}
+
+function moveEl(m) {
+  const d = document.createElement('div'); d.className = 'played';
+  if (!m) return d;
+  if (m.kind === 'pass') { d.textContent = 'passed'; return d; }
+  const t = document.createElement('span'); t.textContent = m.desc; if (m.bomb) t.className = 'bomb';
+  d.append(mini(m.cards), t);
+  return d;
+}
+
+function renderHand() {
+  const v = view, host = $('hand'), cols = [];
+  // one column per rank, in the order the server sorted the hand (level cards and wilds high)
+  v.hand.forEach((code, i) => {
+    const key = code === v.wild ? 'wild' : code.slice(0, -1) || code;
+    let col = cols.length && cols[cols.length - 1].key === key ? cols[cols.length - 1] : null;
+    if (!col) { col = { key, items: [] }; cols.push(col); }
+    col.items.push([code, i]);
+  });
+  const options = v.tribute ? v.tribute.options : [];
+  host.replaceChildren(...cols.map(col => {
+    const c = document.createElement('div'); c.className = 'col';
+    col.items.forEach(([code, i]) => {
+      const el = cardEl(code);
+      el.tabIndex = 0;
+      el.classList.toggle('wild', code === v.wild);
+      el.classList.toggle('sel', v.tribute ? pick === code && [...sel][0] === i : sel.has(i));
+      el.classList.toggle('opt', !!v.tribute && options.includes(code));
+      if (code === v.wild) el.title = 'Wild: stands for any card but a joker';
+      el.onclick = () => toggle(i);
+      el.onkeydown = e => { if (e.key === ' ') { e.preventDefault(); toggle(i); } };
+      c.append(el);
+    });
+    return c;
+  }));
+  const n = v.tribute ? 0 : sel.size;
+  $('selInfo').textContent = n ? `${n} card${n === 1 ? '' : 's'} selected` : (v.your_turn ? 'Click cards to select them' : '');
+  $('play').disabled = !n;
+}
+
+function toggle(i) {
+  const v = view;
+  if (v.tribute) {
+    const code = v.hand[i];
+    if (!v.tribute.options.includes(code)) return showError(new Error('That card cannot be handed back: return a 10 or lower, never a wild or a joker.'));
+    showError(null); pick = code; sel = new Set([i]);
+    $('returnBtn').disabled = false; $('returnBtn').textContent = `Hand back the ${cardName(code)}`;
+  } else if (v.your_turn) {
+    sel.has(i) ? sel.delete(i) : sel.add(i);
+  }
+  renderHand();
+}
+
+function render() {
+  const v = view;
+  $('rules').textContent = `Two packs with jokers · you and your partner against East and West · level ${v.level}` + (v.wild ? `, wild ${v.wild.slice(0, -1)}♥` : '');
+  const seated = v.seats.length > 0;
+  [1, 2, 3].forEach(k => { if (seated) renderSeat(k); else $('seat' + k).replaceChildren(); });
+  // the middle: the combination to beat, or who leads, or how the hand ended
+  const c = $('center'); c.replaceChildren();
+  const what = document.createElement('div'); what.className = 'what';
+  if (v.result) {
+    what.textContent = v.result.winners === 'you' ? `You and your partner win, up ${v.result.levels_up}` : `East and West win, up ${v.result.levels_up}`;
+    const order = document.createElement('span'); order.className = 'small muted'; order.textContent = 'Out in order: ' + v.result.order.join(', ');
+    c.append(what, order);
+  } else if (v.trick) {
+    what.innerHTML = `To beat: ${v.trick.seat}'s <span class="${v.trick.bomb ? 'bomb' : ''}">${v.trick.desc}</span>`;
+    c.append(what, mini(v.trick.cards));
+  } else if (v.phase === 'play') {
+    what.textContent = v.your_turn ? 'You lead: play any combination' : 'A new trick';
+    c.append(what);
+    if (v.last_trick.length) {
+      const w = [...v.last_trick].reverse().find(m => m.kind === 'play');
+      const s = document.createElement('span'); s.className = 'small muted'; s.textContent = `Last trick to ${w.seat === 'You' ? 'you' : w.seat}, with ${w.desc}.`;
+      c.append(s);
+    }
+  } else if (v.phase === 'return') {
+    what.textContent = 'Tribute before the hand'; c.append(what);
+    v.tribute.paid.forEach(t => {
+      const s = document.createElement('span'); s.className = 'small';
+      s.textContent = `${t.payer} pay${t.payer === 'You' ? '' : 's'} ${t.receiver === 'You' ? 'you' : t.receiver} the ${t.name}.`;
+      c.append(s);
+    });
+  } else {
+    what.textContent = v.phase === 'over' ? 'The match is over' : 'Waiting for the deal'; c.append(what);
+  }
+  const you = seated ? v.seats[0] : null;
+  $('youCount').textContent = you ? `${you.count} card${you.count === 1 ? '' : 's'}` : v.hand.length ? `${v.hand.length} cards` : '';
+  $('youPlace').hidden = !(you && you.place); if (you && you.place) $('youPlace').textContent = 'out ' + you.place;
+  $('youMove').hidden = !(you && you.move);
+  $('youMove').replaceChildren(...(you && you.move ? [moveEl(you.move)] : []));
+  $('result').textContent = v.result ? (v.result.winners === 'you' ? 'Your team wins the hand' : 'Your team loses the hand') : '';
+  renderHand();
+  $('actions').hidden = !v.your_turn;
+  $('pass').disabled = !v.can_pass;
+  $('choices').hidden = !v.choices;
+  if (v.choices) {
+    $('choices').replaceChildren(Object.assign(document.createElement('span'), { className: 'small', textContent: 'Your cards read several ways. Play them as:' }),
+      ...v.choices.map((d, k) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = cap(d); b.onclick = () => playSel(k); return b; }));
+  }
+  $('returnBar').hidden = v.phase !== 'return';
+  if (v.phase === 'return') { $('returnMsg').textContent = 'You received tribute. Pick a card to hand back (outlined: a 10 or lower, never a wild).'; $('returnBtn').disabled = !pick; if (!pick) $('returnBtn').textContent = 'Hand it back'; }
+  $('dealbar').hidden = !['deal', 'done', 'over'].includes(v.phase);
+  $('deal').innerHTML = v.phase === 'over' ? 'Start a new match' : v.phase === 'deal' && !v.match.hands ? 'Deal the first hand<kbd>Enter</kbd>' : 'Deal the next hand<kbd>Enter</kbd>';
+  // rail
+  $('lvYou').textContent = v.levels.you; $('lvThem').textContent = v.levels.them;
+  $('hands').textContent = v.match.hands;
+  $('won').textContent = v.match.hands ? `your team won ${v.match.won}` : 'no hands yet';
+  $('level').textContent = v.level;
+  $('declarer').textContent = v.declarer === null ? 'the first hand' : v.declarer === 'you' ? "your team's level" : "the opponents' level";
+  $('followed').textContent = v.stats.decisions ? `You made the coach's play on ${v.stats.followed} of ${v.stats.decisions} turns.` : '';
+  $('unseenBox').hidden = !v.unseen.length;
+  $('unseen').innerHTML = v.unseen.map(u => `<tr><td>${u.label}</td><td class="num">${u.n} of ${u.of}</td></tr>`).join('');
+  $('log').replaceChildren(...v.log.map(t => { const li = document.createElement('li'); li.textContent = t; return li; }));
+  if (v.match.winner) showError(null);
+  advice = null; renderAdvice();
+  if ($('auto').checked && (v.your_turn || v.phase === 'return')) ask();
+}
+
+function selected() { return [...sel].sort((a, b) => a - b).map(i => view.hand[i]); }
+function playSel(reading) {
+  if (!view.your_turn || !sel.size) return;
+  act(reading === undefined ? { type: 'play', cards: selected() } : { type: 'play', cards: selected(), reading }, true)
+    .then(() => { if (!view.choices) { sel.clear(); renderHand(); } });
+}
+
+$('play').onclick = () => playSel();
+$('pass').onclick = () => act({ type: 'pass' });
+$('clear').onclick = () => { sel.clear(); renderHand(); };
+$('returnBtn').onclick = () => { if (pick) act({ type: 'return', card: pick }); };
+$('deal').onclick = () => view.phase === 'over' ? start(true) : act({ type: 'deal' });
+$('ask').onclick = ask;
+$('newSession').onclick = e => { e.preventDefault(); start(true); };
+$('auto').checked = prefs.get('auto-coach', false);
+$('auto').onchange = e => { prefs.set('auto-coach', e.target.checked); if (e.target.checked) ask(); else { advice = null; renderAdvice(); } };
+document.addEventListener('keydown', e => {
+  if (e.metaKey || e.ctrlKey || e.altKey || !view) return;
+  const key = e.key.toLowerCase();
+  if (e.key === 'Enter' && view.your_turn && sel.size) { e.preventDefault(); playSel(); }
+  else if (e.key === 'Enter' && ['deal', 'done'].includes(view.phase)) { e.preventDefault(); act({ type: 'deal' }); }
+  else if (key === 'x' && view.can_pass) { e.preventDefault(); act({ type: 'pass' }); }
+  else if (e.key === 'Escape') { sel.clear(); renderHand(); }
+  else if (key === 'a') { e.preventDefault(); ask(); }
+});
+start(false).catch(showError);
+</script>
+</body>
+</html>

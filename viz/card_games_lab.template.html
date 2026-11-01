@@ -461,7 +461,7 @@ async function checkPlay() {
     return;
   }
   links.hidden = true;
-  $('play-msg').innerHTML = 'To play, start the game server: double-click <code>Play Card Games.command</code> in the Finance folder, or run <code>python -m src.CardGames.Play</code>. This page checks again every few seconds and shows the tables when it is up.';
+  $('play-msg').innerHTML = 'To play, start the game server: double-click <code>Play Card Games.command</code> next to this page in the viz folder, or run <code>python -m src.CardGames.Play</code>. This page checks again every few seconds and shows the tables when it is up.';
   setTimeout(checkPlay, 4000);
 }
 

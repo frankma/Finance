@@ -26,10 +26,10 @@ Play in the browser against the computer, with a coach that suggests each move a
 
 ```bash
 python -m src.CardGames.Play               # the lobby at http://127.0.0.1:8765
-python -m src.CardGames.Play blackjack     # straight to a table (or holdem)
+python -m src.CardGames.Play blackjack     # straight to a table: blackjack, holdem or guandan
 ```
 
-Or double-click `Play Card Games.command` in Finder: it starts the server and opens the lobby, and the Card Games Lab shows Play buttons whenever the server is running. Blackjack and no-limit hold'em are open (heads-up, four- or six-handed against computer seats that play from their own cards only); GuanDan follows. The game runs on a local Python server and the page is only ever sent your seat's view, so hidden cards never reach the browser.
+Or double-click [`viz/Play Card Games.command`](viz) in Finder, next to the Card Games Lab: it starts the server and opens the lobby, and the Lab shows Play buttons whenever the server is running. All three games are open: blackjack against the dealer, no-limit hold'em (heads-up, four- or six-handed) and GuanDan with a partner through a whole match from 2 to A, each against computer seats that play from their own cards only. The game runs on a local Python server and the page is only ever sent your seat's view, so hidden cards never reach the browser.
 
 
 The card game strategies are there to assist a human player, not to cheat for one. Every assistant sees only what its seat could legitimately know at the table: its own cards, the cards shown, every public action, and what follows from those, such as which cards are still unseen. It never sees another player's hidden cards, a face-down card or the undealt order. Each game's observation is an immutable snapshot, and every game is tested with [`assert_fair_play`](src/CardGames/Core/Fairness.py): two tables that differ only in cards the seat cannot see must give the same view and the same advice.

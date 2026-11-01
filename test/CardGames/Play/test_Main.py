@@ -47,7 +47,7 @@ class TestBusyPort(TestCase):
             other.close()
 
 
-LAUNCHER = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'Play Card Games.command')
+LAUNCHER = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'viz', 'Play Card Games.command')
 
 
 @skipUnless(shutil.which('bash'), 'the launcher is a bash script')

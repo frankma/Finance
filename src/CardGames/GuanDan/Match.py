@@ -110,22 +110,35 @@ class Match(object):
     def is_over(self) -> bool:
         return self.winner is not None
 
-    def play_hand(self, strategies: list) -> HandRecord:
+    def deal(self) -> List[List[Card]]:
         if self.is_over:
             raise ValueError('the match is over.')
-        level = self.level
-        hands = deal(self.rng)
-        tributes = []
+        return deal(self.rng)
+
+    def tribute(self, hands: List[List[Card]], strategies=None) -> Tuple[int, List[Tribute]]:
+        """
+        the leader of the coming hand, after tribute in place on hands; the first hand has none and a random leader
+        """
         if self.previous_order is None:
-            leader = self.rng.randrange(N_SEATS)
-        else:
-            leader, tributes = pay_tribute(hands, level, self.previous_order, strategies)
-        game = Round(hands, level, leader)
-        play_out(game, strategies)
+            return self.rng.randrange(N_SEATS), []
+        return pay_tribute(hands, self.level, self.previous_order, strategies)
+
+    def record(self, game: Round, leader: int, tributes: List[Tribute]) -> HandRecord:
+        # score a finished hand, moving the levels on
+        if game.result is None:
+            raise ValueError('the hand is not over yet.')
+        level = game.level
         self._score(game.result)
         record = HandRecord(level, leader, tuple(tributes), game.result, (self.levels[0], self.levels[1]))
         self.records.append(record)
         return record
+
+    def play_hand(self, strategies: list) -> HandRecord:
+        hands = self.deal()
+        leader, tributes = self.tribute(hands, strategies)
+        game = Round(hands, self.level, leader)
+        play_out(game, strategies)
+        return self.record(game, leader, tributes)
 
     def _score(self, result: HandResult) -> None:
         winners = result.winning_team

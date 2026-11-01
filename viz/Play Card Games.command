@@ -1,7 +1,7 @@
 #!/bin/bash
 # Double-click in Finder to play the card games: starts the local game server and opens the lobby in your browser.
 # Close this window, or press Ctrl+C in it, to stop the server. If the server is already running, it just opens it.
-cd "$(dirname "$0")" || exit 1
+cd "$(dirname "$0")/.." || exit 1  # the project root, one up from viz/
 
 pause() { read -r -n 1 -p "Press any key to close this window." _; echo; }
 

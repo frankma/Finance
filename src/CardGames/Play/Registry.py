@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from typing import Callable, Dict, List, Optional
 
 from src.CardGames.Play.BlackJackSession import PRESETS, BlackJackSession
+from src.CardGames.Play.GuanDanSession import GuanDanSession
 from src.CardGames.Play.HoldemSession import SEATS, HoldemSession
 from src.CardGames.Play.Session import Session
 
@@ -27,8 +28,9 @@ GAMES = [
     GameEntry('holdem', "Hold'em", "No-limit Texas hold'em against computer seats. The coach weighs your equity "
               'against the pot odds, from your cards and the board only.',
               'holdem.html', HoldemSession, (('seats', 'Table', tuple((str(n), label) for n, label in SEATS)),)),
-    GameEntry('guandan', 'GuanDan', 'The partnership climbing game, with a computer partner and two opponents.',
-              'guandan.html', None),
+    GameEntry('guandan', 'GuanDan', 'The partnership climbing game from 2 to A, with a computer partner against two '
+              'computer opponents. The coach plans your hand from your cards and the public play.',
+              'guandan.html', GuanDanSession),
 ]
 BY_NAME = {game.name: game for game in GAMES}  # type: Dict[str, GameEntry]
 
