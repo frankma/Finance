@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from typing import Callable, Dict, List, Optional
 
 from src.CardGames.Play.BlackJackSession import PRESETS, BlackJackSession
+from src.CardGames.Play.HoldemSession import SEATS, HoldemSession
 from src.CardGames.Play.Session import Session
 
 __author__ = 'frank.ma'
@@ -23,8 +24,9 @@ GAMES = [
               'You against the dealer from a six-deck shoe. The coach plays basic strategy and sizes bets on the count.',
               'blackjack.html', BlackJackSession,
               (('rules', 'Rules', tuple((key, label) for key, (label, _) in PRESETS.items())),)),
-    GameEntry('holdem', "Hold'em", 'No-limit Texas hold\'em against computer seats, with equity and pot odds.',
-              'holdem.html', None),
+    GameEntry('holdem', "Hold'em", "No-limit Texas hold'em against computer seats. The coach weighs your equity "
+              'against the pot odds, from your cards and the board only.',
+              'holdem.html', HoldemSession, (('seats', 'Table', tuple((str(n), label) for n, label in SEATS)),)),
     GameEntry('guandan', 'GuanDan', 'The partnership climbing game, with a computer partner and two opponents.',
               'guandan.html', None),
 ]
