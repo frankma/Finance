@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Card Games</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="/static/theme.css">
+<link rel="stylesheet" href="/static/common.css">
+<style>
+.games { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 8px; }
+@media (max-width: 860px) { .games { grid-template-columns: minmax(0, 1fr); } }
+.game h2 { font-size: 24px; }
+.game p { font: 400 14.5px/1.5 var(--sans); color: var(--muted); flex: 1; }
+.game select { width: 100%; font-family: var(--sans); font-size: 14px; }
+.game label { font: 600 12px/1.2 var(--sans); color: var(--muted); }
+.soon { opacity: 0.65; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div>
+      <span class="eyebrow">Card games · computer-assisted play</span>
+      <h1>Pick a table</h1>
+      <p class="lede">Play against the computer with a coach at your shoulder. The coach suggests a move and tells you why, using only what your seat can see.</p>
+    </div>
+    <nav class="links"><a href="/lab">Card Games Lab</a></nav>
+  </div>
+  <div class="box fair-note">
+    <span class="kicker">Fair play</span>
+    <p>The game runs on this computer's Python server, and your browser is only ever sent your seat's view: your own cards, the cards shown and the public moves. Hidden cards never leave the server, so neither the page nor the coach can peek.</p>
+  </div>
+  <div class="games" id="games"></div>
+  <p class="err" id="err" hidden></p>
+</div>
+<script src="/static/common.js"></script>
+<script>
+(async () => {
+  try {
+    const games = await api('GET', '/api/games');
+    $('games').innerHTML = games.map(g => `
+      <div class="box game ${g.available ? '' : 'soon'}">
+        <span class="kicker">${g.available ? 'Open' : 'Coming soon'}</span>
+        <h2>${g.title}</h2>
+        <p>${g.blurb}</p>
+        ${g.options.map(o => `<label for="${g.name}-${o.key}">${o.label}</label>
+          <select id="${g.name}-${o.key}" data-key="${o.key}">${o.choices.map(c => `<option value="${c.value}">${c.label}</option>`).join('')}</select>`).join('')}
+        <button class="primary" ${g.available ? '' : 'disabled'} data-game="${g.name}">${g.available ? 'Sit down' : 'Not yet'}</button>
+      </div>`).join('');
+    document.querySelectorAll('[data-game]').forEach(b => b.onclick = () => {
+      const q = new URLSearchParams();
+      b.parentElement.querySelectorAll('select').forEach(s => q.set(s.dataset.key, s.value));
+      location.href = '/' + b.dataset.game + '?' + q.toString();
+    });
+  } catch (e) { $('err').hidden = false; $('err').textContent = 'Could not reach the play server: ' + e.message; }
+})();
+</script>
+</body>
+</html>

@@ -36,6 +36,7 @@ class Observation(object):
     running_count: Optional[float] = None  # None when nobody counts
     true_count: Optional[float] = None
     unseen: Optional[Tuple[Tuple[Rank, int], ...]] = None  # cards not yet shown, by rank
+    bets: Tuple[float, ...] = ()  # the stake on each hand, doubles included
 
     @property
     def hand(self) -> Hand:
@@ -169,12 +170,19 @@ class Round(Game):
             counts = dict(running_count=counter.running_count, true_count=counter.true_count(),
                           unseen=tuple(sorted(counter.unseen_by_rank().items())))
         return Observation(tuple(hand.cards), hand.from_split, self.dealer_up, self.active,
-                           tuple(tuple(h.cards) for h in self.hands), self.rules, **counts)
+                           tuple(tuple(h.cards) for h in self.hands), self.rules,
+                           bets=tuple(h.bet for h in self.hands), **counts)
 
     def payoffs(self) -> List[float]:
         if not self.finished:
             raise ValueError('the round is not over yet.')
         return [sum(self._settle(hand) for hand in self.hands)]
+
+    def hand_payoff(self, index: int) -> float:
+        # net result of one hand, e.g. to report a split hand by hand
+        if not self.finished:
+            raise ValueError('the round is not over yet.')
+        return self._settle(self.hands[index])
 
     def _settle(self, hand: Hand) -> float:
         dealer = self.dealer_hand
