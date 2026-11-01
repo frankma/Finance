@@ -8,3 +8,8 @@ def close_figures():
     # would otherwise receive the next test's 2D plot calls
     yield
     plt.close('all')
+
+
+def pytest_configure(config):
+    # plotting tests call plt.show(), which only warns under the non-interactive Agg backend the suite runs with
+    config.addinivalue_line('filterwarnings', 'ignore:FigureCanvasAgg is non-interactive:UserWarning')
