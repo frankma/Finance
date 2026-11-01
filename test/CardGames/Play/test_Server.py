@@ -40,16 +40,16 @@ class TestServer(TestCase):
             self.assertIsNone(self.request('GET', path, headers=True)[2].get('Access-Control-Allow-Origin'), path)
 
     def test_pages(self):
-        for path in ('/', '/blackjack', '/holdem', '/static/holdem.html', '/static/theme.css', '/static/common.js', '/static/common.css', '/lab'):
+        for path in ('/', '/blackjack', '/holdem', '/guandan', '/static/holdem.html', '/static/theme.css', '/static/common.js', '/static/common.css', '/lab'):
             self.assertEqual(self.request('GET', path)[0], 200, path)
-        for path in ('/guandan', '/static/Server.py', '/static/..%2FServer.py', '/nothing'):
+        for path in ('/poker', '/static/Server.py', '/static/..%2FServer.py', '/nothing'):
             self.assertEqual(self.request('GET', path)[0], 404, path)
 
     def test_api(self):
         status, body = self.request('GET', '/api/games')
         self.assertEqual(status, 200)
         self.assertEqual(json.loads(body), lobby())
-        self.assertEqual(playable(), ['blackjack', 'holdem'])
+        self.assertEqual(playable(), ['blackjack', 'holdem', 'guandan'])
         status, body = self.request('POST', '/api/blackjack/new', {'rules': 'h17'})
         made = json.loads(body)
         sid = made['id']
@@ -64,7 +64,7 @@ class TestServer(TestCase):
         status, body = self.request('POST', '/api/blackjack/%s/act' % sid, {'type': 'move', 'move': 'fly'})
         self.assertEqual((status, json.loads(body)['error']), (400, "unknown move 'fly'."))
         self.assertEqual(self.request('GET', '/api/blackjack/unknown')[0], 404)
-        self.assertEqual(self.request('POST', '/api/guandan/new', {})[0], 404)
+        self.assertEqual(self.request('POST', '/api/poker/new', {})[0], 404)
         self.assertEqual(self.request('GET', '/api/holdem/%s' % sid)[0], 404, 'a session belongs to its game.')
 
     def test_holdem_api(self):
@@ -80,3 +80,21 @@ class TestServer(TestCase):
         self.assertEqual(view['phase'], 'done')
         status, body = self.request('POST', '/api/holdem/%s/act' % sid, {'type': 'move', 'move': 'raise', 'to': 1})
         self.assertEqual((status, json.loads(body)['error']), (400, 'it is not your turn.'))
+
+    def test_guandan_api(self):
+        sid = json.loads(self.request('POST', '/api/guandan/new', {})[1])['id']
+        view = json.loads(self.request('POST', '/api/guandan/%s/act' % sid, {'type': 'deal'})[1])
+        for _ in range(3):
+            if not view['your_turn']:
+                break
+            advice = json.loads(self.request('GET', '/api/guandan/%s/advice' % sid)[1])
+            move = advice['move']
+            action = {'type': 'pass'} if move['kind'] == 'pass' else {'type': 'play', 'cards': move['cards']}
+            status, body = self.request('POST', '/api/guandan/%s/act' % sid, action)
+            self.assertEqual(status, 200)
+            view = json.loads(body)
+            if view['choices']:
+                action['reading'] = view['choices'].index(move['desc'])
+                view = json.loads(self.request('POST', '/api/guandan/%s/act' % sid, action)[1])
+        status, body = self.request('POST', '/api/guandan/%s/act' % sid, {'type': 'play', 'cards': ['ZZ']})
+        self.assertEqual(status, 400)
