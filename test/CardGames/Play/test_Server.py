@@ -22,15 +22,22 @@ class TestServer(TestCase):
         cls.server.shutdown()
         cls.server.server_close()
 
-    def request(self, method, path, body=None):
+    def request(self, method, path, body=None, headers=False):
         data = json.dumps(body).encode('utf-8') if body is not None else None
         req = urllib.request.Request(self.base + path, data=data, method=method,
                                      headers={'Content-Type': 'application/json'})
         try:
             with urllib.request.urlopen(req) as res:
-                return res.status, res.read()
+                return (res.status, res.read(), res.headers) if headers else (res.status, res.read())
         except urllib.error.HTTPError as e:
-            return e.code, e.read()
+            return (e.code, e.read(), e.headers) if headers else (e.code, e.read())
+
+    def test_only_the_game_list_is_shared(self):
+        # the Lab, opened as a file, may ask whether the server is up; no other page may read a game in progress
+        self.assertEqual(self.request('GET', '/api/games', headers=True)[2].get('Access-Control-Allow-Origin'), '*')
+        sid = json.loads(self.request('POST', '/api/blackjack/new', {})[1])['id']
+        for path in ('/api/blackjack/%s' % sid, '/api/blackjack/%s/advice' % sid, '/'):
+            self.assertIsNone(self.request('GET', path, headers=True)[2].get('Access-Control-Allow-Origin'), path)
 
     def test_pages(self):
         for path in ('/', '/blackjack', '/static/theme.css', '/static/common.js', '/static/common.css', '/lab'):
