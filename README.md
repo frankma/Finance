@@ -15,7 +15,7 @@ Quantitative finance and related topics in implementation.
 | [src/Algorithms](src/Algorithms) | Volatility crush around events, asset mixing |
 | [src/Utils](src/Utils) | Root finders and regression, interpolation and extrapolation, random sequences, FX quotes, payoffs |
 | [src/Assets](src/Assets) / [src/Quote](src/Quote) / [src/DataObject](src/DataObject) | Option, quote and market data objects |
-| [src/CardGames](src/CardGames) | A shared card, shoe, counter and game core, with blackjack (basic strategy, hi-lo, Kelly sizing, EV and bankroll simulation), no-limit hold'em and Omaha (side pots, equity, outs, pot odds) and GuanDan (combinations, tribute, levels, a planning bot) |
+| [src/CardGames](src/CardGames) | A shared card, shoe, counter and game core, with blackjack (basic strategy, hi-lo, Kelly sizing, EV and bankroll simulation), no-limit hold'em and Omaha (side pots, equity, outs, pot odds) and GuanDan (combinations, tribute, levels, a planning bot); [Play](src/CardGames/Play) serves them in the browser with a coach |
 | [src/MiniProjects](src/MiniProjects) | Delta hedging, Greeks P&L, PCA, panel regression, zero curve, scenarios, heat equation, maze and sudoku solvers |
 | [viz](viz) | Interactive pages: the [SABR smile lab](viz/sabr_smile_lab.html) and the [Card Games Lab](viz/card_games_lab.html), which `python -m viz.build_card_games_lab` rebuilds from the CardGames engines |
 | [doc](doc) | LaTeX notes on the models |
