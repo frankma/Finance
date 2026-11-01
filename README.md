@@ -20,7 +20,17 @@ Quantitative finance and related topics in implementation.
 | [viz](viz) | Interactive pages: the [SABR smile lab](viz/sabr_smile_lab.html) and the [Card Games Lab](viz/card_games_lab.html), which `python -m viz.build_card_games_lab` rebuilds from the CardGames engines |
 | [doc](doc) | LaTeX notes on the models |
 
-### Card games: fair play
+### Card games: play and fair play
+
+Play in the browser against the computer, with a coach that suggests each move and says why:
+
+```bash
+python -m src.CardGames.Play               # the lobby at http://127.0.0.1:8765
+python -m src.CardGames.Play blackjack     # straight to a table
+```
+
+Blackjack is open; hold'em and GuanDan follow. The game runs on a local Python server and the page is only ever sent your seat's view, so hidden cards never reach the browser.
+
 
 The card game strategies are there to assist a human player, not to cheat for one. Every assistant sees only what its seat could legitimately know at the table: its own cards, the cards shown, every public action, and what follows from those, such as which cards are still unseen. It never sees another player's hidden cards, a face-down card or the undealt order. Each game's observation is an immutable snapshot, and every game is tested with [`assert_fair_play`](src/CardGames/Core/Fairness.py): two tables that differ only in cards the seat cannot see must give the same view and the same advice.
 

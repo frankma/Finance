@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Blackjack Table</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="/static/theme.css">
+<link rel="stylesheet" href="/static/common.css">
+<style>
+.felt { gap: 18px; }
+.seat { display: flex; flex-direction: column; gap: 8px; }
+.seat-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; }
+.seat-head h2 { font-size: 20px; }
+.total { font: 500 15px/1 var(--mono); color: var(--muted); }
+.hands { display: flex; flex-wrap: wrap; gap: 14px; }
+.hand { border: 1px solid var(--line); padding: 10px; display: flex; flex-direction: column; gap: 8px; background: var(--bg); min-width: 0; }
+.hand.active { border: 2px solid var(--oxford); padding: 9px; }
+.hand .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; font: 400 13px/1.2 var(--sans); }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.actions button.advised { outline: 2px solid var(--oxford); outline-offset: 2px; }
+.betbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.betbar input { width: 96px; }
+.result { font: 600 18px/1.3 var(--display); }
+.count .v.hidden { color: var(--muted); }
+hr.thin { border: 0; border-top: 1px solid var(--line); margin: 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div>
+      <span class="eyebrow">Card games · play</span>
+      <h1>Blackjack</h1>
+      <span class="small muted" id="rules"></span>
+    </div>
+    <nav class="links"><a href="/">Lobby</a><a href="/lab">Card Games Lab</a><a href="#" id="newSession">New session</a></nav>
+  </div>
+
+  <div class="layout">
+    <main class="box felt" aria-live="polite">
+      <div class="seat">
+        <div class="seat-head"><h2>Dealer</h2><span class="total" id="dealerTotal"></span></div>
+        <div class="cards" id="dealer"></div>
+      </div>
+      <hr class="thin">
+      <div class="seat">
+        <div class="seat-head"><h2>You</h2><span class="result" id="result"></span></div>
+        <div class="hands" id="hands"></div>
+      </div>
+      <div class="actions" id="actions">
+        <button type="button" data-move="hit">Hit<kbd>H</kbd></button>
+        <button type="button" data-move="stand">Stand<kbd>S</kbd></button>
+        <button type="button" data-move="double">Double<kbd>D</kbd></button>
+        <button type="button" data-move="split">Split<kbd>P</kbd></button>
+        <button type="button" data-move="surrender">Surrender<kbd>R</kbd></button>
+      </div>
+      <div class="betbar" id="betbar">
+        <label for="bet" class="small">Bet</label>
+        <input type="number" id="bet" min="5" step="5">
+        <button type="button" id="betMin"></button>
+        <button type="button" id="betCoach" hidden></button>
+        <button type="button" class="primary" id="deal">Deal<kbd>Enter</kbd></button>
+      </div>
+      <div class="row">
+        <button type="button" id="ask">Ask the coach<kbd>C</kbd></button>
+        <label class="check"><input type="checkbox" id="auto"> Show advice every turn</label>
+      </div>
+      <div class="coach" id="coach" hidden></div>
+      <p class="err" id="err" hidden></p>
+    </main>
+
+    <aside class="rail">
+      <div class="tiles">
+        <div class="tile"><span class="kicker">Bankroll</span><span class="v" id="bankroll"></span><span class="note" id="net"></span></div>
+        <div class="tile"><span class="kicker">Rounds</span><span class="v" id="rounds"></span><span class="note" id="followed"></span></div>
+      </div>
+      <div class="box count">
+        <div class="row" style="justify-content:space-between"><span class="kicker">Hi-lo count</span>
+          <label class="check"><input type="checkbox" id="hideCount"> Hide</label></div>
+        <div class="tiles" style="border-top-width:1px">
+          <div class="tile"><span class="note">Running</span><span class="v" id="running"></span></div>
+          <div class="tile"><span class="note">True</span><span class="v" id="true"></span></div>
+          <div class="tile"><span class="note">Decks left</span><span class="v" id="decks"></span></div>
+          <div class="tile"><span class="note">Est. edge</span><span class="v" id="edge"></span></div>
+        </div>
+        <span class="small muted" id="shoe"></span>
+      </div>
+      <div class="box">
+        <span class="kicker">Table log</span>
+        <ul class="log" id="log"></ul>
+      </div>
+      <div class="box fair-note">
+        <span class="kicker">What the coach knows</span>
+        <p>Your cards, the dealer's up card, the rules and every card shown since the shuffle. Never the dealer's hole card or the order of the shoe: the server never sends them to this page.</p>
+      </div>
+    </aside>
+  </div>
+</div>
+<script src="/static/common.js"></script>
+<script>
+const GAME = 'blackjack';
+let sid = null, view = null, advice = null;
+const NAMES = { hit: 'Hit', stand: 'Stand', double: 'Double', split: 'Split', surrender: 'Surrender' };
+const OUTCOME = { win: ['Win', 'good'], blackjack: ['Blackjack', 'good'], lose: ['Lose', 'bad'], bust: ['Bust', 'bad'],
+                  'dealer blackjack': ['Dealer blackjack', 'bad'], surrendered: ['Surrendered', 'bad'], push: ['Push', 'even'] };
+
+function showError(e) { $('err').hidden = !e; $('err').textContent = e ? e.message || String(e) : ''; }
+
+async function start(fresh) {
+  const params = Object.fromEntries(new URLSearchParams(location.search));
+  sid = fresh ? null : prefs.get(GAME + '-session', null);
+  if (sid) {
+    try { view = await api('GET', `/api/${GAME}/${sid}`); return render(); } catch (e) { sid = null; }
+  }
+  const made = await api('POST', `/api/${GAME}/new`, params);
+  sid = made.id; prefs.set(GAME + '-session', sid); view = made.view; render();
+}
+
+async function act(action) {
+  showError(null);
+  try { view = await api('POST', `/api/${GAME}/${sid}/act`, action); advice = null; render(); }
+  catch (e) { if (e.status === 404) return start(true); showError(e); }
+}
+
+async function ask() {
+  try { advice = await api('GET', `/api/${GAME}/${sid}/advice`); renderAdvice(); } catch (e) { showError(e); }
+}
+
+function renderAdvice() {
+  const box = $('coach');
+  document.querySelectorAll('[data-move]').forEach(b => b.classList.toggle('advised', !!advice && advice.kind === 'move' && b.dataset.move === advice.move));
+  if (!advice) { box.hidden = true; return; }
+  box.hidden = false;
+  box.innerHTML = advice.kind === 'move'
+    ? `<b>Coach: ${NAMES[advice.move]}.</b> ${advice.reason[0].toUpperCase() + advice.reason.slice(1)}.`
+    : `<b>Coach: bet ${advice.bet}.</b> ${advice.reason[0].toUpperCase() + advice.reason.slice(1)}.`;
+  const bc = $('betCoach');
+  bc.hidden = advice.kind !== 'bet'; bc.textContent = `Coach's bet: ${advice.bet}`;
+}
+
+function render() {
+  const v = view;
+  $('rules').textContent = v.rules + ' · blackjack pays 3:2 · bets ' + v.min_bet + ' to ' + v.max_bet;
+  // dealer: the up card, then a face-down back until the round is over
+  const dealerCards = v.dealer ? (v.dealer.hidden ? [...v.dealer.cards, null] : v.dealer.cards) : [];
+  drawCards($('dealer'), dealerCards);
+  $('dealerTotal').textContent = v.dealer && !v.dealer.hidden ? v.dealer.total : '';
+  $('hands').replaceChildren(...v.hands.map((h, k) => {
+    const el = document.createElement('div');
+    el.className = 'hand' + (k === v.active ? ' active' : '');
+    const cards = document.createElement('div'); cards.className = 'cards'; drawCards(cards, h.cards);
+    const out = h.outcome ? `<span class="chip ${OUTCOME[h.outcome][1]}">${OUTCOME[h.outcome][0]}</span>` : '';
+    const meta = document.createElement('div'); meta.className = 'meta';
+    meta.innerHTML = `<span class="total">${h.soft ? 'soft ' : ''}${h.total}</span><span class="muted">bet ${fmt(h.bet)}</span>${out}`;
+    el.append(cards, meta);
+    return el;
+  }));
+  $('result').textContent = v.phase === 'done' ? (v.payoff > 0 ? `You win ${fmt(v.payoff)}` : v.payoff < 0 ? `You lose ${fmt(-v.payoff)}` : 'Push') : '';
+  // actions while a hand is in play, the bet bar between rounds
+  const playing = v.phase === 'play';
+  $('actions').hidden = !playing;
+  document.querySelectorAll('[data-move]').forEach(b => { b.disabled = !v.legal.includes(b.dataset.move); });
+  $('betbar').hidden = playing;
+  const bet = $('bet');
+  bet.min = v.min_bet; bet.max = v.max_bet;
+  if (!bet.value || document.activeElement !== bet) bet.value = Math.min(v.last_bet, v.max_bet);
+  $('betMin').textContent = `Minimum ${v.min_bet}`;
+  $('deal').disabled = v.broke;
+  if (v.broke) showError(new Error('The bankroll is below the minimum bet. Start a new session to play on.'));
+  // rail
+  $('bankroll').textContent = fmt(v.bankroll);
+  $('net').textContent = signed(v.stats.net) + ' this session';
+  $('rounds').textContent = fmt(v.stats.rounds);
+  $('followed').textContent = v.stats.decisions ? `followed the coach on ${v.stats.followed} of ${v.stats.decisions} play${v.stats.decisions === 1 ? '' : 's'}` : 'no plays yet';
+  const hide = $('hideCount').checked;
+  const c = v.count;
+  $('running').textContent = hide ? '·' : signed(c.running);
+  $('true').textContent = hide ? '·' : signed(c.true, 1);
+  $('decks').textContent = fmt(c.decks_left, 1);
+  $('edge').textContent = hide ? '·' : signed(c.edge * 100, 2) + '%';
+  $('shoe').textContent = `${fmt(v.shoe.cards_left)} of ${fmt(v.shoe.n_cards)} cards left in the shoe` + (v.shoe.reshuffle_next ? '; the cut card is out, so it is reshuffled before the next round.' : '.');
+  $('log').replaceChildren(...v.log.map(t => { const li = document.createElement('li'); li.textContent = t; return li; }));
+  advice = null; renderAdvice();
+  if ($('auto').checked && !v.broke) ask();
+}
+
+document.querySelectorAll('[data-move]').forEach(b => b.onclick = () => act({ type: 'move', move: b.dataset.move }));
+$('deal').onclick = () => act({ type: 'deal', bet: +$('bet').value });
+$('betMin').onclick = () => { $('bet').value = view.min_bet; };
+$('betCoach').onclick = () => { if (advice && advice.kind === 'bet') $('bet').value = advice.bet; };
+$('ask').onclick = ask;
+$('newSession').onclick = e => { e.preventDefault(); start(true); };
+$('auto').checked = prefs.get('auto-coach', false);
+$('auto').onchange = e => { prefs.set('auto-coach', e.target.checked); if (e.target.checked) ask(); else { advice = null; renderAdvice(); } };
+$('hideCount').checked = prefs.get('hide-count', false);
+$('hideCount').onchange = e => { prefs.set('hide-count', e.target.checked); render(); };
+document.addEventListener('keydown', e => {
+  if (e.metaKey || e.ctrlKey || e.altKey || !view) return;
+  if (e.target.tagName === 'INPUT' && e.key !== 'Enter') return;
+  const key = e.key.toLowerCase();
+  const move = { h: 'hit', s: 'stand', d: 'double', p: 'split', r: 'surrender' }[key];
+  if (move && view.phase === 'play' && view.legal.includes(move)) { e.preventDefault(); act({ type: 'move', move }); }
+  else if (e.key === 'Enter' && view.phase !== 'play' && !view.broke) { e.preventDefault(); act({ type: 'deal', bet: +$('bet').value }); }
+  else if (key === 'c') { e.preventDefault(); ask(); }
+});
+start(false).catch(showError);
+</script>
+</body>
+</html>
