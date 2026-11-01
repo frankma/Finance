@@ -70,16 +70,19 @@ class Handler(BaseHTTPRequestHandler):
         if not self.quiet:
             super().log_message(fmt, *args)
 
-    def _send(self, status: int, body: bytes, content_type: str) -> None:
+    def _send(self, status: int, body: bytes, content_type: str, shared: bool = False) -> None:
         self.send_response(status)
+        if shared:
+            # the read-only game list may be read by any page, e.g. the Lab opened as a file, to see the server is up
+            self.send_header('Access-Control-Allow-Origin', '*')
         self.send_header('Content-Type', content_type)
         self.send_header('Content-Length', str(len(body)))
         self.send_header('Cache-Control', 'no-store')
         self.end_headers()
         self.wfile.write(body)
 
-    def _json(self, status: int, payload) -> None:
-        self._send(status, json.dumps(payload).encode('utf-8'), 'application/json')
+    def _json(self, status: int, payload, shared: bool = False) -> None:
+        self._send(status, json.dumps(payload).encode('utf-8'), 'application/json', shared)
 
     def _file(self, path: str) -> None:
         with open(path, 'rb') as f:
@@ -111,7 +114,7 @@ class Handler(BaseHTTPRequestHandler):
             elif len(parts) == 1 and parts[0] in BY_NAME and BY_NAME[parts[0]].start is not None:
                 return self._file(os.path.join(STATIC, BY_NAME[parts[0]].page))
             elif parts == ['api', 'games']:
-                return self._json(200, lobby())
+                return self._json(200, lobby(), shared=True)
             elif len(parts) == 3 and parts[0] == 'api':
                 session = self.sessions.get(parts[1], parts[2])
                 with self.sessions.lock:

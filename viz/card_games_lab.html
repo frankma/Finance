@@ -196,6 +196,12 @@ table.hands td span { display: block; font: 600 11.5px/1.1 var(--sans); }
 .ctl output { font: 500 14px var(--mono); }
 .yes { color: var(--good-ink); font-weight: 600; }
 .no { color: var(--critical-ink); font-weight: 600; }
+.playbar { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--teal); padding: 14px 18px; margin-bottom: 14px; display: flex; flex-direction: column; gap: 8px; }
+.playbar p { font: 400 15px/1.5 var(--sans); max-width: 80ch; }
+.play-links { display: flex; flex-wrap: wrap; gap: 8px; }
+.play-links a { font: 600 14px/1 var(--sans); padding: 10px 14px; border: 1px solid var(--ink); text-decoration: none; color: var(--ink); }
+.play-links a.primary { background: var(--ink); color: var(--surface); }
+[hidden] { display: none !important; }
 .warn { border: 1px solid var(--warning); color: var(--warning-ink); padding: 8px 12px; font: 600 13px/1.4 var(--sans); }
 </style>
 </head>
@@ -206,6 +212,11 @@ table.hands td span { display: block; font: 600 11.5px/1.1 var(--sans); }
     <h1>Card Games Lab</h1>
     <p class="lede">What the assistants in <code>src/CardGames</code> know at the table, and what that knowledge is worth. Every number here comes from simulations run by the Python engines, with fixed seeds.</p>
   </header>
+  <div class="playbar" id="playbar">
+    <span class="kicker">Play</span>
+    <p id="play-msg">Checking whether the game server is running…</p>
+    <div class="play-links" id="play-links" hidden></div>
+  </div>
   <div id="quick" class="warn" hidden>Quick build: small samples, so the numbers are noisy. Rebuild without <code>--quick</code> for the real figures.</div>
 
   <div class="fair">
@@ -531,6 +542,25 @@ function renderOdds() {
     }).join('') + '</tbody>';
 }
 
+/* ---------- play: link to the tables when the local game server is up ---------- */
+// served by the play server at /lab, use it; opened as a file, look for it on the default port
+const PLAY = location.protocol.startsWith('http') && location.pathname.replace(/\/$/, '') === '/lab' ? location.origin : 'http://127.0.0.1:8765';
+async function checkPlay() {
+  let games = null;
+  try { const r = await fetch(PLAY + '/api/games', { cache: 'no-store' }); if (r.ok) games = await r.json(); } catch (e) {}
+  const links = $('play-links');
+  if (games) {
+    $('play-msg').textContent = 'The game server is running. Sit down at a table, with the coach at your shoulder.';
+    links.innerHTML = games.filter(g => g.available).map((g, k) => `<a class="${k ? '' : 'primary'}" href="${PLAY}/${g.name}">Play ${g.title}</a>`).join('') +
+      `<a href="${PLAY}/">All games</a>`;
+    links.hidden = false;
+    return;
+  }
+  links.hidden = true;
+  $('play-msg').innerHTML = 'To play, start the game server: double-click <code>Play Card Games.command</code> in the Finance folder, or run <code>python -m src.CardGames.Play</code>. This page checks again every few seconds and shows the tables when it is up.';
+  setTimeout(checkPlay, 4000);
+}
+
 /* ---------- footer ---------- */
 function renderFooter() {
   const z = DATA.sizes;
@@ -538,6 +568,7 @@ function renderFooter() {
 }
 
 function renderAll() { renderEV(); renderBankroll(); renderOdds(); }
+checkPlay();
 if (DATA) {
   $('quick').hidden = !DATA.quick;
   renderStats(); renderStrategy(); renderHands(); renderFooter();
