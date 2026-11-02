@@ -107,9 +107,10 @@ class HoldemSession(Session):
         self.hands += 1
         self._advice = None
         r = self.round
-        self.log.append('Hand %i: %s on the button; %s posts %i, %s posts %i.' % (
-            self.hands, self.names[r.button], self.names[r.small_blind_seat], self.rules.small_blind,
-            self.names[r.big_blind_seat], self.rules.big_blind))
+        posts = lambda seat: '%s post%s' % (self.names[seat], '' if seat == 0 else 's')
+        self.log.append('Hand %i: %s on the button; %s %i, %s %i.' % (
+            self.hands, self.names[r.button], posts(r.small_blind_seat), self.rules.small_blind,
+            posts(r.big_blind_seat), self.rules.big_blind))
         self._run()
 
     def _parse(self, name: Optional[str], to) -> Move:

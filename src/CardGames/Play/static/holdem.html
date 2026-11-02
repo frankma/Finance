@@ -57,11 +57,12 @@
       <h1>Hold'em</h1>
       <span class="small muted" id="rules"></span>
     </div>
-    <nav class="links"><a href="/">Lobby</a><a href="/lab">Card Games Lab</a><a href="#" id="rulesLink" data-rules="">Rules<kbd>?</kbd></a><a href="#" id="newSession">New session</a></nav>
+    <nav class="links"><a href="/">Lobby</a><a href="/lab">Card Games Lab</a><a href="#" id="rulesLink" data-rules="">Rules<kbd>?</kbd></a><a href="?mode=learn" id="modeLink">Lessons</a><a href="#" id="newSession">New session</a></nav>
   </div>
 
   <div class="layout">
     <main class="box felt" aria-live="polite">
+      <div class="lesson" id="lesson" hidden></div>
       <div class="opponents" id="opponents"></div>
       <div class="middle">
         <div class="cards board" id="board"></div>
@@ -122,7 +123,7 @@
 </div>
 <script src="/static/common.js"></script>
 <script>
-const table = seat('holdem');
+const table = seat('holdem', MODE);
 let view = null, advice = null;
 // the rules text, beside the table; terms in the coach's reasons link to their section
 const rules = rulesPanel('holdem', () => $('rules').textContent);
@@ -170,7 +171,7 @@ function seatTags(s) {
 
 function lastMove(s) {
   if (!s.last || !view.street || s.last.street !== view.street) return '';
-  return { fold: 'folded', check: 'checked', call: 'called', bet: 'bet ' + fmt(s.last.to), raise: 'raised to ' + fmt(s.last.to) }[s.last.action];
+  return s.last.action;
 }
 
 function renderSeat(s) {
@@ -182,8 +183,11 @@ function renderSeat(s) {
   const head = document.createElement('div'); head.className = 'seat-head';
   head.innerHTML = `<b>${s.name}</b><span class="stack">${fmt(s.stack)}</span>`;
   const foot = document.createElement('div'); foot.className = 'seat-foot';
-  const did = !s.in_hand && view.phase !== 'deal' ? 'folded' : lastMove(s);
-  foot.innerHTML = seatTags(s) + (s.bet ? `<span class="betamt">bet ${fmt(s.bet)}</span>` : '') + (did ? `<span>${did}</span>` : '') + (s.hand ? `<span>${s.hand}</span>` : '');
+  // one label for what the seat did on this street, with its chips in when it has any: 'bet 2', 'raised to 6'
+  const last = !s.in_hand && view.phase !== 'deal' ? 'fold' : lastMove(s);
+  const did = last === 'fold' ? 'folded' : last === 'check' ? 'checked' : '';
+  const chips = !s.bet ? '' : last === 'raise' ? `raised to ${fmt(s.bet)}` : last === 'call' ? `called ${fmt(s.bet)}` : `bet ${fmt(s.bet)}`;
+  foot.innerHTML = seatTags(s) + (chips ? `<span class="betamt">${chips}</span>` : '') + (did ? `<span>${did}</span>` : '') + (s.hand ? `<span>${s.hand}</span>` : '');
   el.append(head, cards, foot);
   return el;
 }
@@ -198,6 +202,7 @@ function setRaise(to) {
 
 function render() {
   const v = view, you = v.seats[0];
+  renderLesson($('lesson'), v.lesson, act, TERMS);
   $('rules').textContent = `No-limit, blinds ${v.blinds[0]}/${v.blinds[1]} · ${v.n_seats} seats · buy-in ${fmt(v.buy_in)}`;
   // the rules open at side pots once someone is all in, else at the top
   $('rulesLink').dataset.rules = v.phase !== 'deal' && v.seats.some(s => s.in_hand && s.stack === 0) ? 'side-pots' : '';
@@ -222,7 +227,8 @@ function render() {
     $('raiseTo').min = v.raise.min; $('raiseTo').max = v.raise.max;
     setRaise(v.raise.min);
   }
-  $('dealbar').hidden = v.phase === 'play';
+  // in a lesson, deal on only once it is done and you have chosen to play on
+  $('dealbar').hidden = v.phase === 'play' || (!!v.lesson && v.lesson.complete && v.phase === 'done');
   $('deal').disabled = v.can_rebuy;
   $('rebuy').hidden = !v.can_rebuy;
   if (v.can_rebuy) showError(new Error('Your stack is below the big blind. Buy back in to play on.'));
@@ -256,6 +262,8 @@ $('deal').onclick = () => act({ type: 'deal' });
 $('rebuy').onclick = () => { showError(null); act({ type: 'rebuy' }); };
 $('ask').onclick = ask;
 $('newSession').onclick = e => { e.preventDefault(); start(true); };
+// lessons and free play are separate tables: the link switches between them
+if (MODE) { document.querySelector('h1').textContent = "Hold'em practice"; $('modeLink').textContent = 'Free play'; $('modeLink').href = location.pathname; $('newSession').textContent = 'Restart lessons'; }
 $('auto').checked = prefs.get('auto-coach', false);
 $('auto').onchange = e => { prefs.set('auto-coach', e.target.checked); if (e.target.checked && view.your_turn) ask(); else { advice = null; renderAdvice(); } };
 document.addEventListener('keydown', e => {
