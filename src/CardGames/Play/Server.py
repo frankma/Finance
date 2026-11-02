@@ -60,7 +60,7 @@ def _static_files() -> dict:
 
 class Handler(BaseHTTPRequestHandler):
     """
-    pages: /, /<game>, /lab, /static/<file>; JSON: GET /api/games, POST /api/<game>/new,
+    pages: /, /<game>, /<game>/rules, /lab, /static/<file>; JSON: GET /api/games, POST /api/<game>/new,
     GET /api/<game>/<id>, POST /api/<game>/<id>/act, GET /api/<game>/<id>/advice
     """
     sessions = None  # type: Sessions
@@ -113,6 +113,8 @@ class Handler(BaseHTTPRequestHandler):
                     return self._file(files[parts[1]])
             elif len(parts) == 1 and parts[0] in BY_NAME and BY_NAME[parts[0]].start is not None:
                 return self._file(os.path.join(STATIC, BY_NAME[parts[0]].page))
+            elif len(parts) == 2 and parts[0] in BY_NAME and parts[1] == 'rules':
+                return self._file(os.path.join(STATIC, 'rules.html'))
             elif parts == ['api', 'games']:
                 return self._json(200, lobby(), shared=True)
             elif len(parts) == 3 and parts[0] == 'api':

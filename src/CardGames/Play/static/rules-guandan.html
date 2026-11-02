@@ -1,0 +1,115 @@
+<section id="goal">
+  <h2>The goal</h2>
+  <p>GuanDan is a climbing game for two teams of two. Partners sit opposite each other: here you and your partner against East and West. Each hand, everyone tries to get rid of all their cards by playing them in combinations. The team whose player goes out first wins the hand and climbs <b>levels</b>, from 2 up to A. A team that wins a hand at A wins the match.</p>
+</section>
+
+<section id="deal">
+  <h2>The deal and the order of play</h2>
+  <p>Two full packs with all four jokers, 108 cards, are dealt out: 27 to each player. Play passes from you to East, to your partner, to West and back to you. Who leads the first hand is drawn at random; after that, tribute decides.</p>
+</section>
+
+<section id="order">
+  <h2>The order of the cards</h2>
+  <p>From low to high: 2, 3, 4 … 10, J, Q, K, A, then the <b>level rank</b>, then the black joker, then the red joker. The level rank is the level being played: at level 7, the 7s rank above the aces. Suits do not rank.</p>
+  <div class="eg-row"><span data-cards="KS AD 7C BJ RJ"></span><span class="note">At level 7, low to high: K, A, the level 7, black joker, red joker.</span></div>
+</section>
+
+<section id="level">
+  <h2>The level and wild cards</h2>
+  <p>Both teams start at level 2, and each hand is played at the level of the team that won the last one. The two <b>hearts of the level rank</b> are <b>wild</b>: each can stand in for any card except a joker. At level 2 the wilds are the two 2♥; at level 7 the two 7♥. They are outlined in your hand.</p>
+  <div class="eg-row"><span data-cards="9S 9D 2H"></span><span class="note">At level 2, the wild 2♥ makes three 9s.</span></div>
+  <p id="wilds">Some selections read more than one way with a wild: 2♥ 5♠ 6♠ 7♠ 8♠ can be a straight flush or a straight, to 8 or to 9. The table then asks which you mean.</p>
+</section>
+
+<section id="combos">
+  <h2>Combinations</h2>
+  <div class="table-scroll"><table>
+    <tr><th>Combination</th><th>Example</th><th>What it is</th></tr>
+    <tr><td>Single</td><td><span data-cards="KS"></span></td><td>Any one card.</td></tr>
+    <tr><td>Pair</td><td><span data-cards="9S 9D"></span></td><td>Two of one rank. Two jokers pair only if they are the same colour.</td></tr>
+    <tr><td>Triple</td><td><span data-cards="5S 5H 5C"></span></td><td>Three of one rank.</td></tr>
+    <tr><td>Full house</td><td><span data-cards="JS JD JC 4H 4D"></span></td><td>A triple with a pair; it ranks by the triple.</td></tr>
+    <tr><td>Straight</td><td><span data-cards="6C 7D 8S 9H TS"></span></td><td>Exactly five in a row. Ace high (10 to A) or low (A to 5); no jokers.</td></tr>
+    <tr><td>Tube</td><td><span data-cards="3S 3D 4C 4H 5S 5D"></span></td><td>Three pairs in a row.</td></tr>
+    <tr><td>Plate</td><td><span data-cards="QS QH QD KC KS KD"></span></td><td>Two triples in a row.</td></tr>
+  </table></div>
+  <p>In straights, tubes and plates the cards keep their natural order: the level rank sits in its usual place, not above the ace.</p>
+</section>
+
+<section id="bombs">
+  <h2>Bombs</h2>
+  <p>Bombs beat every ordinary combination, whatever was led, and only a bigger bomb beats a bomb. From weakest to strongest:</p>
+  <div class="table-scroll"><table>
+    <tr><th>Bomb</th><th>Example</th></tr>
+    <tr><td>Four of a kind</td><td><span data-cards="8S 8H 8D 8C"></span></td></tr>
+    <tr><td>Five of a kind</td><td><span data-cards="4S 4H 4D 4C 4S"></span></td></tr>
+    <tr><td>Straight flush</td><td><span data-cards="5D 6D 7D 8D 9D"></span></td></tr>
+    <tr><td>Six to ten of a kind</td><td><span data-cards="TS TH TD TC TS TH"></span></td></tr>
+    <tr><td>Four jokers</td><td><span data-cards="BJ BJ RJ RJ"></span></td></tr>
+  </table></div>
+  <p>Bombs of the same size rank by their cards, and a bigger bomb always beats a smaller one: any five of a kind beats any four of a kind.</p>
+</section>
+
+<section id="tricks">
+  <h2>Playing a trick</h2>
+  <ol>
+    <li>The leader plays any combination.</li>
+    <li>Each player in turn either <b>beats</b> it, with the same kind of combination of the same size and higher rank, or with a bomb, or <b>passes</b>.</li>
+    <li>Passing does not stop you playing later in the same trick.</li>
+    <li>When everyone else still holding cards passes in a row, the last player to play wins the trick and leads the next one.</li>
+  </ol>
+  <div class="eg-row"><span data-cards="7S 7D"></span><span class="note">beaten by</span><span data-cards="QH QC"></span><span class="note">beaten by</span><span data-cards="3S 3H 3D 3C"></span><span class="note">a bomb</span></div>
+  <p>You may not pass when you lead.</p>
+</section>
+
+<section id="wind">
+  <h2>Going out and catching the wind</h2>
+  <p>When a player plays their last card they go out, and the others play on. If the player who goes out wins that trick, their partner leads the next one: <b>catching the wind</b>. If the partner is out too, the next player with cards leads.</p>
+  <p>The hand ends as soon as both players of one team are out.</p>
+</section>
+
+<section id="scoring">
+  <h2>Scoring: climbing levels</h2>
+  <p>The team of the first player out wins the hand. How far it climbs depends on where the partner finished:</p>
+  <table>
+    <tr><th>Partner finishes</th><th>Levels up</th></tr>
+    <tr><td>2nd: a double win</td><td>3</td></tr>
+    <tr><td>3rd</td><td>2</td></tr>
+    <tr><td>4th, last</td><td>1</td></tr>
+  </table>
+  <p>The next hand is played at the winning team's new level.</p>
+</section>
+
+<section id="tribute">
+  <h2>Tribute</h2>
+  <p>Before every hand after the first, the losers pay for the last hand:</p>
+  <ul>
+    <li>The last player out gives their highest card, never a wild, to the first player out.</li>
+    <li>After a double win both losers pay; the bigger card goes to the first player out and the other to the second.</li>
+    <li>Each player who receives tribute hands one card back: a 10 or lower if they have one, never a wild or a joker.</li>
+    <li>The player who paid the bigger tribute leads the hand.</li>
+    <li>If the players who must pay hold both red jokers between them, the tribute is <b>resisted</b>: nobody pays, and the first player out of the last hand leads.</li>
+  </ul>
+  <p>When you receive tribute, the table shows what was paid and outlines the cards you may hand back.</p>
+</section>
+
+<section id="winning">
+  <h2>Winning the match</h2>
+  <p>Levels never go past A. A team at A wins the match by winning a hand played at its level with its partner finishing 2nd or 3rd. A team that tries at A and fails three times drops back to level 2.</p>
+</section>
+
+<section id="tips">
+  <h2>Playing well</h2>
+  <ul>
+    <li><b>Plan the whole hand.</b> Group your cards into as few plays as you can. The coach scores every play by how easy it leaves the rest of your hand to play out.</li>
+    <li><b>Keep bombs back</b> until an opponent is close to going out, or a bomb wins you the lead and the rest of your hand follows.</li>
+    <li><b>Do not beat your partner</b> when they are winning a trick. Help them out instead: lead a low single or pair when they hold one or two cards.</li>
+    <li><b>Spend wilds carefully.</b> They are most useful to finish or to make a bomb.</li>
+    <li><b>Count the big cards.</b> The table tracks the jokers, wilds, level cards and aces you have not seen, so you know what can still beat you.</li>
+  </ul>
+</section>
+
+<section id="coach">
+  <h2>What the coach knows</h2>
+  <p>Your hand, the trick to beat, how many cards each player holds, every card played and every pass. Never your partner's or your opponents' cards: the server never sends them to your browser. The computer players, your partner included, follow the same rule, each from its own hand only.</p>
+</section>

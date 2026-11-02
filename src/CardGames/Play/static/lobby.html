@@ -49,6 +49,7 @@
         ${g.options.map(o => `<label for="${g.name}-${o.key}">${o.label}</label>
           <select id="${g.name}-${o.key}" data-key="${o.key}">${o.choices.map(c => `<option value="${c.value}">${c.label}</option>`).join('')}</select>`).join('')}
         <button class="primary" ${g.available ? '' : 'disabled'} data-game="${g.name}">${g.available ? 'Sit down' : 'Not yet'}</button>
+        <a class="small" href="/${g.name}/rules">How to play ${g.title}</a>
       </div>`).join('');
     document.querySelectorAll('[data-game]').forEach(b => b.onclick = () => {
       const q = new URLSearchParams();
