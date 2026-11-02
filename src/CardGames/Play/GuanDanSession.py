@@ -16,10 +16,6 @@ NAMES = ['You', 'East', 'Partner', 'West']
 PLACES = ['1st', '2nd', '3rd', '4th']
 
 
-def _level_name(value: int) -> str:
-    return rank_name(value)
-
-
 def _name(card: Card) -> str:
     # 'red joker', '10♥': how a card reads in the log
     if card.is_joker():
@@ -117,7 +113,7 @@ class GuanDanSession(Session):
             raise ValueError('the match is over: start a new session for another.')
         hands = self._deal_hands()
         self.log.append('Hand %i at level %s, %s' % (
-            len(self.match.records) + 1, _level_name(self.match.level.value),
+            len(self.match.records) + 1, rank_name(self.match.level.value),
             'the first hand' if self.match.declarer is None else
             'your team\'s level' if self.match.declarer == 0 else 'the opponents\' level'))
         if self.match.previous_order is not None:
@@ -248,8 +244,8 @@ class GuanDanSession(Session):
         self.won += ours
         self.log.append('%s win the hand and go up %i level%s: you %s, them %s.' % (
             'You and your partner' if ours else 'East and West', result.levels_up,
-            '' if result.levels_up == 1 else 's', _level_name(record.levels_after[0]),
-            _level_name(record.levels_after[1])))
+            '' if result.levels_up == 1 else 's', rank_name(record.levels_after[0]),
+            rank_name(record.levels_after[1])))
         if self.match.is_over:
             self.log.append('%s the match.' % ('You and your partner win' if self.match.winner == 0
                                                else 'East and West win'))
@@ -265,8 +261,8 @@ class GuanDanSession(Session):
         unseen = Counter(standard_deck(jokers=True) * 2) - Counter(hand) - Counter(played)
         rows = [('Red jokers', lambda c: c.rank.value == RED_JOKER, 2),
                 ('Black jokers', lambda c: c.rank.value == BLACK_JOKER, 2),
-                ('Wild cards (%s of hearts)' % _level_name(level.value), lambda c: is_wild(c, level), 2),
-                ('Other %ss' % _level_name(level.value), lambda c: c.rank == level and not is_wild(c, level), 6)]
+                ('Wild cards (%s of hearts)' % rank_name(level.value), lambda c: is_wild(c, level), 2),
+                ('Other %ss' % rank_name(level.value), lambda c: c.rank == level and not is_wild(c, level), 6)]
         if level != Rank.ACE:
             rows.append(('Aces', lambda c: c.rank == Rank.ACE, 8))
         return [{'label': label, 'n': sum(n for card, n in unseen.items() if test(card)), 'of': of}
@@ -275,9 +271,9 @@ class GuanDanSession(Session):
     def view(self) -> dict:
         m = self.match
         out = {
-            'game': 'guandan', 'phase': self.phase, 'names': NAMES,
-            'levels': {'you': _level_name(m.levels[0]), 'them': _level_name(m.levels[1])},
-            'level': _level_name(m.level.value), 'declarer': None if m.declarer is None else
+            'game': 'guandan', 'phase': self.phase,
+            'levels': {'you': rank_name(m.levels[0]), 'them': rank_name(m.levels[1])},
+            'level': rank_name(m.level.value), 'declarer': None if m.declarer is None else
             ('you' if m.declarer == 0 else 'them'), 'a_fails': list(m.a_fails),
             'hand': [], 'wild': None, 'seats': [], 'trick': None, 'last_trick': [], 'your_turn': False,
             'can_pass': False, 'choices': None, 'tribute': None, 'result': None, 'unseen': [],

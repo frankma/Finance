@@ -31,6 +31,8 @@ class TestBlackJackSession(TestCase):
             session.act({'type': 'fold'})
         with self.assertRaises(ValueError):
             BlackJackSession({'rules': 'x'})
+        self.assertEqual(BlackJackSession({'rules': 'h17', 'n_decks': 2}).view()['rules'],
+                         '2 decks, dealer hits soft 17, late surrender', 'the label follows the decks in play.')
 
     def test_round(self):
         session = BlackJackSession({}, random.Random(1))

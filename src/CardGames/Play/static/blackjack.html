@@ -101,32 +101,22 @@ hr.thin { border: 0; border-top: 1px solid var(--line); margin: 0; }
 </div>
 <script src="/static/common.js"></script>
 <script>
-const GAME = 'blackjack';
-let sid = null, view = null, advice = null;
+const table = seat('blackjack');
+let view = null, advice = null;
 const NAMES = { hit: 'Hit', stand: 'Stand', double: 'Double', split: 'Split', surrender: 'Surrender' };
 const OUTCOME = { win: ['Win', 'good'], blackjack: ['Blackjack', 'good'], lose: ['Lose', 'bad'], bust: ['Bust', 'bad'],
                   'dealer blackjack': ['Dealer blackjack', 'bad'], surrendered: ['Surrendered', 'bad'], push: ['Push', 'even'] };
 
-function showError(e) { $('err').hidden = !e; $('err').textContent = e ? e.message || String(e) : ''; }
-
-async function start(fresh) {
-  const params = Object.fromEntries(new URLSearchParams(location.search));
-  sid = fresh ? null : prefs.get(GAME + '-session', null);
-  if (sid) {
-    try { view = await api('GET', `/api/${GAME}/${sid}`); return render(); } catch (e) { sid = null; }
-  }
-  const made = await api('POST', `/api/${GAME}/new`, params);
-  sid = made.id; prefs.set(GAME + '-session', sid); view = made.view; render();
-}
+async function start(fresh) { view = await table.open(fresh, Object.fromEntries(new URLSearchParams(location.search))); render(); }
 
 async function act(action) {
   showError(null);
-  try { view = await api('POST', `/api/${GAME}/${sid}/act`, action); advice = null; render(); }
+  try { view = await table.act(action); advice = null; render(); }
   catch (e) { if (e.status === 404) return start(true); showError(e); }
 }
 
 async function ask() {
-  try { advice = await api('GET', `/api/${GAME}/${sid}/advice`); renderAdvice(); } catch (e) { showError(e); }
+  try { advice = await table.advice(); renderAdvice(); } catch (e) { showError(e); }
 }
 
 function renderAdvice() {
@@ -135,8 +125,8 @@ function renderAdvice() {
   if (!advice) { box.hidden = true; return; }
   box.hidden = false;
   box.innerHTML = advice.kind === 'move'
-    ? `<b>Coach: ${NAMES[advice.move]}.</b> ${advice.reason[0].toUpperCase() + advice.reason.slice(1)}.`
-    : `<b>Coach: bet ${advice.bet}.</b> ${advice.reason[0].toUpperCase() + advice.reason.slice(1)}.`;
+    ? `<b>Coach: ${NAMES[advice.move]}.</b> ${cap(advice.reason)}.`
+    : `<b>Coach: bet ${advice.bet}.</b> ${cap(advice.reason)}.`;
   const bc = $('betCoach');
   bc.hidden = advice.kind !== 'bet'; bc.textContent = `Coach's bet: ${advice.bet}`;
 }

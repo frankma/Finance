@@ -29,6 +29,27 @@ function cardEl(code) {
 }
 function drawCards(host, codes) { host.replaceChildren(...codes.map(cardEl)); }
 
+// the error line on a table page; pass null to clear it
+function showError(e) { const el = $('err'); el.hidden = !e; el.textContent = e ? e.message || String(e) : ''; }
+const cap = s => s[0].toUpperCase() + s.slice(1);
+
+// your seat at one game on the play server, kept across reloads by its session id in this browser
+function seat(game) {
+  let sid = null;
+  return {
+    // resume this browser's session, or sit down at a new table with these options
+    async open(fresh, options) {
+      sid = fresh ? null : prefs.get(game + '-session', null);
+      if (sid) { try { return await api('GET', `/api/${game}/${sid}`); } catch (e) { sid = null; } }
+      const made = await api('POST', `/api/${game}/new`, options || {});
+      sid = made.id; prefs.set(game + '-session', sid);
+      return made.view;
+    },
+    act: action => api('POST', `/api/${game}/${sid}/act`, action),
+    advice: () => api('GET', `/api/${game}/${sid}/advice`),
+  };
+}
+
 const fmt = (x, d = 0) => Number(x).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
 const signed = (x, d = 0) => (x > 0 ? '+' : x < 0 ? '−' : '±') + fmt(Math.abs(x), d);
 

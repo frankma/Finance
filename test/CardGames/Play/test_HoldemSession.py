@@ -88,8 +88,9 @@ class TestHoldemSession(TestCase):
         self.assertEqual(view['seats'][1]['cards'], ['KD', 'KC'], 'hands are turned over at showdown.')
         self.assertEqual(view['seats'][0]['hand'], 'Straight, jack high')
         self.assertEqual([seat['bet'] for seat in view['seats']], [0, 0])
-        self.assertEqual(view['pots'][0]['winners'], ['Tight 2', 'You'], 'the board plays: a split pot, odd chip first '
-                                                                         'to the left of the button.')
+        self.assertEqual(session.round.pots[0].winners, (1, 0), 'the board plays: a split pot, odd chip first to the '
+                                                                'left of the button.')
+        self.assertEqual(view['log'][-1], 'Tight 2 and You split 20 with straight, jack high.')
         self.assertEqual(view['payoff'], 0)
 
     def test_rebuy(self):
