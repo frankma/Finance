@@ -8,6 +8,7 @@ from collections import OrderedDict
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Optional, Tuple
 
+from src.CardGames.Play.Lesson import LessonSession
 from src.CardGames.Play.Registry import BY_NAME, lobby
 from src.CardGames.Play.Session import Session
 
@@ -57,7 +58,14 @@ class Sessions(object):
         if entry is None or entry.start is None:
             raise KeyError(game)
         with self.lock:
-            session = entry.start(options, random.Random(self.rng.random()))
+            rng = random.Random(self.rng.random())
+            if options.get('mode') == 'learn':
+                # guided practice: the game's lessons, each on a table set up for it
+                if entry.lessons is None:
+                    raise ValueError('%s has no lessons yet.' % entry.title)
+                session = LessonSession(entry.lessons(), rng)
+            else:
+                session = entry.start(options, rng)
             sid = secrets.token_hex(8)
             self.items[sid] = (game, session)
             while len(self.items) > MAX_SESSIONS:

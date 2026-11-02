@@ -103,3 +103,15 @@ class TestServer(TestCase):
                 view = json.loads(self.request('POST', '/api/guandan/%s/act' % sid, action)[1])
         status, body = self.request('POST', '/api/guandan/%s/act' % sid, {'type': 'play', 'cards': ['ZZ']})
         self.assertEqual(status, 400)
+
+    def test_lessons(self):
+        status, body = self.request('POST', '/api/blackjack/new', {'mode': 'learn'})
+        self.assertEqual(status, 200)
+        made = json.loads(body)
+        self.assertEqual(made['view']['lesson']['index'], 0)
+        view = json.loads(self.request('POST', '/api/blackjack/%s/act' % made['id'],
+                                       {'type': 'move', 'move': 'stand'})[1])
+        self.assertEqual(view['lesson']['feedback']['kind'], 'right')
+        status, body = self.request('POST', '/api/holdem/new', {'mode': 'learn'})
+        self.assertEqual((status, json.loads(body)['error']), (400, "Hold'em has no lessons yet."))
+        self.assertEqual([g['lessons'] for g in lobby()], [6, 0, 0])

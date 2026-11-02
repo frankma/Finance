@@ -33,16 +33,18 @@ function drawCards(host, codes) { host.replaceChildren(...codes.map(cardEl)); }
 function showError(e) { const el = $('err'); el.hidden = !e; el.textContent = e ? e.message || String(e) : ''; }
 const cap = s => s[0].toUpperCase() + s.slice(1);
 
-// your seat at one game on the play server, kept across reloads by its session id in this browser
-function seat(game) {
+// your seat at one game on the play server, kept across reloads by its session id in this browser; mode 'learn'
+// keeps the game's lessons apart from free play
+function seat(game, mode) {
   let sid = null;
+  const key = game + (mode ? '-' + mode : '') + '-session';
   return {
     // resume this browser's session, or sit down at a new table with these options
     async open(fresh, options) {
-      sid = fresh ? null : prefs.get(game + '-session', null);
+      sid = fresh ? null : prefs.get(key, null);
       if (sid) { try { return await api('GET', `/api/${game}/${sid}`); } catch (e) { sid = null; } }
       const made = await api('POST', `/api/${game}/new`, options || {});
-      sid = made.id; prefs.set(game + '-session', sid);
+      sid = made.id; prefs.set(key, sid);
       return made.view;
     },
     act: action => api('POST', `/api/${game}/${sid}/act`, action),
@@ -127,4 +129,31 @@ function linkTerms(text, terms) {
     html = html.replace(re, (m, pre, word) => `${pre}<a href="#" data-rules="${terms[term]}">${word}</a>`);
   });
   return html;
+}
+
+// ---- guided practice: the lesson box above a table in learn mode ----
+
+// 'learn' when the page was opened with ?mode=learn, else '' for free play
+const MODE = new URLSearchParams(location.search).get('mode') === 'learn' ? 'learn' : '';
+
+// draw the lesson in front of you into host; act sends the page's actions, terms links words to the rules
+function renderLesson(host, lesson, act, terms) {
+  host.hidden = !lesson;
+  if (!lesson) return;
+  const feedback = lesson.feedback;
+  const steps = lesson.n_steps === 1 ? '' : ` · step ${Math.min(lesson.step + 1, lesson.n_steps)} of ${lesson.n_steps}`;
+  host.innerHTML = `
+    <div class="lesson-head"><span class="kicker">Lesson ${lesson.index + 1} of ${lesson.lessons.length}${steps}</span>
+      <a href="#" data-rules="${lesson.tags[0] || ''}">Rules</a></div>
+    <h2>${lesson.title}</h2>
+    ${feedback ? `<p class="lesson-feedback ${feedback.kind}">${feedback.kind === 'right'
+      ? linkTerms(feedback.text, terms).replace(/^Right([:.])/, '<b>Right$1</b>')
+      : '<b>Not quite.</b> ' + linkTerms(feedback.text, terms)}</p>` : ''}
+    ${lesson.prompt ? `<p class="lesson-prompt">${linkTerms(lesson.prompt, terms)}</p>` : ''}
+    ${lesson.complete ? `<div class="row"><button type="button" class="primary" data-lesson="${Math.min(lesson.index + 1, lesson.lessons.length - 1)}" ${lesson.index + 1 >= lesson.lessons.length ? 'hidden' : ''}>Next lesson</button>
+      <button type="button" data-lesson="${lesson.index}">Try it again</button>
+      ${lesson.index + 1 >= lesson.lessons.length ? '<span class="small">That was the last lesson. <a href="?">Play freely</a> with the coach, or pick any lesson again.</span>' : ''}</div>` : ''}
+    <ol class="lesson-list">${lesson.lessons.map((x, k) => `<li class="${k === lesson.index ? 'current' : ''}">
+      <a href="#" data-lesson="${k}">${x.title}</a>${x.done ? ' <span class="tick" aria-label="done">✓</span>' : ''}</li>`).join('')}</ol>`;
+  host.querySelectorAll('[data-lesson]').forEach(el => el.onclick = e => { e.preventDefault(); act({ type: 'lesson', index: +el.dataset.lesson }); });
 }
