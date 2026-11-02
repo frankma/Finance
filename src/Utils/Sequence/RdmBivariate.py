@@ -14,10 +14,11 @@ class RdmBivariate(object):
             raise ValueError('rho (%.4f) should be smaller than 1' % rho)
 
     @staticmethod
-    def draw_std(rho: float, size: int):
+    def draw_std(rho: float, size: int, rng=np.random):
+        # two standard normal variables with correlation rho; rng may be a np.random.Generator for reproducible draws
         RdmBivariate.__check_rho(rho)
-        x1 = np.random.random(size=size)
-        x2 = np.random.random(size=size)
+        x1 = rng.standard_normal(size=size)
+        x2 = rng.standard_normal(size=size)
         return x1, rho * x1 + np.sqrt(1.0 - rho * rho) * x2
 
     @staticmethod
@@ -28,4 +29,4 @@ class RdmBivariate(object):
         x_2_norm = (x_2 - mu_2) / sig_2
         xx1, xx2 = np.meshgrid(x_1_norm, x_2_norm)
         z = (xx1 ** 2) - 2.0 * rho * xx1 * xx2 + (xx2 ** 2)
-        return np.exp(-z / (2.0 * np.sqrt(1.0 - rho ** 2))) / (2.0 * np.pi * sig_1 * sig_2 * np.sqrt(1.0 - rho ** 2))
+        return np.exp(-z / (2.0 * (1.0 - rho ** 2))) / (2.0 * np.pi * sig_1 * sig_2 * np.sqrt(1.0 - rho ** 2))
