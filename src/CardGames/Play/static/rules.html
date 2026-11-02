@@ -55,6 +55,10 @@
     const play = document.createElement('button'); play.type = 'button'; play.className = 'primary play';
     play.textContent = 'Play ' + entry.title; play.onclick = () => { location.href = '/' + game; };
     $('toc').append(play);
+    if (entry.lessons) {
+      const learn = document.createElement('a'); learn.href = `/${game}?mode=learn`;
+      learn.textContent = `Practice: ${entry.lessons} guided hands`; $('toc').append(learn);
+    }
     if (location.hash) { const t = document.getElementById(location.hash.slice(1)); if (t) t.scrollIntoView(); }
   } catch (e) { showError(e); }
 })();

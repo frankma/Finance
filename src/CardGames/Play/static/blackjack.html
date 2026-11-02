@@ -36,11 +36,12 @@ hr.thin { border: 0; border-top: 1px solid var(--line); margin: 0; }
       <h1>Blackjack</h1>
       <span class="small muted" id="rules"></span>
     </div>
-    <nav class="links"><a href="/">Lobby</a><a href="/lab">Card Games Lab</a><a href="#" id="rulesLink" data-rules="">Rules<kbd>?</kbd></a><a href="#" id="newSession">New session</a></nav>
+    <nav class="links"><a href="/">Lobby</a><a href="/lab">Card Games Lab</a><a href="#" id="rulesLink" data-rules="">Rules<kbd>?</kbd></a><a href="?mode=learn" id="modeLink">Lessons</a><a href="#" id="newSession">New session</a></nav>
   </div>
 
   <div class="layout">
     <main class="box felt" aria-live="polite">
+      <div class="lesson" id="lesson" hidden></div>
       <div class="seat">
         <div class="seat-head"><h2>Dealer</h2><span class="total" id="dealerTotal"></span></div>
         <div class="cards" id="dealer"></div>
@@ -101,7 +102,7 @@ hr.thin { border: 0; border-top: 1px solid var(--line); margin: 0; }
 </div>
 <script src="/static/common.js"></script>
 <script>
-const table = seat('blackjack');
+const table = seat('blackjack', MODE);
 let view = null, advice = null;
 // the rules text, beside the table; terms in the coach's reasons link to their section
 const rules = rulesPanel('blackjack', () => $('rules').textContent);
@@ -137,6 +138,7 @@ function renderAdvice() {
 
 function render() {
   const v = view;
+  renderLesson($('lesson'), v.lesson, act, TERMS);
   $('rules').textContent = v.rules + ' · blackjack pays 3:2 · bets ' + v.min_bet + ' to ' + v.max_bet;
   // dealer: the up card, then a face-down back until the round is over
   const dealerCards = v.dealer ? (v.dealer.hidden ? [...v.dealer.cards, null] : v.dealer.cards) : [];
@@ -157,7 +159,9 @@ function render() {
   const playing = v.phase === 'play';
   $('actions').hidden = !playing;
   document.querySelectorAll('[data-move]').forEach(b => { b.disabled = !v.legal.includes(b.dataset.move); });
-  $('betbar').hidden = playing;
+  // in a lesson, the bet bar shows only when the lesson asks for a bet
+  $('betbar').hidden = playing || (!!v.lesson && v.lesson.awaiting !== 'deal' && !v.lesson.complete) ||
+    (!!v.lesson && v.lesson.complete && v.phase === 'done');
   const bet = $('bet');
   bet.min = v.min_bet; bet.max = v.max_bet;
   if (!bet.value || document.activeElement !== bet) bet.value = Math.min(v.last_bet, v.max_bet);
@@ -187,6 +191,8 @@ $('betMin').onclick = () => { $('bet').value = view.min_bet; };
 $('betCoach').onclick = () => { if (advice && advice.kind === 'bet') $('bet').value = advice.bet; };
 $('ask').onclick = ask;
 $('newSession').onclick = e => { e.preventDefault(); start(true); };
+// lessons and free play are separate tables: the link switches between them
+if (MODE) { document.querySelector('h1').textContent = 'Blackjack practice'; $('modeLink').textContent = 'Free play'; $('modeLink').href = location.pathname; $('newSession').textContent = 'Restart lessons'; }
 $('auto').checked = prefs.get('auto-coach', false);
 $('auto').onchange = e => { prefs.set('auto-coach', e.target.checked); if (e.target.checked) ask(); else { advice = null; renderAdvice(); } };
 $('hideCount').checked = prefs.get('hide-count', false);
