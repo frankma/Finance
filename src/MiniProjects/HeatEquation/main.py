@@ -22,7 +22,7 @@ for n_x, n_t in [(11, 9), (21, 17), (41, 33), (81, 65), (161, 129)]:
     dt = 1.0 / (n_t - 1.0)
     mu = dx * dx / dt
 
-    state = np.matrix(xs * (np.ones(n_x) - xs)).transpose()
+    state = (xs * (np.ones(n_x) - xs)).reshape(-1, 1)  # one column: the value at each grid point
     coe_curr = diffusion_coe(ts[0])
 
     for idx, t in enumerate(ts[:-1]):
@@ -33,8 +33,9 @@ for n_x, n_t in [(11, 9), (21, 17), (41, 33), (81, 65), (161, 129)]:
 
         state[0] = 0.0
         state[n_x - 1] = 0.0
-        state[1:- 1] = td_next.get_inverse() * td_curr.get_matrix() * state[1:- 1]
+        state[1:- 1] = td_next.get_inverse() @ td_curr.get_matrix() @ state[1:- 1]
 
-    diff = state[((n_x - 1) / 2, 0)] - prev
-    prev = state[((n_x - 1) / 2, 0)]
-    print('%.6f\t%.6f\t%.2f\t%.8f\t%.4e\t%.4e' % (dx, dt, xs[(n_x - 1) / 2], state[((n_x - 1) / 2, 0)], diff, diff / 4))
+    mid = (n_x - 1) // 2
+    diff = state[mid, 0] - prev
+    prev = state[mid, 0]
+    print('%.6f\t%.6f\t%.2f\t%.8f\t%.4e\t%.4e' % (dx, dt, xs[mid], state[mid, 0], diff, diff / 4))

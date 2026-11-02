@@ -25,7 +25,8 @@ class BlackScholesForwardPDE(object):
         self.tdx = self.ts / self.dt
 
     def solve(self):
-        state = np.matrix(np.maximum(OptionType.call.value * (self.s - self.ks), np.full(np.shape(self.ks), 0.0)))
+        # one row: the values at each strike, stepped forward in time by multiplying on the right
+        state = np.maximum(OptionType.call.value * (self.s - self.ks), np.full(np.shape(self.ks), 0.0)).reshape(1, -1)
 
         vol_loc = self.sig  # assume flat vol across time and strike, then local vol equals to implied vol
 
@@ -47,12 +48,12 @@ class BlackScholesForwardPDE(object):
         rhs_ctr[-1] = 1.0 - self.r * self.kdx[-1] * self.dt / 2.0
         rhs_tdm = TriDiagonalMatrix(rhs_lft[1:], rhs_ctr, rhs_upr[:-1])
 
-        tm = rhs_tdm.get_matrix().transpose() * lhs_tdm.get_inverse().transpose()
+        tm = rhs_tdm.get_matrix().transpose() @ lhs_tdm.get_inverse().transpose()
 
         for _ in self.ts[:-1]:
-            state *= tm  # save vector space for calculation
+            state = state @ tm
 
-        vec = np.asarray(state).reshape(-1)
+        vec = state.reshape(-1)
         return np.interp([self.k], self.ks, vec)[0]
 
 if __name__ == '__main__':
