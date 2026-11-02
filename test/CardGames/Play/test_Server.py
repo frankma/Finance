@@ -40,9 +40,10 @@ class TestServer(TestCase):
             self.assertIsNone(self.request('GET', path, headers=True)[2].get('Access-Control-Allow-Origin'), path)
 
     def test_pages(self):
-        for path in ('/', '/blackjack', '/holdem', '/guandan', '/static/holdem.html', '/static/theme.css', '/static/common.js', '/static/common.css', '/lab'):
+        for path in ('/', '/blackjack', '/holdem', '/guandan', '/blackjack/rules', '/holdem/rules', '/guandan/rules',
+                     '/static/rules-guandan.html', '/static/rules.html', '/static/holdem.html', '/static/theme.css', '/static/common.js', '/static/common.css', '/lab'):
             self.assertEqual(self.request('GET', path)[0], 200, path)
-        for path in ('/poker', '/static/Server.py', '/static/..%2FServer.py', '/nothing'):
+        for path in ('/poker', '/poker/rules', '/blackjack/rules/x', '/static/Server.py', '/static/..%2FServer.py', '/nothing'):
             self.assertEqual(self.request('GET', path)[0], 404, path)
 
     def test_api(self):

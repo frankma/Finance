@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How to Play</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="/static/theme.css">
+<link rel="stylesheet" href="/static/common.css">
+<style>
+.page { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 32px; align-items: start; }
+@media (max-width: 860px) { .page { grid-template-columns: minmax(0, 1fr); gap: 18px; } }
+.toc { position: sticky; top: 16px; display: flex; flex-direction: column; gap: 6px; font: 400 14px/1.35 var(--sans); }
+@media (max-width: 860px) { .toc { position: static; } }
+.toc a { text-decoration: none; }
+.toc a:hover { text-decoration: underline; }
+.play { align-self: flex-start; margin-top: 6px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div>
+      <span class="eyebrow">Card games · how to play</span>
+      <h1 id="title">How to play</h1>
+      <p class="lede" id="lede"></p>
+    </div>
+    <nav class="links"><a href="/">Lobby</a><a href="/lab">Card Games Lab</a></nav>
+  </div>
+  <div class="page">
+    <nav class="toc box" id="toc" aria-label="Contents"><span class="kicker">Contents</span></nav>
+    <main class="rules" id="rules"></main>
+  </div>
+  <p class="err" id="err" hidden></p>
+</div>
+<script src="/static/common.js"></script>
+<script>
+(async () => {
+  // the game is the first part of the path: /blackjack/rules
+  const game = location.pathname.split('/').filter(Boolean)[0];
+  try {
+    const games = await api('GET', '/api/games');
+    const entry = games.find(g => g.name === game);
+    document.title = `${entry.title} Rules`;
+    $('title').textContent = 'How to play ' + entry.title;
+    $('lede').textContent = entry.blurb;
+    const body = $('rules');
+    body.innerHTML = await loadRules(game);
+    drawExamples(body);
+    body.querySelectorAll('section[id] > h2').forEach(h => {
+      const a = document.createElement('a'); a.href = '#' + h.parentElement.id; a.textContent = h.textContent; $('toc').append(a);
+    });
+    const play = document.createElement('button'); play.type = 'button'; play.className = 'primary play';
+    play.textContent = 'Play ' + entry.title; play.onclick = () => { location.href = '/' + game; };
+    $('toc').append(play);
+    if (location.hash) { const t = document.getElementById(location.hash.slice(1)); if (t) t.scrollIntoView(); }
+  } catch (e) { showError(e); }
+})();
+</script>
+</body>
+</html>

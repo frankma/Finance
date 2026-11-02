@@ -58,3 +58,73 @@ const prefs = {
   get(key, fallback) { try { const v = localStorage.getItem('cg-' + key); return v === null ? fallback : JSON.parse(v); } catch (e) { return fallback; } },
   set(key, value) { try { localStorage.setItem('cg-' + key, JSON.stringify(value)); } catch (e) {} },
 };
+
+// ---- how to play: one rules text per game (static/rules-<game>.html), shown as its own page and in a table's panel ----
+
+// examples in a rules text: <span data-cards="AS KD"></span> draws those cards, '_' a face-down one
+function drawExamples(root) {
+  root.querySelectorAll('[data-cards]').forEach(el => {
+    el.classList.add('cards', 'eg');
+    drawCards(el, el.dataset.cards.split(' ').map(c => c === '_' ? null : c));
+  });
+}
+
+const rulesCache = {};
+async function loadRules(game) {
+  if (!rulesCache[game]) {
+    const res = await fetch(`/static/rules-${game}.html`);
+    if (!res.ok) throw new Error('Could not load the rules.');
+    rulesCache[game] = await res.text();
+  }
+  return rulesCache[game];
+}
+
+// a panel beside the table holding the game's rules, opened by the ? key, a "Rules" link or any [data-rules] link;
+// note() gives a line about this table's own settings, shown above the text
+function rulesPanel(game, note) {
+  const panel = document.createElement('aside');
+  panel.className = 'rules-panel'; panel.hidden = true; panel.setAttribute('aria-label', 'How to play');
+  panel.innerHTML = `<div class="rules-head"><span class="kicker">How to play</span>
+    <a href="/${game}/rules" target="_blank" rel="noopener">Open as a page</a>
+    <button type="button" class="rules-close">Close<kbd>Esc</kbd></button></div>
+    <p class="this-table small" hidden></p><div class="rules"></div>`;
+  document.body.append(panel);
+  const body = panel.querySelector('.rules');
+  const close = () => { panel.hidden = true; };
+  async function open(section) {
+    if (!body.childElementCount) { body.innerHTML = await loadRules(game); drawExamples(body); }
+    const line = panel.querySelector('.this-table'), text = note ? note() : '';
+    line.hidden = !text; line.textContent = text ? 'This table: ' + text : '';
+    panel.hidden = false;
+    // scroll the panel only, never the table behind it
+    const target = section && body.querySelector('#' + section);
+    body.scrollTop = target ? target.offsetTop - body.offsetTop - 8 : 0;
+  }
+  panel.querySelector('.rules-close').onclick = close;
+  document.addEventListener('click', e => {
+    const link = e.target.closest('[data-rules]');
+    if (link) { e.preventDefault(); open(link.dataset.rules).catch(showError); }
+  });
+  // capture first, so Esc and ? reach the panel before the table's own keys
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && !panel.hidden) { e.stopPropagation(); close(); }
+    else if (e.key === '?' && e.target.tagName !== 'INPUT') {
+      // the same section the Rules link would open, which the table keeps up to date
+      e.preventDefault(); e.stopPropagation();
+      const link = document.getElementById('rulesLink');
+      panel.hidden ? open(link ? link.dataset.rules : '').catch(showError) : close();
+    }
+  }, true);
+  return { open, close, get isOpen() { return !panel.hidden; } };
+}
+
+// put links to the rules on the terms a text uses, e.g. the coach's reason; terms maps a phrase to a section id
+function linkTerms(text, terms) {
+  const escape = s => s.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+  let html = escape(text);
+  Object.keys(terms).sort((a, b) => b.length - a.length).forEach(term => {
+    const re = new RegExp(`(^|[^\\w-])(${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})(?![\\w-])(?![^<]*</a>)`, 'i');
+    html = html.replace(re, (m, pre, word) => `${pre}<a href="#" data-rules="${terms[term]}">${word}</a>`);
+  });
+  return html;
+}

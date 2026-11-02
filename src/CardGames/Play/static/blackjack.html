@@ -36,7 +36,7 @@ hr.thin { border: 0; border-top: 1px solid var(--line); margin: 0; }
       <h1>Blackjack</h1>
       <span class="small muted" id="rules"></span>
     </div>
-    <nav class="links"><a href="/">Lobby</a><a href="/lab">Card Games Lab</a><a href="#" id="newSession">New session</a></nav>
+    <nav class="links"><a href="/">Lobby</a><a href="/lab">Card Games Lab</a><a href="#" id="rulesLink" data-rules="">Rules<kbd>?</kbd></a><a href="#" id="newSession">New session</a></nav>
   </div>
 
   <div class="layout">
@@ -78,7 +78,7 @@ hr.thin { border: 0; border-top: 1px solid var(--line); margin: 0; }
         <div class="tile"><span class="kicker">Rounds</span><span class="v" id="rounds"></span><span class="note" id="followed"></span></div>
       </div>
       <div class="box count">
-        <div class="row" style="justify-content:space-between"><span class="kicker">Hi-lo count</span>
+        <div class="row" style="justify-content:space-between"><a href="#" class="kicker" data-rules="counting">Hi-lo count</a>
           <label class="check"><input type="checkbox" id="hideCount"> Hide</label></div>
         <div class="tiles" style="border-top-width:1px">
           <div class="tile"><span class="note">Running</span><span class="v" id="running"></span></div>
@@ -103,6 +103,10 @@ hr.thin { border: 0; border-top: 1px solid var(--line); margin: 0; }
 <script>
 const table = seat('blackjack');
 let view = null, advice = null;
+// the rules text, beside the table; terms in the coach's reasons link to their section
+const rules = rulesPanel('blackjack', () => $('rules').textContent);
+const TERMS = { 'basic strategy': 'basic-strategy', 'soft 17': 'values', 'true count': 'counting', 'edge': 'counting',
+                'Kelly': 'kelly', 'surrender': 'moves', 'split': 'splitting', 'double': 'moves' };
 const NAMES = { hit: 'Hit', stand: 'Stand', double: 'Double', split: 'Split', surrender: 'Surrender' };
 const OUTCOME = { win: ['Win', 'good'], blackjack: ['Blackjack', 'good'], lose: ['Lose', 'bad'], bust: ['Bust', 'bad'],
                   'dealer blackjack': ['Dealer blackjack', 'bad'], surrendered: ['Surrendered', 'bad'], push: ['Push', 'even'] };
@@ -125,8 +129,8 @@ function renderAdvice() {
   if (!advice) { box.hidden = true; return; }
   box.hidden = false;
   box.innerHTML = advice.kind === 'move'
-    ? `<b>Coach: ${NAMES[advice.move]}.</b> ${cap(advice.reason)}.`
-    : `<b>Coach: bet ${advice.bet}.</b> ${cap(advice.reason)}.`;
+    ? `<b>Coach: ${NAMES[advice.move]}.</b> ${linkTerms(cap(advice.reason), TERMS)}.`
+    : `<b>Coach: bet ${advice.bet}.</b> ${linkTerms(cap(advice.reason), TERMS)}.`;
   const bc = $('betCoach');
   bc.hidden = advice.kind !== 'bet'; bc.textContent = `Coach's bet: ${advice.bet}`;
 }

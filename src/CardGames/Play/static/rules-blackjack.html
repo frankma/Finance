@@ -1,0 +1,100 @@
+<section id="goal">
+  <h2>The goal</h2>
+  <p>You play against the dealer, not against other players. Each round you bet, then try to finish with a hand closer to 21 than the dealer's without going over. Go over 21 and you <b>bust</b>: you lose at once, even if the dealer busts later.</p>
+</section>
+
+<section id="values">
+  <h2>Card values</h2>
+  <ul>
+    <li>2 to 10 count their number.</li>
+    <li>Jack, queen and king count 10.</li>
+    <li>An ace counts 11, or 1 if 11 would take you over 21.</li>
+  </ul>
+  <div class="eg-row"><span data-cards="AS 6D"></span><span class="note"><b>Soft 17</b>: the ace counts 11, and can drop to 1 if you take a big card, so hitting cannot bust you.</span></div>
+  <div class="eg-row"><span data-cards="TS 7D"></span><span class="note"><b>Hard 17</b>: no ace counting 11, so any card over 4 busts you.</span></div>
+  <div class="eg-row"><span data-cards="AH KC"></span><span class="note"><b>Blackjack</b>: an ace and a ten-value card as your first two cards. It beats any other 21.</span></div>
+</section>
+
+<section id="deal">
+  <h2>The deal</h2>
+  <ol>
+    <li>Place your bet, between the table minimum and maximum.</li>
+    <li>You get two cards face up. The dealer gets one face up (the <b>up card</b>) and one face down (the <b>hole card</b>).</li>
+    <li>If the dealer shows an ace or a ten, they peek at the hole card. With blackjack the round ends at once: you lose your bet, unless you have blackjack too, which is a push. Peeking means a dealer blackjack only ever takes your original bet.</li>
+    <li>Otherwise you play your hand, then the dealer plays theirs.</li>
+  </ol>
+  <div class="eg-row"><span data-cards="9D _"></span><span class="note">What you see of the dealer: the up card and a face-down card.</span></div>
+</section>
+
+<section id="moves">
+  <h2>Your moves</h2>
+  <table>
+    <tr><th>Move</th><th>Key</th><th>What it does</th></tr>
+    <tr><td><b>Hit</b></td><td>H</td><td>Take another card. You can keep hitting until you stand or bust.</td></tr>
+    <tr><td><b>Stand</b></td><td>S</td><td>Keep your total and end your turn.</td></tr>
+    <tr><td><b>Double</b></td><td>D</td><td>Double your bet on your first two cards, take exactly one more card, then stand.</td></tr>
+    <tr><td><b>Split</b></td><td>P</td><td>With two cards of the same value (a 10 and a king count), split them into two hands, each with its own bet equal to the first, and play them one by one.</td></tr>
+    <tr><td><b>Surrender</b></td><td>R</td><td>On tables that allow it, give up your first two cards and get half your bet back.</td></tr>
+  </table>
+  <h3 id="splitting">Splitting</h3>
+  <ul>
+    <li>You can split up to four hands, and double after a split.</li>
+    <li>Split aces get one card each and cannot be hit. An ace and a ten after a split counts as 21, not blackjack.</li>
+    <li>Doubling and splitting need spare money in your bankroll to cover the extra bet.</li>
+  </ul>
+</section>
+
+<section id="dealer">
+  <h2>How the dealer plays</h2>
+  <p>The dealer has no choices. They turn over the hole card, then hit until they reach 17 or more. The table sets one detail: on a <b>soft 17</b> the dealer either stands (S17) or hits (H17). Hitting soft 17 is slightly worse for you.</p>
+  <p>If every one of your hands has busted, the dealer does not need to draw.</p>
+</section>
+
+<section id="payouts">
+  <h2>Winning and payouts</h2>
+  <table>
+    <tr><th>Result</th><th>You get</th></tr>
+    <tr><td>Blackjack</td><td>3 to 2: a 10 bet wins 15</td></tr>
+    <tr><td>Beat the dealer, or the dealer busts</td><td>1 to 1: a 10 bet wins 10</td></tr>
+    <tr><td>Same total as the dealer</td><td>A push: your bet back</td></tr>
+    <tr><td>Lower total, or you bust</td><td>You lose your bet</td></tr>
+    <tr><td>Surrender</td><td>Half your bet back</td></tr>
+  </table>
+</section>
+
+<section id="shoe">
+  <h2>The shoe</h2>
+  <p>Cards come from a <b>shoe</b> of several decks shuffled together. They are not reshuffled every round: once the <b>cut card</b> comes out, about three quarters of the way through, the whole shoe is shuffled before the next round. Until then, the cards already shown are gone from the shoe, which is what makes counting possible.</p>
+</section>
+
+<section id="basic-strategy">
+  <h2>Basic strategy</h2>
+  <p>For every hand you can hold against every dealer up card there is one best move, worked out from the odds. Played perfectly, it cuts the house edge to about half a percent. The coach plays it and tells you which row of the chart it used. Some patterns to remember:</p>
+  <ul>
+    <li>Against a dealer 7 or higher, hit hard totals up to 16: the dealer will often make 17 or more.</li>
+    <li>Against a dealer 2 to 6, stand on hard 12 to 16 (hit 12 against a 2 or 3): the dealer busts often from a weak card.</li>
+    <li>Double 11 against anything but an ace, and 10 against 2 to 9.</li>
+    <li>Always split aces and 8s. Never split 10s or 5s.</li>
+  </ul>
+  <p class="tip">The Card Games Lab shows the full chart for this table's rules.</p>
+</section>
+
+<section id="counting">
+  <h2>Counting cards</h2>
+  <p>High cards left in the shoe help you (more blackjacks, more dealer busts); low cards help the dealer. The <b>hi-lo count</b> keeps score of the cards shown since the shuffle:</p>
+  <div class="eg-row"><span data-cards="2S 3H 4D 5C 6S"></span><span class="note">+1 each</span></div>
+  <div class="eg-row"><span data-cards="7H 8D 9C"></span><span class="note">0</span></div>
+  <div class="eg-row"><span data-cards="TS JH QD KC AS"></span><span class="note">−1 each</span></div>
+  <p>The <b>running count</b> is that score. The <b>true count</b> divides it by the decks still in the shoe, so it measures how rich the rest of the shoe is. Each point of true count is worth roughly half a percent of edge to you.</p>
+  <p>Counting uses only cards everyone can see. It is a skill, not cheating, and it is all the coach uses.</p>
+</section>
+
+<section id="kelly">
+  <h2>Sizing your bet</h2>
+  <p>When the count says the edge is yours, bet more; when it is the house's, bet the minimum. The coach sizes bets with the <b>Kelly rule</b>: stake the fraction edge ÷ variance of your bankroll. That grows the bankroll fastest over time without risking ruin on one round, which is the same rule an investor uses to size a position from its expected return and risk.</p>
+</section>
+
+<section id="coach">
+  <h2>What the coach knows</h2>
+  <p>Your cards, the dealer's up card, the table's rules and every card shown since the shuffle. Never the hole card or the order of the shoe: the server never sends them to your browser, so neither the page nor the coach can peek.</p>
+</section>

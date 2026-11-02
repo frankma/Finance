@@ -56,7 +56,7 @@ table.unseen td.num { text-align: right; font: 500 13px/1.3 var(--mono); font-va
       <h1>GuanDan</h1>
       <span class="small muted" id="rules"></span>
     </div>
-    <nav class="links"><a href="/">Lobby</a><a href="/lab">Card Games Lab</a><a href="#" id="newSession">New match</a></nav>
+    <nav class="links"><a href="/">Lobby</a><a href="/lab">Card Games Lab</a><a href="#" id="rulesLink" data-rules="">Rules<kbd>?</kbd></a><a href="#" id="newSession">New match</a></nav>
   </div>
 
   <div class="layout">
@@ -120,6 +120,11 @@ table.unseen td.num { text-align: right; font: 500 13px/1.3 var(--mono); font-va
 <script>
 const table = seat('guandan');
 let view = null, advice = null, sel = new Set(), pick = null;
+// the rules text, beside the table; terms in the coach's reasons and the log link to their section
+const rules = rulesPanel('guandan', () => $('rules').textContent);
+const TERMS = { 'bomb': 'bombs', 'straight flush': 'bombs', 'four jokers': 'bombs', 'wild card': 'level', 'wild': 'level',
+                'catching the wind': 'wind', 'tribute': 'tribute', 'full house': 'combos', 'tube': 'combos',
+                'plate': 'combos', 'straight': 'combos', 'level': 'level' };
 // how a card reads in a sentence: 'red joker', '10♥'
 const cardName = code => code === 'RJ' ? 'red joker' : code === 'BJ' ? 'black joker' : (RANK[code.slice(0, -1)] || code.slice(0, -1)) + SUIT[code.slice(-1)][0];
 const mini = codes => { const d = document.createElement('div'); d.className = 'mini'; drawCards(d, codes); return d; };
@@ -148,13 +153,13 @@ function renderAdvice() {
   if (!advice || advice.kind === 'wait') { box.hidden = true; return; }
   box.hidden = false;
   if (advice.kind === 'return') {
-    box.innerHTML = `<b>Coach: hand back the ${advice.name}.</b> ${cap(advice.reason)}.<div class="alt"><button type="button" id="usePick">Select it</button></div>`;
+    box.innerHTML = `<b>Coach: hand back the ${advice.name}.</b> ${linkTerms(cap(advice.reason), TERMS)}.<div class="alt"><button type="button" id="usePick">Select it</button></div>`;
     $('usePick').onclick = () => toggle(view.hand.indexOf(advice.card));
     return;
   }
-  const line = (a, k) => `<div class="alt">${k ? `<span class="muted">Or ${a.move.desc}:</span> ${a.reason || ''}` : ''}
+  const line = (a, k) => `<div class="alt">${k ? `<span class="muted">Or ${a.move.desc}:</span> ${linkTerms(a.reason || '', TERMS)}` : ''}
     ${a.move.kind === 'play' ? `<button type="button" data-use="${k}">Select ${k ? 'these' : 'the coach\'s'} cards</button>` : ''}</div>`;
-  box.innerHTML = `<b>Coach: ${advice.move.kind === 'pass' ? 'pass' : 'play the ' + advice.move.desc}.</b> ${advice.reason ? cap(advice.reason) + '.' : ''}` +
+  box.innerHTML = `<b>Coach: ${advice.move.kind === 'pass' ? 'pass' : 'play the ' + advice.move.desc}.</b> ${advice.reason ? linkTerms(cap(advice.reason), TERMS) + '.' : ''}` +
     line(advice, 0) + advice.alternatives.map((a, k) => line(a, k + 1)).join('');
   const all = [advice, ...advice.alternatives];
   box.querySelectorAll('[data-use]').forEach(b => b.onclick = () => { sel = indicesOf(all[+b.dataset.use].move.cards); renderHand(); });
@@ -224,7 +229,9 @@ function toggle(i) {
 
 function render() {
   const v = view;
-  $('rules').textContent = `Two packs with jokers · you and your partner against East and West · level ${v.level}` + (v.wild ? `, wild ${v.wild.slice(0, -1)}♥` : '');
+  $('rules').textContent = `Two packs with jokers · you and your partner against East and West · level ${v.level}` + (v.wild ? `, wild ${cardName(v.wild)}` : '');
+  // the rules open where they matter now: tribute while you hand a card back, wilds when a play reads several ways
+  $('rulesLink').dataset.rules = v.phase === 'return' ? 'tribute' : v.choices ? 'wilds' : ['done', 'over'].includes(v.phase) ? 'scoring' : '';
   const seated = v.seats.length > 0;
   [1, 2, 3].forEach(k => { if (seated) renderSeat(k); else $('seat' + k).replaceChildren(); });
   // the middle: the combination to beat, or who leads, or how the hand ended
@@ -266,11 +273,11 @@ function render() {
   $('pass').disabled = !v.can_pass;
   $('choices').hidden = !v.choices;
   if (v.choices) {
-    $('choices').replaceChildren(Object.assign(document.createElement('span'), { className: 'small', textContent: 'Your cards read several ways. Play them as:' }),
+    $('choices').replaceChildren(Object.assign(document.createElement('span'), { className: 'small', innerHTML: 'Your cards read several ways (<a href="#" data-rules="wilds">why?</a>). Play them as:' }),
       ...v.choices.map((d, k) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = cap(d); b.onclick = () => playSel(k); return b; }));
   }
   $('returnBar').hidden = v.phase !== 'return';
-  if (v.phase === 'return') { $('returnMsg').textContent = 'You received tribute. Pick a card to hand back (outlined: a 10 or lower, never a wild).'; $('returnBtn').disabled = !pick; if (!pick) $('returnBtn').textContent = 'Hand it back'; }
+  if (v.phase === 'return') { $('returnMsg').innerHTML = 'You received <a href="#" data-rules="tribute">tribute</a>. Pick a card to hand back (outlined: a 10 or lower, never a wild).'; $('returnBtn').disabled = !pick; if (!pick) $('returnBtn').textContent = 'Hand it back'; }
   $('dealbar').hidden = !['deal', 'done', 'over'].includes(v.phase);
   $('deal').innerHTML = v.phase === 'over' ? 'Start a new match' : v.phase === 'deal' && !v.match.hands ? 'Deal the first hand<kbd>Enter</kbd>' : 'Deal the next hand<kbd>Enter</kbd>';
   // rail
@@ -285,7 +292,7 @@ function render() {
   $('followed').textContent = v.stats.decisions ? `You made the coach's play on ${v.stats.followed} of ${v.stats.decisions} turns.` : '';
   $('unseenBox').hidden = !v.unseen.length;
   $('unseen').innerHTML = v.unseen.map(u => `<tr><td>${u.label}</td><td class="num">${u.n} of ${u.of}</td></tr>`).join('');
-  $('log').replaceChildren(...v.log.map(t => { const li = document.createElement('li'); li.textContent = t; return li; }));
+  $('log').replaceChildren(...v.log.map(t => { const li = document.createElement('li'); li.innerHTML = linkTerms(t, TERMS); return li; }));
   if (v.match.winner) showError(null);
   advice = null; renderAdvice();
   if ($('auto').checked && (v.your_turn || v.phase === 'return')) ask();

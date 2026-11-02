@@ -44,3 +44,34 @@ ul.log li:last-child { border-bottom: 0; color: var(--ink); font-weight: 600; }
 .chip.even { color: var(--muted); }
 .coach { border: 1px solid var(--oxford); background: var(--oxford-soft); padding: 10px 12px; font: 400 14px/1.45 var(--sans); }
 .coach b { font-weight: 600; }
+
+/* how to play: the rules text, as a page and in the panel beside a table */
+.rules { display: flex; flex-direction: column; gap: 6px; }
+.rules section { border-top: 4px solid var(--ink); padding-top: 10px; margin-top: 22px; display: flex; flex-direction: column; gap: 10px; scroll-margin-top: 12px; }
+.rules section:first-child { margin-top: 0; }
+.rules h2 { font-size: 22px; }
+.rules h3 { font: 600 15px/1.3 var(--sans); margin: 4px 0 0; }
+.rules p, .rules li { font: 400 15.5px/1.55 var(--body); max-width: 66ch; }
+.rules ul, .rules ol { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 4px; }
+.rules .eg-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; }
+.rules .eg-row .note { font: 400 13.5px/1.4 var(--sans); color: var(--muted); }
+.rules .eg { min-height: 0; gap: 3px; }
+.rules td .eg { flex-wrap: nowrap; }  /* an example stays on one line; a wide table scrolls in its wrapper */
+.rules .eg .card { width: 36px; height: 52px; font-size: 14px; padding: 3px 4px; flex-direction: row; justify-content: flex-start; gap: 2px; }
+.rules .eg .card .s { font-size: 14px; align-self: flex-start; }
+.rules table { border-collapse: collapse; width: 100%; font: 400 14px/1.4 var(--sans); }
+.rules th { text-align: left; font: 600 11.5px/1.2 var(--sans); text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); border-bottom: 2px solid var(--ink); padding: 6px 8px 6px 0; }
+.rules td { border-bottom: 1px solid var(--line); padding: 7px 8px 7px 0; vertical-align: middle; }
+.rules .tip { border-left: 4px solid var(--oxford); background: var(--oxford-soft); padding: 8px 12px; font: 400 14px/1.5 var(--sans); max-width: 66ch; }
+.table-scroll { overflow-x: auto; }
+.rules-panel { position: fixed; top: 0; right: 0; bottom: 0; width: min(480px, 100%); background: var(--surface); border-left: 1px solid var(--line);
+               display: flex; flex-direction: column; z-index: 10; }
+.rules-panel .rules-head { display: flex; align-items: center; gap: 12px; padding: 12px 18px; border-bottom: 1px solid var(--line); font: 600 13px/1 var(--sans); }
+.rules-panel .rules-head .kicker { margin-right: auto; }
+.rules-panel .rules-head button { padding: 6px 10px; font-size: 13px; }
+.rules-panel .this-table { padding: 10px 18px 0; color: var(--muted); }
+.rules-panel .rules { overflow-y: auto; padding: 14px 18px 40px; flex: 1; }
+.rules-panel .rules section { margin-top: 18px; }
+.rules-panel .rules h2 { font-size: 19px; }
+.rules-panel .rules p, .rules-panel .rules li { font-size: 14.5px; }
+a[data-rules] { text-decoration: underline dotted; text-underline-offset: 3px; }

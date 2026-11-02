@@ -454,7 +454,8 @@ async function checkPlay() {
   try { const r = await fetch(PLAY + '/api/games', { cache: 'no-store' }); if (r.ok) games = await r.json(); } catch (e) {}
   const links = $('play-links');
   if (games) {
-    $('play-msg').textContent = 'The game server is running. Sit down at a table, with the coach at your shoulder.';
+    const howTo = games.filter(g => g.available).map(g => `<a href="${PLAY}/${g.name}/rules">${g.title}</a>`).join(', ');
+    $('play-msg').innerHTML = `The game server is running. Sit down at a table, with the coach at your shoulder, or first read how to play ${howTo}.`;
     links.innerHTML = games.filter(g => g.available).map((g, k) => `<a class="${k ? '' : 'primary'}" href="${PLAY}/${g.name}">Play ${g.title}</a>`).join('') +
       `<a href="${PLAY}/">All games</a>`;
     links.hidden = false;

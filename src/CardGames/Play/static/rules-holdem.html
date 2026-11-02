@@ -1,0 +1,100 @@
+<section id="goal">
+  <h2>The goal</h2>
+  <p>Win chips. Each hand you either make the best five-card hand at the showdown, or bet so that everyone else folds before it. Each player has two private <b>hole cards</b>; five shared <b>board</b> cards come face up in the middle. Your hand is the best five of your two and the board's five, in any mix.</p>
+</section>
+
+<section id="rankings">
+  <h2>Hand rankings</h2>
+  <p>Best first. Within a category, higher cards win: a pair of kings beats a pair of queens, and with the same pair the highest other card, the <b>kicker</b>, decides. Suits never rank.</p>
+  <div class="table-scroll"><table>
+    <tr><th>Hand</th><th>Example</th><th>What it is</th></tr>
+    <tr><td>Straight flush</td><td><span data-cards="9H TH JH QH KH"></span></td><td>Five in a row, all one suit. Ace high is a royal flush.</td></tr>
+    <tr><td>Four of a kind</td><td><span data-cards="8S 8H 8D 8C KD"></span></td><td>Four cards of one rank.</td></tr>
+    <tr><td>Full house</td><td><span data-cards="QS QH QD 5C 5D"></span></td><td>Three of one rank and two of another; the three rank first.</td></tr>
+    <tr><td>Flush</td><td><span data-cards="2D 7D 9D JD KD"></span></td><td>Five of one suit, highest card first.</td></tr>
+    <tr><td>Straight</td><td><span data-cards="5C 6D 7H 8S 9C"></span></td><td>Five in a row. The ace plays high (10 to A) or low (A to 5).</td></tr>
+    <tr><td>Three of a kind</td><td><span data-cards="7S 7H 7D KC 2S"></span></td><td>Three of one rank.</td></tr>
+    <tr><td>Two pair</td><td><span data-cards="JS JH 4D 4C AS"></span></td><td>Two different pairs; the higher pair first.</td></tr>
+    <tr><td>Pair</td><td><span data-cards="TS TH 8D 5C 2S"></span></td><td>Two of one rank.</td></tr>
+    <tr><td>High card</td><td><span data-cards="AS JD 8C 6H 3S"></span></td><td>None of the above; the highest card plays.</td></tr>
+  </table></div>
+</section>
+
+<section id="blinds">
+  <h2>The button and the blinds</h2>
+  <p>The <b>button</b> (D) marks the dealer's seat and moves one seat left each hand. The two seats after it post forced bets before any cards: the <b>small blind</b> (SB) and the <b>big blind</b> (BB), here 1 and 2 chips. The blinds give everyone something to win from the start.</p>
+  <p>Heads-up, with only two players, the button posts the small blind.</p>
+</section>
+
+<section id="streets">
+  <h2>The four betting rounds</h2>
+  <ol>
+    <li><b>Preflop</b>: everyone gets two hole cards. Betting starts left of the big blind.</li>
+    <li><b>Flop</b>: three board cards. Betting starts with the first player still in, left of the button.</li>
+    <li><b>Turn</b>: a fourth board card, then betting.</li>
+    <li><b>River</b>: the fifth board card, then the last betting round.</li>
+  </ol>
+  <div class="eg-row"><span data-cards="7D 8S 9H TD JS"></span><span class="note">A full board after the river.</span></div>
+  <p>A round ends when everyone still in has acted and put in the same amount, or is all in.</p>
+</section>
+
+<section id="moves">
+  <h2>Your moves</h2>
+  <table>
+    <tr><th>Move</th><th>Key</th><th>When</th></tr>
+    <tr><td><b>Fold</b></td><td>F</td><td>Give up the hand and whatever you have put in.</td></tr>
+    <tr><td><b>Check</b></td><td>K</td><td>Pass without betting, when there is nothing to call.</td></tr>
+    <tr><td><b>Call</b></td><td>K</td><td>Match the current bet.</td></tr>
+    <tr><td><b>Bet</b> or <b>raise</b></td><td>R</td><td>Put in more than the current bet; others must call, raise again or fold. The first bet in a round is a bet, any after it a raise.</td></tr>
+  </table>
+  <h3 id="raise-size">How much you can raise</h3>
+  <ul>
+    <li>This is <b>no-limit</b>: you can bet any amount up to everything in front of you.</li>
+    <li>The smallest raise adds at least as much as the last raise did. If the bet is 2 and someone raises to 6, the next raise must be to at least 10.</li>
+    <li>The raise slider offers the minimum, half the pot, the pot and all in.</li>
+  </ul>
+  <h3 id="all-in">All in</h3>
+  <p>If you cannot cover a bet, you can call with all your chips. A player all in cannot be forced out, but can only win as much from each other player as they put in. An all-in that adds less than a full raise does not let players who have already acted raise again; they can only call it or fold.</p>
+</section>
+
+<section id="side-pots">
+  <h2>Side pots</h2>
+  <p>When a player is all in for less than the others bet, the chips split into a <b>main pot</b>, which everyone can win, and <b>side pots</b> that only the players who put in more can win.</p>
+  <p class="tip">Example: you are all in for 50; two others bet 120 each. The main pot is 150 (50 from each of you), and you can win it. The side pot is 140 (the other 70 from each of them), and only they can win it.</p>
+</section>
+
+<section id="showdown">
+  <h2>The showdown</h2>
+  <p>If more than one player is left after the river, the hands are turned over and the best five-card hand wins each pot it is eligible for. Equal hands split the pot; an odd chip goes to the first winner left of the button. If everyone else folds, the last player wins without showing.</p>
+  <div class="eg-row"><span data-cards="AS AH"></span><span data-cards="KD KC"></span><span class="note">On 7♦ 8♠ 9♥ 10♦ J♠ both make the same straight from the board: the pot is split.</span></div>
+</section>
+
+<section id="equity">
+  <h2>Equity</h2>
+  <p>Your <b>equity</b> is your share of the pot if the hand were played to the end many times: the chance you win, with ties counted as part wins. The coach estimates it by dealing the other players random hands from the cards you have not seen, thousands of times, and finishing the board each time.</p>
+  <div class="eg-row"><span data-cards="AS AH"></span><span class="note">Pocket aces against one random hand: about 85%.</span></div>
+</section>
+
+<section id="pot-odds">
+  <h2>Pot odds</h2>
+  <p>The equity a call needs to break even: the call divided by the pot it would make.</p>
+  <p class="tip">The pot holds 60 and it costs you 20 to call. The pot would be 80, so you need 20 ÷ 80 = 25% equity. With more, calling makes chips in the long run; with less, folding does.</p>
+</section>
+
+<section id="outs">
+  <h2>Outs</h2>
+  <p><b>Outs</b> are the unseen cards that would improve your hand. A quick estimate, the <b>rule of 2 and 4</b>: on the flop, outs × 4 is roughly your chance to hit by the river; on the turn, outs × 2 is your chance on the river.</p>
+  <div class="eg-row"><span data-cards="AH 5H"></span><span data-cards="KH 9H 2C"></span><span class="note">A flush draw: 9 hearts left, so about 9 × 4 = 36% by the river (exactly 35%).</span></div>
+  <p>The coach also counts cards that only pair the board, which help you a little but help everyone, so its count can run high.</p>
+</section>
+
+<section id="call-ev">
+  <h2>Expected value of a call</h2>
+  <p>The chips a call wins on average, compared with folding: equity × (pot + call) − call.</p>
+  <p class="tip">With 35% equity, a pot of 60 and 20 to call: 0.35 × 80 − 20 = +8 chips. A positive value means the call pays over time, even though you will lose it more often than you win it.</p>
+</section>
+
+<section id="coach">
+  <h2>What the coach knows</h2>
+  <p>Your two cards, the board, the pot, the stacks and every bet made. Never another player's cards or the order of the deck: the server never sends them to your browser. The computer players follow the same rule, each from its own cards only.</p>
+</section>
