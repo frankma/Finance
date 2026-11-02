@@ -1,3 +1,4 @@
+import hashlib
 import json
 import os
 import random
@@ -20,6 +21,25 @@ LAB = os.path.join(VIZ, 'card_games_lab.html')
 TYPES = {'.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8',
          '.js': 'text/javascript; charset=utf-8'}
 MAX_SESSIONS = 200
+CARD_GAMES = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
+BUILD_HEADER = 'X-Card-Games-Build'
+SHUTDOWN_HEADER = 'X-Card-Games-Shutdown'
+
+
+def build_id(root: str = CARD_GAMES) -> str:
+    """
+    a short fingerprint of the Python code under root, so a launcher can tell a server running older code from one
+    running this code; pages and other static files are read from disk on every request, so they never go stale
+    """
+    digest = hashlib.sha1()
+    for folder, dirs, files in sorted(os.walk(root)):
+        dirs.sort()
+        for name in sorted(f for f in files if f.endswith('.py')):
+            path = os.path.join(folder, name)
+            digest.update(os.path.relpath(path, root).replace(os.sep, '/').encode('utf-8'))
+            with open(path, 'rb') as f:
+                digest.update(f.read())
+    return digest.hexdigest()[:12]
 
 
 class Sessions(object):
@@ -61,10 +81,15 @@ def _static_files() -> dict:
 class Handler(BaseHTTPRequestHandler):
     """
     pages: /, /<game>, /<game>/rules, /lab, /static/<file>; JSON: GET /api/games, POST /api/<game>/new,
-    GET /api/<game>/<id>, POST /api/<game>/<id>/act, GET /api/<game>/<id>/advice
+    GET /api/<game>/<id>, POST /api/<game>/<id>/act, GET /api/<game>/<id>/advice, and POST /api/shutdown for a
+    launcher replacing this server with newer code
+
+    every response carries the build of the code it runs; the shutdown needs a custom header, which a page on another
+    site cannot send without the browser first asking this server's permission, which it never gives
     """
     sessions = None  # type: Sessions
     quiet = True
+    build = ''
 
     def log_message(self, fmt, *args):
         if not self.quiet:
@@ -72,6 +97,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def _send(self, status: int, body: bytes, content_type: str, shared: bool = False) -> None:
         self.send_response(status)
+        self.send_header(BUILD_HEADER, self.build)
         if shared:
             # the read-only game list may be read by any page, e.g. the Lab opened as a file, to see the server is up
             self.send_header('Access-Control-Allow-Origin', '*')
@@ -131,6 +157,8 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         parts = self._parts()
+        if parts == ['api', 'shutdown']:
+            return self._shutdown()
         try:
             if len(parts) == 3 and parts[0] == 'api' and parts[2] == 'new':
                 sid, session = self.sessions.create(parts[1], self._body())
@@ -148,10 +176,23 @@ class Handler(BaseHTTPRequestHandler):
             self._json(400, {'error': str(e)})
 
 
+    def _shutdown(self) -> None:
+        if self.headers.get(SHUTDOWN_HEADER) != self.build:
+            return self._json(403, {'error': 'a shutdown needs the %s header naming this build.' % SHUTDOWN_HEADER})
+        self._json(200, {'build': self.build})
+        self.server.replaced = True
+        # serve_forever is waiting on this thread's request to finish, so stop it from another thread
+        threading.Thread(target=self.server.shutdown, daemon=True).start()
+
+
 def make_server(host: str = '127.0.0.1', port: int = 8765, seed: Optional[int] = None,
-                quiet: bool = True) -> ThreadingHTTPServer:
+                quiet: bool = True, build: Optional[str] = None) -> ThreadingHTTPServer:
     """
     a play server on host:port (port 0 picks a free one); local only by default
+    :param build: the build it reports, by default the fingerprint of the code it runs
     """
-    handler = type('PlayHandler', (Handler,), {'sessions': Sessions(seed), 'quiet': quiet})
-    return ThreadingHTTPServer((host, port), handler)
+    handler = type('PlayHandler', (Handler,), {'sessions': Sessions(seed), 'quiet': quiet,
+                                               'build': build if build is not None else build_id()})
+    server = ThreadingHTTPServer((host, port), handler)
+    server.replaced = False  # set once a newer server has asked this one to stop
+    return server

@@ -5,7 +5,7 @@ import urllib.request
 from unittest import TestCase
 
 from src.CardGames.Play.Registry import lobby, playable
-from src.CardGames.Play.Server import make_server
+from src.CardGames.Play.Server import build_id, make_server
 
 __author__ = 'frank.ma'
 
@@ -38,6 +38,10 @@ class TestServer(TestCase):
         sid = json.loads(self.request('POST', '/api/blackjack/new', {})[1])['id']
         for path in ('/api/blackjack/%s' % sid, '/api/blackjack/%s/advice' % sid, '/'):
             self.assertIsNone(self.request('GET', path, headers=True)[2].get('Access-Control-Allow-Origin'), path)
+
+    def test_every_response_names_its_build(self):
+        for path in ('/', '/api/games', '/nothing'):
+            self.assertEqual(self.request('GET', path, headers=True)[2].get('X-Card-Games-Build'), build_id(), path)
 
     def test_pages(self):
         for path in ('/', '/blackjack', '/holdem', '/guandan', '/blackjack/rules', '/holdem/rules', '/guandan/rules',
