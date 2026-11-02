@@ -24,7 +24,8 @@ class BlackScholesBackwardPDE(object):
         self.tdx = self.ts / self.dt
 
     def solve(self):
-        state = np.matrix(np.maximum(OptionType.call.value * (self.xs - self.k), np.full(np.shape(self.xs), 0.0)))
+        # one row: the values at each grid point, stepped back in time by multiplying on the right
+        state = np.maximum(OptionType.call.value * (self.xs - self.k), np.full(np.shape(self.xs), 0.0)).reshape(1, -1)
 
         lhs_lft = self.r * self.sdx * self.dt / 4.0 - ((self.sig * self.sdx) ** 2) * self.dt / 4.0
         lhs_ctr = 1.0 + ((self.sig * self.sdx) ** 2) * self.dt / 2.0 + self.r * self.dt / 2.0
@@ -52,12 +53,12 @@ class BlackScholesBackwardPDE(object):
         # rhs_ctr[-1] = 2.0
         rhs_tdm = TriDiagonalMatrix(rhs_lft[1:], rhs_ctr, rhs_upr[:-1])
 
-        tm = rhs_tdm.get_matrix().transpose() * lhs_tdm.get_inverse().transpose()
+        tm = rhs_tdm.get_matrix().transpose() @ lhs_tdm.get_inverse().transpose()
 
         for _ in self.ts[:-1]:
-            state *= tm  # save vector space for calculation
+            state = state @ tm
 
-        vec = np.asarray(state).reshape(-1)
+        vec = state.reshape(-1)
         return np.interp([self.s], self.xs, vec)[0]
 
 

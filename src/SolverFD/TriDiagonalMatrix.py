@@ -17,6 +17,8 @@ class TriDiagonalMatrix(object):
             self.lower = np.full(n - 1, lower)
             self.center = np.full(n, center)
             self.upper = np.full(n - 1, upper)
+        else:
+            raise ValueError('n %i should be at least 3 to build a matrix from repeated values.' % n)
         self.matrix = self.create(self.lower, self.center, self.upper)
 
     def get_matrix(self):
@@ -26,7 +28,7 @@ class TriDiagonalMatrix(object):
         return np.linalg.inv(self.matrix)
 
     @staticmethod
-    def create(lower: np.array or list, center: np.array or list, upper: np.array or list) -> np.matrix:
+    def create(lower: np.array or list, center: np.array or list, upper: np.array or list) -> np.ndarray:
         n = center.__len__()
         if not len(lower) == len(upper) == n - 1:
             raise ValueError('invalid length of lower, center and upper vector, expect (n - 1, n, n - 1) shape')
@@ -43,4 +45,4 @@ class TriDiagonalMatrix(object):
         matrix[n - 1][n - 2] = lower[n - 2]
         matrix[n - 1][n - 1] = center[n - 1]
 
-        return np.matrix(matrix)
+        return matrix
