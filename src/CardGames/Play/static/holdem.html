@@ -122,32 +122,21 @@
 </div>
 <script src="/static/common.js"></script>
 <script>
-const GAME = 'holdem';
-let sid = null, view = null, advice = null;
+const table = seat('holdem');
+let view = null, advice = null;
 const NAMES = { fold: 'Fold', check: 'Check', call: 'Call', raise: 'Raise' };
 const pct = (x, d = 0) => fmt(100 * x, d) + '%';
 
-function showError(e) { $('err').hidden = !e; $('err').textContent = e ? e.message || String(e) : ''; }
-const cap = s => s[0].toUpperCase() + s.slice(1);
-
-async function start(fresh) {
-  const params = Object.fromEntries(new URLSearchParams(location.search));
-  sid = fresh ? null : prefs.get(GAME + '-session', null);
-  if (sid) {
-    try { view = await api('GET', `/api/${GAME}/${sid}`); return render(); } catch (e) { sid = null; }
-  }
-  const made = await api('POST', `/api/${GAME}/new`, params);
-  sid = made.id; prefs.set(GAME + '-session', sid); view = made.view; render();
-}
+async function start(fresh) { view = await table.open(fresh, Object.fromEntries(new URLSearchParams(location.search))); render(); }
 
 async function act(action) {
   showError(null);
-  try { view = await api('POST', `/api/${GAME}/${sid}/act`, action); advice = null; render(); }
+  try { view = await table.act(action); advice = null; render(); }
   catch (e) { if (e.status === 404) return start(true); showError(e); }
 }
 
 async function ask() {
-  try { advice = await api('GET', `/api/${GAME}/${sid}/advice`); renderAdvice(); } catch (e) { showError(e); }
+  try { advice = await table.advice(); renderAdvice(); } catch (e) { showError(e); }
 }
 
 function moveLabel(move, to) {

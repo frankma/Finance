@@ -118,32 +118,22 @@ table.unseen td.num { text-align: right; font: 500 13px/1.3 var(--mono); font-va
 </div>
 <script src="/static/common.js"></script>
 <script>
-const GAME = 'guandan';
-let sid = null, view = null, advice = null, sel = new Set(), pick = null;
-
-function showError(e) { $('err').hidden = !e; $('err').textContent = e ? e.message || String(e) : ''; }
-const cap = s => s[0].toUpperCase() + s.slice(1);
+const table = seat('guandan');
+let view = null, advice = null, sel = new Set(), pick = null;
 // how a card reads in a sentence: 'red joker', '10♥'
 const cardName = code => code === 'RJ' ? 'red joker' : code === 'BJ' ? 'black joker' : (RANK[code.slice(0, -1)] || code.slice(0, -1)) + SUIT[code.slice(-1)][0];
 const mini = codes => { const d = document.createElement('div'); d.className = 'mini'; drawCards(d, codes); return d; };
 
-async function start(fresh) {
-  sid = fresh ? null : prefs.get(GAME + '-session', null);
-  if (sid) {
-    try { view = await api('GET', `/api/${GAME}/${sid}`); return render(); } catch (e) { sid = null; }
-  }
-  const made = await api('POST', `/api/${GAME}/new`, {});
-  sid = made.id; prefs.set(GAME + '-session', sid); view = made.view; sel.clear(); render();
-}
+async function start(fresh) { view = await table.open(fresh); sel.clear(); render(); }
 
 async function act(action, keep) {
   showError(null);
-  try { view = await api('POST', `/api/${GAME}/${sid}/act`, action); advice = null; if (!keep) sel.clear(); pick = null; render(); }
+  try { view = await table.act(action); advice = null; if (!keep) sel.clear(); pick = null; render(); }
   catch (e) { if (e.status === 404) return start(true); showError(e); }
 }
 
 async function ask() {
-  try { advice = await api('GET', `/api/${GAME}/${sid}/advice`); renderAdvice(); } catch (e) { showError(e); }
+  try { advice = await table.advice(); renderAdvice(); } catch (e) { showError(e); }
 }
 
 // the hand indices holding these cards, one index per card, so a pair of the same card picks both copies
@@ -289,6 +279,9 @@ function render() {
   $('won').textContent = v.match.hands ? `your team won ${v.match.won}` : 'no hands yet';
   $('level').textContent = v.level;
   $('declarer').textContent = v.declarer === null ? 'the first hand' : v.declarer === 'you' ? "your team's level" : "the opponents' level";
+  // at A a team must win with its partner 2nd or 3rd; three failed tries drop it back to 2
+  const fails = v.declarer === null ? 0 : v.a_fails[v.declarer === 'you' ? 0 : 1];
+  if (v.level === 'A' && fails) $('declarer').textContent += ` · ${fails} of 3 tries at A failed`;
   $('followed').textContent = v.stats.decisions ? `You made the coach's play on ${v.stats.followed} of ${v.stats.decisions} turns.` : '';
   $('unseenBox').hidden = !v.unseen.length;
   $('unseen').innerHTML = v.unseen.map(u => `<tr><td>${u.label}</td><td class="num">${u.n} of ${u.of}</td></tr>`).join('');

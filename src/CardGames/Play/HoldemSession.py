@@ -224,7 +224,7 @@ class HoldemSession(Session):
         out = {
             'game': 'holdem', 'phase': self.phase, 'blinds': [self.rules.small_blind, self.rules.big_blind],
             'buy_in': self.buy_in, 'seats': self._seat_views(), 'board': [], 'pot': 0, 'street': None,
-            'legal': [], 'to_call': 0, 'raise': None, 'your_turn': False, 'made': None, 'pots': None,
+            'legal': [], 'to_call': 0, 'raise': None, 'your_turn': False, 'made': None,
             'payoff': None, 'log': self.log[-14:], 'can_rebuy': self.phase != 'play' and self.stacks[0] < self.rules.big_blind,
             # chips won so far, counted between hands: during one, your stack is the one you sat down with
             'stats': {'hands': self.hands, 'net': self.stacks[0] - self.bought[0], 'bought': self.bought[0],
@@ -249,7 +249,6 @@ class HoldemSession(Session):
                 out['raise'] = {'min': o.min_raise_to, 'max': o.max_raise_to,
                                 'pot': min(o.max_raise_to, max(o.min_raise_to, o.current_bet + o.pot + o.to_call))}
         if self.phase == 'done':
-            out['pots'] = [{'amount': p.amount, 'winners': [self.names[i] for i in p.winners]} for p in self.round.pots]
             out['payoff'] = self.payoff
         return out
 
@@ -260,9 +259,8 @@ class HoldemSession(Session):
         o = self.round.observation(0)
         out = {'kind': 'move', 'move': advice.move.action.value, 'to': advice.move.to, 'reason': advice.reason,
                'equity': advice.equity, 'pot_odds': advice.pot_odds, 'call_ev': advice.call_ev,
-               'n_opponents': o.n_opponents, 'n_sims': COACH_SIMS, 'outs': None}
+               'n_opponents': o.n_opponents, 'outs': None}
         if o.street in (Street.FLOP, Street.TURN):
             found = outs(list(o.hole), list(o.board), self.rules)
-            out['outs'] = {'n': found.n_outs, 'p_next': found.p_next_card,
-                           'p_river': found.p_by_river(2 if o.street == Street.FLOP else 1)}
+            out['outs'] = {'n': found.n_outs, 'p_river': found.p_by_river(2 if o.street == Street.FLOP else 1)}
         return out

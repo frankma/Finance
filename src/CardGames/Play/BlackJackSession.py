@@ -12,10 +12,13 @@ from src.CardGames.Play.Session import Session
 
 __author__ = 'frank.ma'
 
-PRESETS = {
-    's17': ('6 decks, dealer stands on soft 17', Rules()),
-    'h17': ('6 decks, dealer hits soft 17, late surrender', Rules(dealer_hits_soft_17=True, surrender=True)),
-}
+PRESETS = {'s17': Rules(), 'h17': Rules(dealer_hits_soft_17=True, surrender=True)}
+
+
+def describe(rules: Rules) -> str:
+    return '%i deck%s, dealer %s soft 17%s' % (rules.n_decks, '' if rules.n_decks == 1 else 's',
+                                              'hits' if rules.dealer_hits_soft_17 else 'stands on',
+                                              ', late surrender' if rules.surrender else '')
 
 
 def _outcome(hand: Hand, dealer: Hand, payoff: float) -> str:
@@ -41,14 +44,14 @@ class BlackJackSession(Session):
         preset = options.get('rules', 's17')
         if preset not in PRESETS:
             raise ValueError('unknown rules %r, expect one of %s.' % (preset, sorted(PRESETS)))
-        self.rules_label, rules = PRESETS[preset]
+        rules = PRESETS[preset]
         n_decks = int(options.get('n_decks', rules.n_decks))
         if not 1 <= n_decks <= 8:
             raise ValueError('n_decks %i should be between 1 and 8.' % n_decks)
         self.rules = dataclasses.replace(rules, n_decks=n_decks)
         self.min_bet, self.max_bet = 5, 500
         self.bankroll = float(options.get('bankroll', 1000))
-        self.start_bankroll = self.bankroll
+        self.bought = self.bankroll  # what you sat down with
         self.table = Table(self.rules, rng)
         self.coach = BasicStrategy(self.rules)
         self.sizer = KellyBetSizer(self.min_bet, self.max_bet)
@@ -150,11 +153,11 @@ class BlackJackSession(Session):
     def view(self) -> dict:
         shoe = self.table.shoe
         out = {
-            'game': 'blackjack', 'phase': self.phase, 'rules': self.rules_label, 'n_decks': self.rules.n_decks,
-            'bankroll': self.bankroll, 'start_bankroll': self.start_bankroll, 'min_bet': self.min_bet,
+            'game': 'blackjack', 'phase': self.phase, 'rules': describe(self.rules),
+            'bankroll': self.bankroll, 'min_bet': self.min_bet,
             'max_bet': min(self.max_bet, int(self.bankroll)), 'last_bet': self.last_bet,
             'shoe': {'cards_left': shoe.cards_remaining, 'n_cards': shoe.n_cards, 'reshuffle_next': shoe.needs_shuffle},
-            'stats': {'rounds': self.rounds, 'net': self.bankroll - self.start_bankroll,
+            'stats': {'rounds': self.rounds, 'net': self.bankroll - self.bought,
                       'followed': self.followed, 'decisions': self.decisions},
             'log': self.log[-12:], 'legal': [m.value for m in self.legal()],
             'broke': self.phase != 'play' and self.bankroll < self.min_bet,
