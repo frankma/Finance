@@ -2,9 +2,10 @@
 build viz/card_games_lab.html: run the CardGames engines once with fixed seeds, then write the numbers into the
 page template together with the paper theme, so the page itself carries no game logic
 
-    python -m viz.build_card_games_lab            # full run, a couple of minutes
+    python -m viz.build_card_games_lab            # full run, several minutes
     python -m viz.build_card_games_lab --quick    # small samples, seconds, for checking the page
     python -m viz.build_card_games_lab --reuse    # keep the page's numbers, refill an edited template
+    python -m viz.build_card_games_lab --only guandan    # rerun one game, keep the other numbers
 
 every number on the page comes from src/CardGames; the assistants it describes see only what their seat could know
 """
@@ -23,6 +24,14 @@ from src.CardGames.BlackJack.Round import Observation
 from src.CardGames.BlackJack.Rules import Rules
 from src.CardGames.BlackJack.Table import ev_by_true_count, simulate_bankroll
 from src.CardGames.Core.Card import Card, Rank, Suit
+from src.CardGames.Core.Game import play_out
+from src.CardGames.Core.Player import RandomStrategy
+from src.CardGames.Core.Simulator import MonteCarloResult
+from src.CardGames.GuanDan.Combo import BLACK_JOKER, RED_JOKER, is_wild
+from src.CardGames.GuanDan.Match import Match
+from src.CardGames.GuanDan.Planner import plan_hand
+from src.CardGames.GuanDan.Round import N_SEATS, Round as GuanDanRound, deal, team
+from src.CardGames.GuanDan.Strategy import LowestPlay, PlannerStrategy
 from src.CardGames.Holdem.Equity import outs, simulate_equity
 
 __author__ = 'frank.ma'
@@ -38,7 +47,8 @@ RULES = {'s17': S17, 'h17': H17}
 DEALER = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'A']
 
 # sample sizes for a full build; --quick divides them
-FULL = {'ev_rounds': 1000000, 'bankroll_paths': 120, 'bankroll_rounds': 4000, 'hand_sims': 1000, 'spot_sims': 6000}
+FULL = {'ev_rounds': 1000000, 'bankroll_paths': 120, 'bankroll_rounds': 4000, 'hand_sims': 1000, 'spot_sims': 6000,
+        'guandan_hands': 3000, 'guandan_versus': 300, 'guandan_matches': 100}
 
 
 def _rules_dict(rules: Rules) -> dict:
@@ -156,6 +166,104 @@ def flop_spots(n_sims: int, seed: int) -> List[Dict]:
     return rows
 
 
+def guandan_versus(n_hands: int, seed: int) -> List[Dict]:
+    """
+    a planning team against a team playing by a simple rule, on independent deals at level 2 with a random leader:
+    the share of hands won and the levels gained per hand
+    """
+    rng = random.Random(seed)
+    planner = PlannerStrategy()
+    rows = []
+    for name, baseline in (('Random legal plays', RandomStrategy(rng)), ('Always the lowest play', LowestPlay())):
+        wins, levels = [], []
+        seats = [planner, baseline, planner, baseline]
+        for _ in range(n_hands):
+            game = GuanDanRound(deal(rng), Rank.TWO, rng.randrange(N_SEATS))
+            payoffs = play_out(game, seats)
+            wins.append(float(game.result.winning_team == 0))
+            levels.append(payoffs[0])
+        rows.append({'name': name, 'win': MonteCarloResult.from_samples(wins).to_dict(),
+                     'levels': MonteCarloResult.from_samples(levels).to_dict()})
+    return rows
+
+
+def _starting_rows(samples: Dict[int, List[float]], total: int, low: int, high: int) -> List[Dict]:
+    # one row per value of a feature of the dealt hand, the tails pooled into their end values
+    rows = []
+    for value in sorted(samples):
+        result = MonteCarloResult.from_samples(samples[value])
+        label = str(value)
+        if value == low and low > 0:
+            label = '%i or fewer' % value
+        elif value == high:
+            label = '%i or more' % value
+        rows.append({'value': value, 'label': label, 'share': len(samples[value]) / total, 'win': result.mean,
+                     'stderr': result.stderr})
+    return rows
+
+
+def guandan_hands(n_hands: int, seed: int) -> dict:
+    """
+    planners in all four seats on independent deals at level 2 with a random leader: how often a seat's team wins the
+    hand given what that seat could read from its own 27 cards before the first play, and how hands end
+    """
+    rng = random.Random(seed)
+    planner = [PlannerStrategy()] * N_SEATS
+    limits = {'turns': (5, 11), 'bombs': (0, 4), 'wilds': (0, 3), 'jokers': (0, 3)}  # no hand holds a third wild
+    samples = {key: {} for key in limits}  # type: Dict[str, Dict[int, List[float]]]
+    ups = {1: 0, 2: 0, 3: 0}
+    leads = []
+    for _ in range(n_hands):
+        hands = deal(rng)
+        leader = rng.randrange(N_SEATS)
+        plans = [plan_hand(hand, Rank.TWO) for hand in hands]
+        features = [{'turns': plan.turns, 'bombs': plan.bombs, 'wilds': sum(is_wild(c, Rank.TWO) for c in hand),
+                     'jokers': sum(c.rank.value in (BLACK_JOKER, RED_JOKER) for c in hand)}
+                    for hand, plan in zip(hands, plans)]
+        game = GuanDanRound(hands, Rank.TWO, leader)
+        play_out(game, planner)
+        winners = game.result.winning_team
+        ups[game.result.levels_up] += 1
+        leads.append(float(team(leader) == winners))
+        for seat in range(N_SEATS):
+            won = float(team(seat) == winners)
+            for key, (low, high) in limits.items():
+                value = min(high, max(low, features[seat][key]))
+                samples[key].setdefault(value, []).append(won)
+    total = n_hands * N_SEATS
+    return {
+        'starting': {key: _starting_rows(samples[key], total, *limits[key]) for key in limits},
+        'levels_up': {str(k): v / n_hands for k, v in ups.items()},
+        'leader': MonteCarloResult.from_samples(leads).to_dict(),
+        'n_hands': n_hands,
+    }
+
+
+def guandan_matches(n_matches: int, seed: int) -> dict:
+    """
+    whole matches between planners, tribute included: how long they run, and how often the team that won a hand wins
+    the next one, after the tribute it receives
+    """
+    rng = random.Random(seed)
+    planner = [PlannerStrategy()] * N_SEATS
+    lengths, repeats = [], []
+    for _ in range(n_matches):
+        match = Match(random.Random(rng.random()))
+        match.play(planner)
+        lengths.append(len(match.records))
+        winners = [record.result.winning_team for record in match.records]
+        repeats += [float(a == b) for a, b in zip(winners, winners[1:])]
+    return {'n_matches': n_matches, 'hands_mean': float(np.mean(lengths)),
+            'hands_percentiles': [float(p) for p in np.percentile(lengths, [10, 50, 90])],
+            'winner_repeats': MonteCarloResult.from_samples(repeats).to_dict()}
+
+
+def guandan(sizes: dict) -> dict:
+    return {'versus': guandan_versus(sizes['guandan_versus'], seed=61),
+            'hands': guandan_hands(sizes['guandan_hands'], seed=71),
+            'matches': guandan_matches(sizes['guandan_matches'], seed=81)}
+
+
 def render(data: dict, output: str = OUTPUT) -> None:
     with open(TEMPLATE, encoding='utf-8') as f:
         page = f.read()
@@ -193,8 +301,21 @@ def build(quick: bool = False, output: str = OUTPUT) -> dict:
             'hands': starting_hands(sizes['hand_sims'], seed=41),
             'spots': flop_spots(sizes['spot_sims'], seed=51),
         },
+        'guandan': guandan(sizes),
     }
     data['seconds'] = round(time.time() - start, 1)
+    render(data, output)
+    return data
+
+
+def rerun(game: str, output: str = OUTPUT) -> dict:
+    # recompute one game's numbers in a built page, keeping every other number and the page's sample sizes
+    began = time.time()
+    data = read_data(output)
+    data['sizes'] = dict(FULL, **data['sizes'])
+    data[game] = {'guandan': guandan}[game](data['sizes'])
+    data['built'] = time.strftime('%Y-%m-%d')
+    data['seconds'] = round(data['seconds'] + time.time() - began, 1)
     render(data, output)
     return data
 
@@ -203,9 +324,13 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--quick', action='store_true', help='small samples, for checking the page')
     parser.add_argument('--reuse', action='store_true', help='keep the numbers in the built page, refill the template')
+    parser.add_argument('--only', choices=['guandan'], help='rerun this game, keep the other numbers in the built page')
     parser.add_argument('--output', default=OUTPUT)
     args = parser.parse_args()
-    if args.reuse:
+    if args.only:
+        rerun(args.only, args.output)
+        print('reran %s in %s' % (args.only, args.output))
+    elif args.reuse:
         render(read_data(args.output), args.output)
         print('refilled %s' % args.output)
     else:

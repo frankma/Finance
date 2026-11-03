@@ -210,6 +210,41 @@ table.hands td span { display: block; font: 600 11.5px/1.1 var(--sans); }
     </div>
   </section>
 
+  <section class="part" id="guandan">
+    <h2>GuanDan</h2>
+    <p class="prose">A partnership climbing game with 27 cards to each of four players. There is no dealing out of unseen cards here: the assistant splits your own hand into as few plays as it can, and scores each play by how easy it leaves the rest of the hand, adjusted for the trick and how many cards everyone holds.</p>
+    <div class="knows">
+      <div><span class="kicker">The assistant knows</span>
+        <ul><li>your hand and the level, so which cards are wild</li><li>the trick to beat, each seat's card count, every card played and every pass</li><li>which cards are unseen, wherever they are</li></ul></div>
+      <div><span class="kicker">It never sees</span>
+        <ul><li>anyone else's hand, your partner's included</li><li>which seat holds the cards it has not seen</li></ul></div>
+    </div>
+
+    <div class="exhibit">
+      <div><h3>What planning is worth</h3>
+        <p class="sub">A team of two planning assistants against a team playing by a simple rule. Each hand is an independent deal at level 2, with a random leader.</p></div>
+      <div class="scroll"><table id="t-gd-versus"></table></div>
+      <figcaption id="cap-gd-versus"></figcaption>
+    </div>
+
+    <div class="exhibit">
+      <div class="ex-head">
+        <div><h3>What your starting hand is worth</h3>
+          <p class="sub">How often your team wins the hand, given what you can read from your own 27 cards before the first play, when all four seats plan. You can see your hand, so you know which column you are in. The dashed line marks a fair share, 50%.</p></div>
+        <div class="seg" role="group" aria-label="Feature of the hand" id="seg-gd"></div>
+      </div>
+      <div class="chart" id="c-gd" role="img" aria-label="Team win rate by a feature of the starting hand"></div>
+      <div class="scroll"><table id="t-gd"></table></div>
+      <figcaption id="cap-gd"></figcaption>
+    </div>
+
+    <div class="exhibit">
+      <div><h3>How hands and matches end</h3>
+        <p class="sub">The first three tiles split the same hands by where the winner's partner finished, which sets how many levels the team climbs. The others come from whole matches between planners, tribute included.</p></div>
+      <div class="stats" id="gd-ends"></div>
+    </div>
+  </section>
+
   <footer style="margin-top:52px" id="foot"></footer>
 </div>
 
@@ -274,7 +309,7 @@ function segmented(host, options, current, onPick) {
     host.appendChild(b);
   }
 }
-const state = { rules: 's17', strat: 's17', band: 2, opp: 1, bet: 50 };
+const state = { rules: 's17', strat: 's17', band: 2, opp: 1, bet: 50, gd: 'bombs' };
 
 /* ---------- headline numbers ---------- */
 function renderStats() {
@@ -466,23 +501,87 @@ async function checkPlay() {
   setTimeout(checkPlay, 4000);
 }
 
+/* ---------- guandan ---------- */
+const GD_FEATURES = {
+  bombs: ['Bombs', 'Bombs the plan finds in your hand'],
+  wilds: ['Wild cards', 'Wild cards in your hand'],
+  jokers: ['Jokers', 'Jokers in your hand'],
+  turns: ['Plays needed', 'Plays the plan needs to empty your hand'],
+};
+
+function renderGdVersus() {
+  const rows = DATA.guandan.versus;
+  $('t-gd-versus').innerHTML = `<thead><tr><th>Opposing team plays</th><th class="num">Hands won by the planners</th><th class="num">Levels per hand</th></tr></thead><tbody>` +
+    rows.map(r => `<tr><td>${r.name}</td><td class="num">${pct(r.win.mean, 1)}</td><td class="num">${r.levels.mean >= 0 ? '+' : '−'}${Math.abs(r.levels.mean).toFixed(2)}</td></tr>`).join('') + '</tbody>';
+  $('cap-gd-versus').textContent = `${fmt(rows[0].win.n)} hands each. Levels per hand is what the planners' team climbs when it wins, less what the other team climbs when it does: 3 is the most a hand can give. Both rules are weak on purpose, as floors to measure against; neither reads the hand as a whole.`;
+}
+
+function renderGdStart() {
+  const rows = DATA.guandan.hands.starting[state.gd], [, title] = GD_FEATURES[state.gd], host = $('c-gd');
+  const ci = r => 1.96 * r.stderr;
+  const top = Math.max(0.6, ...rows.map(r => r.win + ci(r)));
+  const yT = ticks(0, top, 5);
+  const f = frame(host, { x: [0, rows.length], y: [0, yT[yT.length - 1]], xTicks: [], yTicks: yT, yFmt: v => pct(v, 0), xTitle: title, yTitle: 'Your team wins', height: 280 });
+  const t = tip(host), base = f.Y(0), band = f.X(1) - f.X(0), bw = Math.min(56, band * 0.6);
+  svg('line', { x1: f.m.l, x2: f.w - f.m.r, y1: base, y2: base, style: 'stroke:var(--axis)' }, f.s);
+  const short = label => label.replace(/^(\d+) or fewer$/, '≤$1').replace(/^(\d+) or more$/, '$1+');
+  const cxOf = k => f.X(k + 0.5);
+  rows.forEach((r, k) => {
+    const cx = cxOf(k), y = f.Y(r.win), e = Math.min(4, bw / 2);
+    // a bar anchored on the baseline with its data end rounded
+    svg('path', { d: `M${cx - bw / 2} ${base}V${y + e}Q${cx - bw / 2} ${y} ${cx - bw / 2 + e} ${y}H${cx + bw / 2 - e}Q${cx + bw / 2} ${y} ${cx + bw / 2} ${y + e}V${base}Z`, style: 'fill:var(--s1)' }, f.s);
+  });
+  // the fair share, over the bars so each can be compared with it, under the values so they stay readable
+  const even = f.Y(0.5);
+  svg('line', { x1: f.m.l, x2: f.w - f.m.r, y1: even, y2: even, style: 'stroke:var(--ink);stroke-dasharray:4 3' }, f.s);
+  rows.forEach((r, k) => {
+    const cx = cxOf(k), y = f.Y(r.win), lo = f.Y(Math.max(0, r.win - ci(r))), hi = f.Y(r.win + ci(r));
+    svg('line', { x1: cx, x2: cx, y1: lo, y2: hi, style: 'stroke:var(--ink);stroke-width:1.5' }, f.s);
+    svg('text', { x: cx, y: hi - 6, 'text-anchor': 'middle', class: 'dlab', style: 'paint-order:stroke;stroke:var(--surface);stroke-width:4px' }, f.s).textContent = pct(r.win, 0);
+    svg('text', { x: cx, y: base + 15, 'text-anchor': 'middle' }, f.s).textContent = short(r.label);
+    const hit = svg('rect', { x: cx - band / 2, y: f.m.t, width: band, height: base - f.m.t, style: 'fill:transparent' }, f.s);
+    const show = () => t.show(`<b>${r.label}</b><br>wins ${pct(r.win, 1)} ± ${pct(ci(r), 1)}<br>${pct(r.share, 1)} of hands`, cx, y);
+    hit.onmouseenter = show; hit.onmouseleave = () => t.hide();
+    hit.ontouchstart = show;
+  });
+  $('t-gd').innerHTML = `<thead><tr><th>${title}</th><th class="num">Share of hands</th><th class="num">Your team wins</th></tr></thead><tbody>` +
+    rows.map(r => `<tr><td>${r.label}</td><td class="num">${pct(r.share, 1)}</td><td class="num">${pct(r.win, 1)}</td></tr>`).join('') + '</tbody>';
+  const H = DATA.guandan.hands;
+  $('cap-gd').textContent = `${fmt(H.n_hands)} deals at level 2, four seats each, with no tribute. The thin lines are 95% ranges; they treat seats as independent, so read them as a little narrow, since partners share a result.` +
+    (state.gd === 'jokers' ? ' More jokers do not go with more wins here. This measures how these planning assistants fare with the hand, not what a joker is worth to a good player, and the cause has not been established.' : '');
+}
+
+function renderGdEnds() {
+  const H = DATA.guandan.hands, M = DATA.guandan.matches, [p10, p50, p90] = M.hands_percentiles, up = H.levels_up;
+  const cells = [
+    ['Partner 2nd: up 3 levels', pct(up['3'], 0), 'a double win'],
+    ['Partner 3rd: up 2 levels', pct(up['2'], 0), 'of hands between planners'],
+    ['Partner last: up 1 level', pct(up['1'], 0), 'and at A, not enough to win the match'],
+    ['Hands in a match', fmt(p50, 0), `median of ${fmt(M.n_matches)} matches; 10th to 90th percentile ${fmt(p10, 0)} to ${fmt(p90, 0)}`],
+    ['Winners win the next hand', pct(M.winner_repeats.mean, 0), 'after the tribute they receive'],
+    ['Leading the first trick', pct(H.leader.mean, 0), 'of hands are won by the leader\'s team'],
+  ];
+  $('gd-ends').innerHTML = cells.map(([k, v, n]) => `<div class="stat"><span class="kicker">${k}</span><span class="v">${v}</span><span class="note">${n}</span></div>`).join('');
+}
+
 /* ---------- footer ---------- */
 function renderFooter() {
   const z = DATA.sizes;
-  $('foot').innerHTML = `<p>Built ${DATA.built} in ${DATA.seconds} s by <code>python -m viz.build_card_games_lab</code> from the engines in <code>src/CardGames</code>: ${fmt(z.ev_rounds)} blackjack rounds per rule set for the count chart, ${z.bankroll_paths} bankroll paths of ${fmt(z.bankroll_rounds)} rounds per betting scheme, ${fmt(z.hand_sims)} deals per starting hand and opponent count, and ${fmt(z.spot_sims)} per flop situation. Seeds are fixed, so a rebuild gives the same numbers. Basic strategy is the standard multi-deck table; the count is hi-lo; Kelly uses the small-edge approximation edge ÷ variance. Everything here is original work in this repository.</p>`;
+  $('foot').innerHTML = `<p>Built ${DATA.built} in ${DATA.seconds} s by <code>python -m viz.build_card_games_lab</code> from the engines in <code>src/CardGames</code>: ${fmt(z.ev_rounds)} blackjack rounds per rule set for the count chart, ${z.bankroll_paths} bankroll paths of ${fmt(z.bankroll_rounds)} rounds per betting scheme, ${fmt(z.hand_sims)} deals per starting hand and opponent count, ${fmt(z.spot_sims)} per flop situation, and for GuanDan ${fmt(z.guandan_hands)} planner hands, ${fmt(z.guandan_versus)} hands against each simple rule and ${fmt(z.guandan_matches)} whole matches. Seeds are fixed, so a rebuild gives the same numbers. Basic strategy is the standard multi-deck table; the count is hi-lo; Kelly uses the small-edge approximation edge ÷ variance. Everything here is original work in this repository.</p>`;
 }
 
-function renderAll() { renderEV(); renderBankroll(); renderOdds(); }
+function renderAll() { renderEV(); renderBankroll(); renderOdds(); renderGdStart(); }
 checkPlay();
 if (DATA) {
   $('quick').hidden = !DATA.quick;
-  renderStats(); renderStrategy(); renderHands(); renderFooter();
+  renderStats(); renderStrategy(); renderHands(); renderGdVersus(); renderGdEnds(); renderFooter();
   document.querySelectorAll('[data-rules]').forEach(b => b.onclick = () => {
     state.rules = b.dataset.rules; document.querySelectorAll('[data-rules]').forEach(o => o.setAttribute('aria-pressed', String(o === b))); renderEV(); });
   document.querySelectorAll('[data-strat]').forEach(b => b.onclick = () => {
     state.strat = b.dataset.strat; document.querySelectorAll('[data-strat]').forEach(o => o.setAttribute('aria-pressed', String(o === b))); renderStrategy(); });
   segmented($('seg-bank'), DATA.blackjack.bankroll.schemes.map((s, k) => [k, s.label]), state.band, v => { state.band = v; renderBankroll(); });
   segmented($('seg-opp'), [1, 2, 3, 4, 5].map(n => [n, n + (n === 1 ? ' opponent' : '')]), state.opp, v => { state.opp = v; renderHands(); });
+  segmented($('seg-gd'), Object.entries(GD_FEATURES).map(([key, [label]]) => [key, label]), state.gd, v => { state.gd = v; renderGdStart(); });
   $('bet').oninput = e => { state.bet = +e.target.value; renderOdds(); };
   renderAll();
   let last = 0;

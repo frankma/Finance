@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from typing import List, Optional
 
 from src.CardGames.Core.Card import Card, Rank, standard_deck
-from src.CardGames.Core.Player import Advice, Advisor
+from src.CardGames.Core.Player import Advice, Advisor, Strategy
 from src.CardGames.GuanDan.Combo import Combo, ComboType, group_value, is_wild
 from src.CardGames.GuanDan.Match import choose_return
 from src.CardGames.GuanDan.Planner import HandPlan, plan_hand
@@ -136,3 +136,10 @@ class PlannerStrategy(Advisor):
 
     def choose_return(self, hand: List[Card], level: Rank, options: List[Card]) -> Card:
         return choose_return(hand, level)
+
+
+class LowestPlay(Strategy):
+    # baseline that never plans: always plays the lowest combination it can, keeping bombs for when nothing else fits
+    def decide(self, observation: Observation, legal_moves: List[Optional[Combo]]) -> Optional[Combo]:
+        plays = [move for move in legal_moves if move is not PASS]
+        return min(plays, key=lambda move: (move.is_bomb, move.value, -move.n)) if plays else PASS

@@ -136,6 +136,20 @@ class TestGuanDanSession(TestCase):
         json.dumps(view)
 
 
+class TestLog(TestCase):
+    def test_every_public_move_is_logged(self):
+        session = GuanDanSession({}, random.Random(13))
+        seat(session, [Card.parse_many(h) for h in ('3S 3D 9C', '4S 5D 6C', '7H 8H TC', 'JD QD KD')])
+        session.act({'type': 'deal'})
+        session.act({'type': 'play', 'cards': ['3S', '3D']})
+        lines = session.log
+        self.assertTrue(any(line.startswith('You play pair of 3s: ') and '3♠' in line and '3♦' in line for line in lines))
+        self.assertEqual(lines.count('East passes.'), 1, 'East has no pair to beat it with.')
+        moves = [line for line in lines if line.endswith('passes.') or line == 'You pass.' or ' plays ' in line or
+                 line.startswith('You play ')]
+        self.assertEqual(len(moves), len(session.round.history), 'one line per move, passes included.')
+
+
 class TestFairPlay(TestCase):
     def test_the_page_never_gets_another_seats_cards(self):
         # two tables alike in everything you can see, different in which opponent holds two of the cards

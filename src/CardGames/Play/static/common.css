@@ -38,6 +38,8 @@ ul.log li:last-child { border-bottom: 0; color: var(--ink); font-weight: 600; }
 .card.red { color: var(--claret); }
 .card.back { background: repeating-linear-gradient(45deg, var(--oxford-soft) 0 6px, var(--surface) 6px 12px); border-color: var(--oxford); }
 @media (max-width: 420px) { .card { width: 48px; height: 70px; font-size: 17px; } .card .s { font-size: 20px; } .cards { min-height: 72px; } }
+/* small cards show only their corner: there the joker's name is enough */
+.mini .card.joker .s, .col .card.joker .s, .rules .eg .card.joker .s { display: none; }
 .chip { display: inline-block; font: 600 12px/1 var(--sans); border: 1px solid var(--line); padding: 4px 8px; }
 .chip.good { color: var(--good-ink); border-color: var(--good); }
 .chip.bad { color: var(--critical-ink); border-color: var(--critical); }

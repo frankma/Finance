@@ -16,9 +16,11 @@ function cardEl(code) {
   const el = document.createElement('div');
   if (!code) { el.className = 'card back'; el.setAttribute('aria-label', 'face-down card'); return el; }
   if (code === 'BJ' || code === 'RJ') {
-    el.className = 'card' + (code === 'RJ' ? ' red' : '');
-    el.innerHTML = `<span>J</span><span class="s">★</span>`;
-    el.setAttribute('aria-label', code === 'RJ' ? 'red joker' : 'black joker');
+    // named on the face, not by colour alone, and not a bare J that reads as a jack
+    const name = code === 'RJ' ? 'red joker' : 'black joker';
+    el.className = 'card joker' + (code === 'RJ' ? ' red' : '');
+    el.innerHTML = `<span>${code}</span><span class="s">★</span>`;
+    el.setAttribute('aria-label', name); el.title = name[0].toUpperCase() + name.slice(1);
     return el;
   }
   const rank = code.slice(0, -1), [sym, red] = SUIT[code.slice(-1)];

@@ -43,6 +43,7 @@
 .result { font: 600 18px/1.3 var(--display); }
 .coach .alt { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 6px; font-size: 13.5px; }
 .coach button { padding: 5px 9px; font-size: 12.5px; }
+#log { max-height: 340px; overflow-y: auto; }
 table.unseen { width: 100%; border-collapse: collapse; font: 400 13px/1.3 var(--sans); }
 table.unseen td { padding: 4px 0; border-bottom: 1px solid var(--line); }
 table.unseen td.num { text-align: right; font: 500 13px/1.3 var(--mono); font-variant-numeric: tabular-nums; }
@@ -296,6 +297,7 @@ function render() {
   $('unseenBox').hidden = !v.unseen.length;
   $('unseen').innerHTML = v.unseen.map(u => `<tr><td>${u.label}</td><td class="num">${u.n} of ${u.of}</td></tr>`).join('');
   $('log').replaceChildren(...v.log.map(t => { const li = document.createElement('li'); li.innerHTML = linkTerms(t, TERMS); return li; }));
+  $('log').scrollTop = $('log').scrollHeight;  // the latest play stays in view
   if (v.match.winner) showError(null);
   advice = null; renderAdvice();
   if ($('auto').checked && (v.your_turn || v.phase === 'return')) ask();
