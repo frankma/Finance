@@ -56,11 +56,12 @@ table.unseen td.num { text-align: right; font: 500 13px/1.3 var(--mono); font-va
       <h1>GuanDan</h1>
       <span class="small muted" id="rules"></span>
     </div>
-    <nav class="links"><a href="/">Lobby</a><a href="/lab">Card Games Lab</a><a href="#" id="rulesLink" data-rules="">Rules<kbd>?</kbd></a><a href="#" id="newSession">New match</a></nav>
+    <nav class="links"><a href="/">Lobby</a><a href="/lab">Card Games Lab</a><a href="#" id="rulesLink" data-rules="">Rules<kbd>?</kbd></a><a href="?mode=learn" id="modeLink">Lessons</a><a href="#" id="newSession">New match</a></nav>
   </div>
 
   <div class="layout">
     <main class="box felt" aria-live="polite">
+      <div class="lesson" id="lesson" hidden></div>
       <div class="table">
         <div style="grid-area:north" id="seat2"></div>
         <div style="grid-area:west" id="seat3"></div>
@@ -118,7 +119,7 @@ table.unseen td.num { text-align: right; font: 500 13px/1.3 var(--mono); font-va
 </div>
 <script src="/static/common.js"></script>
 <script>
-const table = seat('guandan');
+const table = seat('guandan', MODE);
 let view = null, advice = null, sel = new Set(), pick = null;
 // the rules text, beside the table; terms in the coach's reasons and the log link to their section
 const rules = rulesPanel('guandan', () => $('rules').textContent);
@@ -129,7 +130,7 @@ const TERMS = { 'bomb': 'bombs', 'straight flush': 'bombs', 'four jokers': 'bomb
 const cardName = code => code === 'RJ' ? 'red joker' : code === 'BJ' ? 'black joker' : (RANK[code.slice(0, -1)] || code.slice(0, -1)) + SUIT[code.slice(-1)][0];
 const mini = codes => { const d = document.createElement('div'); d.className = 'mini'; drawCards(d, codes); return d; };
 
-async function start(fresh) { view = await table.open(fresh); sel.clear(); render(); }
+async function start(fresh) { view = await table.open(fresh, Object.fromEntries(new URLSearchParams(location.search))); sel.clear(); render(); }
 
 async function act(action, keep) {
   showError(null);
@@ -229,6 +230,7 @@ function toggle(i) {
 
 function render() {
   const v = view;
+  renderLesson($('lesson'), v.lesson, act, TERMS);
   $('rules').textContent = `Two packs with jokers · you and your partner against East and West · level ${v.level}` + (v.wild ? `, wild ${cardName(v.wild)}` : '');
   // the rules open where they matter now: tribute while you hand a card back, wilds when a play reads several ways
   $('rulesLink').dataset.rules = v.phase === 'return' ? 'tribute' : v.choices ? 'wilds' : ['done', 'over'].includes(v.phase) ? 'scoring' : '';
@@ -278,7 +280,8 @@ function render() {
   }
   $('returnBar').hidden = v.phase !== 'return';
   if (v.phase === 'return') { $('returnMsg').innerHTML = 'You received <a href="#" data-rules="tribute">tribute</a>. Pick a card to hand back (outlined: a 10 or lower, never a wild).'; $('returnBtn').disabled = !pick; if (!pick) $('returnBtn').textContent = 'Hand it back'; }
-  $('dealbar').hidden = !['deal', 'done', 'over'].includes(v.phase);
+  // in a lesson, deal on only once it is done and you have chosen to play on
+  $('dealbar').hidden = !['deal', 'done', 'over'].includes(v.phase) || (!!v.lesson && v.lesson.complete);
   $('deal').innerHTML = v.phase === 'over' ? 'Start a new match' : v.phase === 'deal' && !v.match.hands ? 'Deal the first hand<kbd>Enter</kbd>' : 'Deal the next hand<kbd>Enter</kbd>';
   // rail
   $('lvYou').textContent = v.levels.you; $('lvThem').textContent = v.levels.them;
@@ -312,6 +315,8 @@ $('returnBtn').onclick = () => { if (pick) act({ type: 'return', card: pick }); 
 $('deal').onclick = () => view.phase === 'over' ? start(true) : act({ type: 'deal' });
 $('ask').onclick = ask;
 $('newSession').onclick = e => { e.preventDefault(); start(true); };
+// lessons and free play are separate tables: the link switches between them
+if (MODE) { document.querySelector('h1').textContent = 'GuanDan practice'; $('modeLink').textContent = 'Free play'; $('modeLink').href = location.pathname; $('newSession').textContent = 'Restart lessons'; }
 $('auto').checked = prefs.get('auto-coach', false);
 $('auto').onchange = e => { prefs.set('auto-coach', e.target.checked); if (e.target.checked) ask(); else { advice = null; renderAdvice(); } };
 document.addEventListener('keydown', e => {

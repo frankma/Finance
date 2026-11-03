@@ -14,16 +14,23 @@ class Step(object):
     a hint when you choose otherwise
 
     expect matches an action by its fields, e.g. {'type': 'move', 'move': 'hit'}; the key 'bet_at_least' asks for a
-    deal with at least that bet
+    deal with at least that bet, and 'cards' matches the same cards in any order. check, when given, is a further
+    test of the action against the table, e.g. that a play read with a wild card is read the way the lesson means
     """
     expect: dict
     prompt: str
     why: str
     hint: str
+    check: Optional[Callable[[dict, Session], bool]] = None
 
-    def matches(self, action: dict) -> bool:
+    def matches(self, action: dict, table: Optional[Session] = None) -> bool:
+        if self.check is not None and table is not None and not self.check(action, table):
+            return False
         for key, value in self.expect.items():
-            if key == 'bet_at_least':
+            if key == 'cards':
+                if sorted(map(str, action.get('cards') or [])) != sorted(value):
+                    return False
+            elif key == 'bet_at_least':
                 try:
                     if int(action.get('bet', 0)) < value:
                         return False
@@ -100,11 +107,15 @@ class LessonSession(Session):
             self.table.act(action)  # the lesson is done: play the hand out as you like
             return
         step = self.lesson.steps[self.step]
-        if not step.matches(action):
+        if not step.matches(action, self.table):
             self.mistakes += 1
             self.feedback = {'kind': 'hint', 'text': step.hint}
             return
         self.table.act(action)
+        if getattr(self.table, 'choices', None):
+            # the cards read several ways: the step is done once you say which reading you mean
+            self.feedback = {'kind': 'choose', 'text': 'Your cards read more than one way: pick the reading you mean.'}
+            return
         self.step += 1
         text = step.why
         if self.complete:

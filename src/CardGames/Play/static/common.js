@@ -148,7 +148,7 @@ function renderLesson(host, lesson, act, terms) {
     <h2>${lesson.title}</h2>
     ${feedback ? `<p class="lesson-feedback ${feedback.kind}">${feedback.kind === 'right'
       ? linkTerms(feedback.text, terms).replace(/^Right([:.])/, '<b>Right$1</b>')
-      : '<b>Not quite.</b> ' + linkTerms(feedback.text, terms)}</p>` : ''}
+      : feedback.kind === 'hint' ? '<b>Not quite.</b> ' + linkTerms(feedback.text, terms) : linkTerms(feedback.text, terms)}</p>` : ''}
     ${lesson.prompt ? `<p class="lesson-prompt">${linkTerms(lesson.prompt, terms)}</p>` : ''}
     ${lesson.complete ? `<div class="row"><button type="button" class="primary" data-lesson="${Math.min(lesson.index + 1, lesson.lessons.length - 1)}" ${lesson.index + 1 >= lesson.lessons.length ? 'hidden' : ''}>Next lesson</button>
       <button type="button" data-lesson="${lesson.index}">Try it again</button>

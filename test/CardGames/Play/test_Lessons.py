@@ -3,7 +3,7 @@ import random
 from unittest import TestCase
 
 from src.CardGames.Holdem.Round import Action, Street
-from src.CardGames.Play import HoldemLessons
+from src.CardGames.Play import GuanDanLessons, HoldemLessons
 from src.CardGames.Play.BlackJackLessons import lessons
 from src.CardGames.Play.HoldemLessons import Scripted
 from src.CardGames.Play.Lesson import LessonSession, Step
@@ -144,3 +144,87 @@ class TestHoldemLessons(TestCase):
         seat, street, move = r.history[-1]
         self.assertEqual((seat, street, move.action, move.to), (1, Street.FLOP, Action.RAISE, 2), 'half the pot of 4.')
         self.assertEqual(Scripted().decide(r.observation(0), r.legal_moves(0)).action, Action.CALL)
+
+
+def follow_guandan(session: LessonSession) -> None:
+    # take every step as the lesson expects, checking first that the coach would make the same play
+    test = TestCase()
+    lesson = session.lesson
+    for step in lesson.steps:
+        advice = session.advice()
+        kind = step.expect['type']
+        if kind == 'return':
+            test.assertEqual(advice['kind'], 'return')
+            session.act({'type': 'return', 'card': advice['card']})
+        elif kind == 'pass':
+            test.assertEqual(advice['move']['kind'], 'pass', lesson.key)
+            session.act({'type': 'pass'})
+        else:
+            test.assertEqual(sorted(advice['move']['cards']), sorted(step.expect['cards']), lesson.key)
+            session.act({'type': 'play', 'cards': advice['move']['cards']})
+            if session.table.choices:
+                readings = [combo.describe() for combo in session.table.choices]
+                session.act({'type': 'play', 'cards': advice['move']['cards'],
+                             'reading': readings.index(advice['move']['desc'])})
+        test.assertEqual(session.feedback['kind'], 'right', lesson.key)
+
+
+class TestGuanDanLessons(TestCase):
+    def keys(self, session):
+        return [lesson.key for lesson in session.lessons]
+
+    def test_every_lesson_plays_as_written(self):
+        session = LessonSession(GuanDanLessons.lessons(), random.Random(8))
+        for k, lesson in enumerate(session.lessons):
+            session.act({'type': 'lesson', 'index': k})
+            follow_guandan(session)
+            view = session.view()
+            self.assertTrue(view['lesson']['complete'], lesson.key)
+            json.dumps(view)
+        self.assertTrue(all(x['done'] for x in session.view()['lesson']['lessons']))
+
+    def test_an_endgame_spot_is_your_view_only(self):
+        session = LessonSession(GuanDanLessons.lessons(), random.Random(9))
+        session.act({'type': 'lesson', 'index': self.keys(session).index('wind')})
+        view = session.view()
+        self.assertEqual((view['hand'], [seat['count'] for seat in view['seats']]), (['RJ'], [1, 3, 4, 3]))
+        text = json.dumps(view)
+        for card in ('9S', 'AS', 'QC', '8H'):
+            self.assertNotIn('"%s"' % card, text, 'the other hands stay hidden.')
+        # the rest of both packs counts as played, so what you have not seen is only what the others hold
+        self.assertEqual(view['unseen'][0], {'label': 'Red jokers', 'n': 0, 'of': 2})
+        self.assertEqual(sum(view['seats'][s]['count'] for s in range(4)) + len(session.table.round.played), 108)
+
+    def test_wrong_plays_get_hints(self):
+        session = LessonSession(GuanDanLessons.lessons(), random.Random(10))
+        session.act({'type': 'play', 'cards': ['5S']})  # a single cannot beat a pair
+        self.assertEqual((session.feedback['kind'], session.view()['seats'][0]['count']), ('hint', 5))
+        session.act({'type': 'lesson', 'index': self.keys(session).index('partner')})
+        session.act({'type': 'play', 'cards': ['KS', 'KD']})
+        self.assertEqual(session.feedback['kind'], 'hint', 'beating your partner is the mistake.')
+
+    def test_the_wild_reading(self):
+        session = LessonSession(GuanDanLessons.lessons(), random.Random(11))
+        session.act({'type': 'lesson', 'index': self.keys(session).index('wild')})
+        cards = ['2H', '5S', '6S', '7S', '8S']
+        session.act({'type': 'play', 'cards': cards})
+        self.assertEqual(session.feedback['kind'], 'choose')
+        readings = session.view()['choices']
+        self.assertEqual(readings, ['straight flush to 9', 'straight flush to 8'])
+        session.act({'type': 'play', 'cards': cards, 'reading': readings.index('straight flush to 8')})
+        self.assertEqual(session.feedback['kind'], 'hint')
+        self.assertEqual(session.view()['choices'], readings, 'still waiting for the reading.')
+        session.act({'type': 'play', 'cards': cards, 'reading': readings.index('straight flush to 9')})
+        self.assertEqual(session.feedback['kind'], 'right')
+        self.assertTrue(session.complete)
+
+    def test_tribute_hands_back_only_a_low_card(self):
+        session = LessonSession(GuanDanLessons.lessons(), random.Random(12))
+        session.act({'type': 'lesson', 'index': self.keys(session).index('tribute')})
+        view = session.view()
+        self.assertEqual(view['phase'], 'return')
+        self.assertEqual(view['tribute']['paid'][0]['payer'], 'West')
+        session.act({'type': 'return', 'card': 'BJ'})
+        self.assertEqual(session.feedback['kind'], 'hint', 'a joker is never handed back.')
+        session.act({'type': 'return', 'card': view['tribute']['options'][0]})
+        self.assertEqual(session.feedback['kind'], 'right')
