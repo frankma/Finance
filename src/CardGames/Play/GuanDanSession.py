@@ -14,6 +14,7 @@ __author__ = 'frank.ma'
 # play passes to the next seat, so East follows you, then your partner opposite, then West
 NAMES = ['You', 'East', 'Partner', 'West']
 PLACES = ['1st', '2nd', '3rd', '4th']
+LOG_LINES = 60  # enough to look back over the last few tricks
 
 
 def _name(card: Card) -> str:
@@ -213,20 +214,26 @@ class GuanDanSession(Session):
         r = self.round
         r.apply(seat, move)
         self.trick.append((seat, move))
+        self.log.append(self._said(seat, move))
         if move is not PASS and not r.hands[seat]:
-            self.log.append('%s %s out %s with %s.' % (NAMES[seat], 'go' if seat == 0 else 'goes',
-                                                       PLACES[len(r.out) - 1], move.describe()))
+            self.log.append('%s %s out %s.' % (NAMES[seat], 'go' if seat == 0 else 'goes', PLACES[len(r.out) - 1]))
         if r.result is None and r.target is None:
             # everyone else passed: the trick is won and a new one starts
             winner = next(s for s, m in reversed(self.trick) if m is not PASS)
-            self.log.append('%s win%s the trick with %s.' % (NAMES[winner], '' if winner == 0 else 's',
-                                                           next(m for s, m in reversed(self.trick)
-                                                                if m is not PASS).describe()))
+            self.log.append('%s win%s the trick.' % (NAMES[winner], '' if winner == 0 else 's'))
             if not r.hands[winner]:
                 self.log.append('%s %s, so %s lead%s (catching the wind).' % (
                     NAMES[winner], 'are out' if winner == 0 else 'is out',
                     'you' if r.to_act == 0 else NAMES[r.to_act], '' if r.to_act == 0 else 's'))
             self.last_trick, self.trick = self.trick, []
+
+    @staticmethod
+    def _said(seat: int, move: Optional[Combo]) -> str:
+        # one public move as the log reads it; every card named is on the table for everyone to see
+        s = '' if seat == 0 else 's'
+        if move is PASS:
+            return '%s pass%s.' % (NAMES[seat], '' if seat == 0 else 'es')
+        return '%s play%s %s: %s.' % (NAMES[seat], s, move.describe(), ' '.join(_name(card) for card in move.cards))
 
     def _run(self) -> None:
         # the computer seats play until it is your turn or the hand is over
@@ -279,7 +286,7 @@ class GuanDanSession(Session):
             'can_pass': False, 'choices': None, 'tribute': None, 'result': None, 'unseen': [],
             'match': {'hands': len(m.records), 'won': self.won, 'winner': None if m.winner is None else
                       ('you' if m.winner == 0 else 'them')},
-            'stats': {'followed': self.followed, 'decisions': self.decisions}, 'log': self.log[-14:],
+            'stats': {'followed': self.followed, 'decisions': self.decisions}, 'log': self.log[-LOG_LINES:],
         }
         if self.waiting is not None:
             _, yours, options, paid = self.waiting

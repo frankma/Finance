@@ -2,11 +2,12 @@ import random
 from unittest import TestCase
 
 from src.CardGames.Core.Card import Card, Rank
+from src.CardGames.Core.Game import play_out
 from src.CardGames.Core.Player import RandomStrategy
 from src.CardGames.GuanDan.Combo import ComboType, interpret
 from src.CardGames.GuanDan.Match import Match, choose_return, pay_tribute, returnable
-from src.CardGames.GuanDan.Round import PASS, HandResult, Round
-from src.CardGames.GuanDan.Strategy import PlannerStrategy
+from src.CardGames.GuanDan.Round import PASS, HandResult, Round, deal
+from src.CardGames.GuanDan.Strategy import LowestPlay, PlannerStrategy
 
 __author__ = 'frank.ma'
 
@@ -121,3 +122,35 @@ class TestPlannerStrategy(TestCase):
         advice = PlannerStrategy().advise(observation, legal)
         self.assertEqual(advice.move.type, ComboType.PAIR)
         self.assertIn('last cards', advice.reason)
+
+
+class TestLowestPlay(TestCase):
+    def test_plays_lowest_keeps_bombs(self):
+        hand = Card.parse_many('3S 9D 9C 7S 7D 7H 7C')
+        game = Round([hand, Card.parse_many('4S'), Card.parse_many('5S'), Card.parse_many('6S')], Rank.TEN, 0)
+        strategy = LowestPlay()
+        move = strategy.decide(game.observation(0), game.legal_moves(0))
+        self.assertEqual(move.describe(), 'single 3')
+        # with only a bomb able to beat the trick, it bombs; with nothing, it passes
+        game = Round([Card.parse_many('7S 7D 7H 7C 3S'), Card.parse_many('AS AD 4D'), Card.parse_many('5S'),
+                      Card.parse_many('6S')], Rank.TEN, 1)
+        game.apply(1, interpret(Card.parse_many('AS AD'), Rank.TEN)[0])
+        game.apply(2, PASS)
+        game.apply(3, PASS)
+        self.assertTrue(strategy.decide(game.observation(0), game.legal_moves(0)).is_bomb)
+        game = Round([Card.parse_many('3S 4C'), Card.parse_many('AS AD 4D'), Card.parse_many('5S'),
+                      Card.parse_many('6S')], Rank.TEN, 1)
+        game.apply(1, interpret(Card.parse_many('AS AD'), Rank.TEN)[0])
+        game.apply(2, PASS)
+        game.apply(3, PASS)
+        self.assertIs(strategy.decide(game.observation(0), game.legal_moves(0)), PASS)
+
+    def test_planners_beat_it(self):
+        rng = random.Random(3)
+        planner, lowest = PlannerStrategy(), LowestPlay()
+        wins = 0
+        for _ in range(12):
+            game = Round(deal(rng), Rank.TWO, rng.randrange(4))
+            play_out(game, [planner, lowest, planner, lowest])
+            wins += game.result.winning_team == 0
+        self.assertGreaterEqual(wins, 10)
