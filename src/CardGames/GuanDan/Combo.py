@@ -215,14 +215,18 @@ def generate_moves(hand: List[Card], level: Rank) -> List[Combo]:
     for card in hand:
         if not is_wild(card, level):
             by_rank.setdefault(card.rank.value, []).append(card)
-    moves, seen = [], set()
+    moves, seen = [], {}  # (type, cards) -> index in moves
 
     def add(combo_type, cards, value, rank, pair_rank=None):
+        # the same cards may read as more than one combination of a type, e.g. a wild ending a straight low or high:
+        # keep the strongest reading, which beats everything the weaker one does
         combo = make(combo_type, cards, value, rank, pair_rank)
         key = (combo_type, combo.cards)
         if key in seen:
+            if combo.value > moves[seen[key]].value:
+                moves[seen[key]] = combo
             return None
-        seen.add(key)
+        seen[key] = len(moves)
         moves.append(combo)
         return combo
 

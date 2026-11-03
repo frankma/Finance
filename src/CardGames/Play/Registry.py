@@ -2,7 +2,7 @@ import random
 from dataclasses import dataclass
 from typing import Callable, Dict, List, Optional
 
-from src.CardGames.Play import BlackJackLessons, HoldemLessons
+from src.CardGames.Play import BlackJackLessons, GuanDanLessons, HoldemLessons
 from src.CardGames.Play.BlackJackSession import PRESETS, BlackJackSession, describe
 from src.CardGames.Play.GuanDanSession import GuanDanSession
 from src.CardGames.Play.HoldemSession import SEATS, HoldemSession
@@ -35,7 +35,7 @@ GAMES = [
               HoldemLessons.lessons),
     GameEntry('guandan', 'GuanDan', 'The partnership climbing game from 2 to A, with a computer partner against two '
               'computer opponents. The coach plans your hand from your cards and the public play.',
-              'guandan.html', GuanDanSession),
+              'guandan.html', GuanDanSession, (), GuanDanLessons.lessons),
 ]
 BY_NAME = {game.name: game for game in GAMES}  # type: Dict[str, GameEntry]
 

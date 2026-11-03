@@ -83,9 +83,18 @@ class TestGenerateMoves(TestCase):
         moves = generate_moves(P('9S 9D 9C 4S 4D 7H'), L7)
         kinds = {(m.type, m.value) for m in moves}
         for expected in [(ComboType.SINGLE, 9), (ComboType.SINGLE, 15), (ComboType.PAIR, 4), (ComboType.TRIPLE, 4),
-                         (ComboType.BOMB, 9), (ComboType.FULL_HOUSE, 9), (ComboType.FULL_HOUSE, 4)]:
+                         (ComboType.BOMB, 9), (ComboType.FULL_HOUSE, 9)]:
             self.assertIn(expected, kinds)
         self.assertNotIn((ComboType.PAIR, 15), kinds, 'one wild alone makes no pair.')
+        # 4S 4D 9S 9D with the wild read as 9s full of 4s, never the weaker 4s full of 9s of the same cards
+        self.assertNotIn((ComboType.FULL_HOUSE, 4), kinds)
+
+    def test_the_same_cards_keep_their_strongest_reading(self):
+        moves = generate_moves(P('2H 5S 6S 7S 8S'), L2)
+        flushes = [m for m in moves if m.type == ComboType.STRAIGHT_FLUSH]
+        self.assertEqual([m.describe() for m in flushes], ['straight flush to 9'], 'the wild as the 9, not the 4.')
+        keys = [(m.type, m.cards) for m in moves]
+        self.assertEqual(len(keys), len(set(keys)), 'one reading per type for any set of cards.')
 
     def test_every_move_is_a_reading_of_its_cards(self):
         rng = random.Random(1)
