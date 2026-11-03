@@ -124,6 +124,27 @@ class TestPlannerStrategy(TestCase):
         self.assertIn('last cards', advice.reason)
 
 
+class TestJokers(TestCase):
+    def spot(self, hand: str, target: str):
+        # an opponent with plenty of cards left has just led; every other seat passed
+        rest = '3C 4C 5C 6C 7C 8C 9C TC JC QC KC 3D 4D 5D 6D 7D 8D 9D TD JD QD KD'
+        game = Round([P(hand), P(rest + ' ' + target), P('3H'), P('4H')], L2, 1)
+        game.apply(1, interpret(P(target), L2)[0])
+        game.apply(2, PASS)
+        game.apply(3, PASS)
+        return game
+
+    def test_a_lone_joker_takes_the_lead_early(self):
+        game = self.spot('RJ 3S 5S 7H 9H JH KS 8D TH', 'AH')
+        advice = PlannerStrategy().advise(game.observation(0), game.legal_moves(0))
+        self.assertEqual(advice.move.describe(), 'red joker', advice.reason)
+
+    def test_a_smaller_winner_goes_first(self):
+        game = self.spot('RJ AS 3S 5S 7H 9H JH TS 8D', 'KH')
+        advice = PlannerStrategy().advise(game.observation(0), game.legal_moves(0))
+        self.assertEqual(advice.move.describe(), 'single A', 'the ace beats the king, and the joker stays in hand.')
+
+
 class TestLowestPlay(TestCase):
     def test_plays_lowest_keeps_bombs(self):
         hand = Card.parse_many('3S 9D 9C 7S 7D 7H 7C')

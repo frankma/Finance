@@ -548,7 +548,7 @@ function renderGdStart() {
     rows.map(r => `<tr><td>${r.label}</td><td class="num">${pct(r.share, 1)}</td><td class="num">${pct(r.win, 1)}</td></tr>`).join('') + '</tbody>';
   const H = DATA.guandan.hands;
   $('cap-gd').textContent = `${fmt(H.n_hands)} deals at level 2, four seats each, with no tribute. The thin lines are 95% ranges; they treat seats as independent, so read them as a little narrow, since partners share a result.` +
-    (state.gd === 'jokers' ? ' More jokers do not go with more wins here. This measures how these planning assistants fare with the hand, not what a joker is worth to a good player, and the cause has not been established.' : '');
+    (state.gd === 'jokers' ? ' Jokers barely move the win rate here. This measures how these planning assistants fare with the hand, not what a joker can be worth to a good player: they cannot join a straight, a tube or an ordinary bomb, and the planner may still undersell them.' : '');
 }
 
 function renderGdEnds() {
