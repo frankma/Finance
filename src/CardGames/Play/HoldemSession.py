@@ -4,6 +4,7 @@ from typing import List, Optional
 from src.CardGames.Core.Shoe import Shoe
 from src.CardGames.Holdem.Equity import outs
 from src.CardGames.Holdem.HandEvaluator import describe
+from src.CardGames.Holdem.Range import betting_weights
 from src.CardGames.Holdem.Round import Action, Move, Round, Street
 from src.CardGames.Holdem.Rules import Rules
 from src.CardGames.Holdem.Strategy import MonteCarloStrategy
@@ -27,8 +28,8 @@ BOT_SIMS, COACH_SIMS = 400, 2000
 class HoldemSession(Session):
     """
     you in seat 0 at a no-limit hold'em table against computer seats, hand after hand with the button moving left;
-    a computer seat that busts buys back in, and so may you. The computer seats and the coach both play from equity
-    against random hands, dealt from the cards their own seat has not seen
+    a computer seat that busts buys back in, and so may you. The computer seats play from equity against random hands
+    dealt from the cards they have not seen; the coach does the same, but favours hands that fit the public betting
     """
 
     def __init__(self, options: Optional[dict] = None, rng: Optional[random.Random] = None):
@@ -182,7 +183,8 @@ class HoldemSession(Session):
         # one Monte Carlo answer per decision, from your observation only
         key = len(self.round.history)
         if self._advice is None or self._advice[0] != (self.hands, key):
-            coach = MonteCarloStrategy(COACH_SIMS, rng=random.Random('%i-%i-%i' % (self.seed, self.hands, key)))
+            coach = MonteCarloStrategy(COACH_SIMS, rng=random.Random('%i-%i-%i' % (self.seed, self.hands, key)),
+                                       reads_betting=True)
             self._advice = ((self.hands, key), coach.advise(self.round.observation(0), self.round.legal_moves(0)))
         return self._advice[1]
 
@@ -260,7 +262,7 @@ class HoldemSession(Session):
         o = self.round.observation(0)
         out = {'kind': 'move', 'move': advice.move.action.value, 'to': advice.move.to, 'reason': advice.reason,
                'equity': advice.equity, 'pot_odds': advice.pot_odds, 'call_ev': advice.call_ev,
-               'n_opponents': o.n_opponents, 'outs': None}
+               'n_opponents': o.n_opponents, 'read_betting': betting_weights(o) is not None, 'outs': None}
         if o.street in (Street.FLOP, Street.TURN):
             found = outs(list(o.hole), list(o.board), self.rules)
             out['outs'] = {'n': found.n_outs, 'p_river': found.p_by_river(2 if o.street == Street.FLOP else 1)}

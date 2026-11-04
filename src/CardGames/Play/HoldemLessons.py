@@ -92,8 +92,9 @@ def lessons() -> List[Lesson]:
                    Step(_move('fold'),
                         'The flop is ace, king, queen: your three-two has nothing, and your opponent bets the pot, 4 '
                         'chips. Fold, call or raise?',
-                        'Right: fold. A call of 4 to win 12 needs 33% equity, and three-high on this board has about '
-                        '19%. Folding costs nothing more; calling would lose chips over time.',
+                        'Right: fold. A call of 4 to win 12 needs 33% equity, and three-high has about 13% against the '
+                        'hands that bet this much here. Folding costs nothing more; calling would lose chips over '
+                        'time.',
                         'Calling 4 into a pot of 8 needs a third of the pot in equity. Three-high with no draw on an '
                         'ace-king-queen board wins far less often than that. Try folding.'),
                ), 'Folding is a move too: it saves the chips a bad call would lose.', ('pot-odds', 'equity')),

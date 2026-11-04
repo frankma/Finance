@@ -116,7 +116,7 @@
       </div>
       <div class="box fair-note">
         <span class="kicker">What the coach knows</span>
-        <p>Your two cards, the board, the pot, the stacks and every bet made. Never another seat's cards or the order of the deck: the server never sends them to this page. Equity is estimated by dealing the other seats random hands from the cards you have not seen. The computer seats play by the same rule, each from its own cards only.</p>
+        <p>Your two cards, the board, the pot, the stacks and every bet made. Never another seat's cards or the order of the deck: the server never sends them to this page. Equity is estimated by dealing the other seats hands from the cards you have not seen, favouring hands that fit their public bets. The computer seats also see only their own cards, and do not read bets.</p>
       </div>
     </aside>
   </div>
@@ -157,7 +157,7 @@ function renderAdvice() {
   const o = advice.outs;
   box.innerHTML = `<b>Coach: ${moveLabel(advice.move, advice.to)}.</b> ${linkTerms(cap(advice.reason), TERMS)}.` +
     `<div class="numbers">
-      <div><span><a href="#" data-rules="equity">Equity</a> vs ${advice.n_opponents} random hand${advice.n_opponents === 1 ? '' : 's'}</span><b>${pct(advice.equity, 1)}</b></div>
+      <div><span><a href="#" data-rules="equity">Equity</a> vs ${advice.n_opponents} ${advice.read_betting ? (advice.n_opponents === 1 ? 'hand that fits' : 'hands that fit') + ' the betting' : 'random hand' + (advice.n_opponents === 1 ? '' : 's')}</span><b>${pct(advice.equity, 1)}</b></div>
       <div><span><a href="#" data-rules="pot-odds">Pot odds</a> to call</span><b>${view.to_call ? pct(advice.pot_odds, 1) : '—'}</b></div>
       <div><span><a href="#" data-rules="call-ev">Call EV</a> over folding</span><b>${view.to_call ? signed(advice.call_ev, 1) : '—'}</b></div>
       <div><span><a href="#" data-rules="outs">Cards that improve you</a>${o ? ', hit by the river' : ''}</span><b>${o ? `${o.n} · ${pct(o.p_river)}` : '—'}</b></div>

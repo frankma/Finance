@@ -4,6 +4,9 @@ from unittest import TestCase
 
 from src.CardGames.Core.Card import Card
 from src.CardGames.Core.Shoe import Shoe
+from src.CardGames.Holdem.Equity import simulate_equity
+from src.CardGames.Holdem.Round import Street
+from src.CardGames.Play.HoldemLessons import _heads_up
 from src.CardGames.Play.HoldemSession import HoldemSession
 
 __author__ = 'frank.ma'
@@ -131,3 +134,23 @@ class TestFairPlay(TestCase):
                 self.assertNotIn('"%s"' % card, views[-1])
         self.assertEqual(views[0], views[1])
         self.assertEqual(advice[0], advice[1])
+
+    def test_the_coach_reads_public_bets_and_nothing_else(self):
+        # the same public betting with different cards behind it: your view and the advice are the same
+        results = []
+        for them in ('QC 8D', 'KS KD'):
+            session = _heads_up('AH 5H', them, 'KH 9H 2C 4S JD', {Street.FLOP: 0.5})(random.Random(14))
+            before = session.advice()
+            self.assertFalse(before['read_betting'], 'nobody has acted yet, so the hands are random.')
+            session.act({'type': 'move', 'move': 'call'})
+            results.append((json.dumps(session.view(), sort_keys=True), session.advice()))
+        self.assertEqual(results[0][0], results[1][0])
+        self.assertEqual(results[0][1], results[1][1])
+        self.assertTrue(results[0][1]['read_betting'], 'the opponent has bet.')
+
+    def test_a_bet_lowers_the_coachs_equity(self):
+        session = _heads_up('AH 5D', 'QC 8D', 'KH 9S 2C 4S JD', {Street.FLOP: 1.0})(random.Random(15))
+        session.act({'type': 'move', 'move': 'call'})
+        o = session.round.observation(0)
+        plain = simulate_equity(list(o.hole), list(o.board), 1, 2000, rng=random.Random(1)).equity.mean
+        self.assertLess(session.advice()['equity'], plain - 0.03)

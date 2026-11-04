@@ -4,6 +4,7 @@ from typing import List, Optional
 
 from src.CardGames.Core.Player import Advice as CoreAdvice, Advisor, Strategy
 from src.CardGames.Holdem.Equity import call_ev, pot_odds, simulate_equity
+from src.CardGames.Holdem.Range import betting_weights
 from src.CardGames.Holdem.Round import Action, Move, Observation
 
 __author__ = 'frank.ma'
@@ -11,7 +12,7 @@ __author__ = 'frank.ma'
 
 @dataclass(frozen=True)
 class Advice(CoreAdvice):
-    equity: float  # against random hands, from the seat's own cards and the board only
+    equity: float  # against dealt hands, random or fitted to public betting, from the seat's own cards and board only
     pot_odds: float
     call_ev: float  # chips gained by calling over folding, 0 when there is nothing to call
 
@@ -21,17 +22,22 @@ class MonteCarloStrategy(Advisor):
     equity against random hands, compared with the pot odds to call and with a value threshold to bet; the
     opponents' cards are dealt at random from the cards this seat has not seen, never read from the table
 
+    with reads_betting the dealt hands favour those that fit each opponent's public betting (see Range), which over
+    thousands of hands beat random hands at every table size against this game's computer seats, though it gives back
+    some of that against players who bet far more than their hands justify
+
     the value threshold scales with the field: a fair share is 1 / players in the hand, and the seat bets once its
     equity clears that by 0.15 * aggression; it folds when equity is short of the pot odds by more than fold_slack
     """
 
     def __init__(self, n_sims: int = 500, fold_slack: float = 0.08, aggression: float = 1.0, bluff: float = 0.0,
-                 rng: Optional[random.Random] = None):
+                 rng: Optional[random.Random] = None, reads_betting: bool = False):
         self.n_sims = n_sims
         self.fold_slack = fold_slack
         self.aggression = aggression
         self.bluff = bluff  # chance of betting without equity when checked to, heads-up or three-handed
         self.rng = rng if rng is not None else random.Random()
+        self.reads_betting = reads_betting  # weigh opponents' hands by their public betting, not all hands alike
 
     def _raise_to(self, observation: Observation, fraction: float) -> int:
         # raise by a fraction of the pot after calling, in whole small blinds, within the legal range
@@ -45,8 +51,9 @@ class MonteCarloStrategy(Advisor):
 
     def advise(self, observation: Observation, legal_moves: Optional[List[Move]] = None) -> Advice:
         o = observation
-        equity = simulate_equity(list(o.hole), list(o.board), o.n_opponents, self.n_sims, o.rules, self.rng) \
-            .equity.mean
+        weights = betting_weights(o) if self.reads_betting else None
+        equity = simulate_equity(list(o.hole), list(o.board), o.n_opponents, self.n_sims, o.rules, self.rng,
+                                 weights=weights).equity.mean
         odds = pot_odds(o.pot, o.to_call)
         ev = call_ev(equity, o.pot, o.to_call) if o.to_call > 0 else 0.0
         fair = 1.0 / (o.n_opponents + 1)
