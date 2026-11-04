@@ -70,6 +70,7 @@ class GuanDanSession(Session):
         self.trick = []  # type: List[Tuple[int, Optional[Combo]]]  # moves in the trick in play
         self.last_trick = []  # type: List[Tuple[int, Optional[Combo]]]
         self.won = 0  # hands your team won
+        self.hands_before = 0  # hands of this match played before the server last restarted
         self.followed = 0  # decisions where you made the coach's move
         self.decisions = 0
         self.log = []  # type: List[str]
@@ -80,6 +81,8 @@ class GuanDanSession(Session):
     def phase(self) -> str:
         if self.waiting is not None:
             return 'return'
+        if self.match.is_over:
+            return 'over'
         if self.round is None:
             return 'deal'
         if self.round.result is None:
@@ -114,7 +117,7 @@ class GuanDanSession(Session):
             raise ValueError('the match is over: start a new session for another.')
         hands = self._deal_hands()
         self.log.append('Hand %i at level %s, %s' % (
-            len(self.match.records) + 1, rank_name(self.match.level.value),
+            self._hands_played() + 1, rank_name(self.match.level.value),
             'the first hand' if self.match.declarer is None else
             'your team\'s level' if self.match.declarer == 0 else 'the opponents\' level'))
         if self.match.previous_order is not None:
@@ -257,6 +260,35 @@ class GuanDanSession(Session):
             self.log.append('%s the match.' % ('You and your partner win' if self.match.winner == 0
                                                else 'East and West win'))
 
+    # ---- saved between server runs ----
+
+    def _hands_played(self) -> int:
+        return self.hands_before + len(self.match.records)
+
+    def progress(self) -> dict:
+        m = self.match
+        return {'levels': list(m.levels), 'declarer': m.declarer, 'a_fails': list(m.a_fails), 'winner': m.winner,
+                'previous_order': list(m.previous_order) if m.previous_order else None,
+                'hands': self._hands_played(), 'won': self.won, 'followed': self.followed,
+                'decisions': self.decisions}
+
+    def restore(self, progress: dict) -> None:
+        m = self.match
+        levels, a_fails, order = progress['levels'], progress['a_fails'], progress['previous_order']
+        if not (len(levels) == len(a_fails) == 2 and all(2 <= int(x) <= 14 for x in levels)):
+            raise ValueError('expect two levels from 2 to A and two counts of failures at A.')
+        if order is not None and sorted(int(s) for s in order) != list(range(N_SEATS)):
+            raise ValueError('expect a finishing order of all %i seats.' % N_SEATS)
+        declarer, winner = progress['declarer'], progress['winner']
+        if declarer not in (None, 0, 1) or winner not in (None, 0, 1):
+            raise ValueError('expect a team, 0 or 1, or none.')
+        m.levels, m.a_fails = [int(x) for x in levels], [int(x) for x in a_fails]
+        m.declarer, m.winner = declarer, winner
+        m.previous_order = tuple(int(s) for s in order) if order is not None else None
+        self.hands_before, self.won = int(progress['hands']), int(progress['won'])
+        self.followed, self.decisions = int(progress['followed']), int(progress['decisions'])
+        self.log.append('Back at the table after the server restarted. Any hand in play did not count.')
+
     # ---- what you see ----
 
     def _advice(self):
@@ -284,7 +316,7 @@ class GuanDanSession(Session):
             ('you' if m.declarer == 0 else 'them'), 'a_fails': list(m.a_fails),
             'hand': [], 'wild': None, 'seats': [], 'trick': None, 'last_trick': [], 'your_turn': False,
             'can_pass': False, 'choices': None, 'tribute': None, 'result': None, 'unseen': [],
-            'match': {'hands': len(m.records), 'won': self.won, 'winner': None if m.winner is None else
+            'match': {'hands': self._hands_played(), 'won': self.won, 'winner': None if m.winner is None else
                       ('you' if m.winner == 0 else 'them')},
             'stats': {'followed': self.followed, 'decisions': self.decisions}, 'log': self.log[-LOG_LINES:],
         }

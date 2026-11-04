@@ -138,3 +138,13 @@ class LessonSession(Session):
 
     def advice(self) -> dict:
         return self.table.advice()
+
+    def progress(self) -> dict:
+        return {'done': list(self.done), 'index': self.index}
+
+    def restore(self, progress: dict) -> None:
+        done = [bool(x) for x in progress['done']]
+        if len(done) != len(self.lessons):
+            raise ValueError('saved for %i lessons, there are %i.' % (len(done), len(self.lessons)))
+        self.done = done
+        self._start(int(progress['index']))

@@ -33,3 +33,17 @@ class Session(ABC):
         the coach's recommendation for your current decision and why, from your observation only
         """
         pass
+
+    def progress(self) -> dict:
+        """
+        what to keep if the server restarts: plain numbers such as a bankroll or levels, never a card, so a saved file
+        holds nothing hidden. A hand in play is not kept: bets settle when a hand ends, so it simply does not count
+        """
+        return {}
+
+    def restore(self, progress: dict) -> None:
+        """
+        pick up from progress, between hands
+        :raises (KeyError, TypeError, ValueError): when it is not progress this session could have saved
+        """
+        pass
