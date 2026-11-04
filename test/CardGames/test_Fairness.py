@@ -13,6 +13,7 @@ from src.CardGames.GuanDan.Round import PASS, Round as GuanDanRound, deal
 from src.CardGames.GuanDan.Strategy import PlannerStrategy
 from src.CardGames.Holdem.Round import Action as HoldemAction, Move, Round as HoldemRound
 from src.CardGames.Holdem.Rules import Rules as HoldemRules
+from src.CardGames.Holdem.Range import betting_weights
 from src.CardGames.Holdem.Strategy import MonteCarloStrategy
 from test.CardGames.BlackJack.test_Round import stacked_shoe
 from test.CardGames.Holdem.test_Round import stacked
@@ -84,6 +85,22 @@ class TestFairPlay(TestCase):
             game.apply(2, Move(HoldemAction.CHECK))
         view = games[0].observation(0)
         self.assertEqual((view.stacks, view.in_hand, len(view.history)), ((98, 98, 98), (True, True, True), 5))
+        assert_fair_play(games[0], games[1], 0, advisor)
+
+    def test_holdem_reading_bets(self):
+        # the coach that weighs hands by public bets: the same bets over different hidden cards give the same advice
+        board = '2C 7D 9H TS 3C'
+        games = [HoldemRound([100, 100, 100], HoldemRules(1, 2), shoe=stacked(['AS AH'] + others, board))
+                 for others in (['KS KH', 'QS QH'], ['7S 2H', '8C 8D'])]
+
+        def advisor():
+            return MonteCarloStrategy(n_sims=200, rng=random.Random(3), reads_betting=True)
+
+        for game in games:
+            game.apply(0, Move(HoldemAction.CALL, 2))
+            game.apply(1, Move(HoldemAction.RAISE, 8))
+            game.apply(2, Move(HoldemAction.CALL, 8))
+        self.assertIsNotNone(betting_weights(games[0].observation(0)))
         assert_fair_play(games[0], games[1], 0, advisor)
 
     def test_guandan(self):

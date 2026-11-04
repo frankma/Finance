@@ -2,7 +2,7 @@ import random
 from collections import Counter
 from dataclasses import dataclass
 from itertools import combinations
-from typing import Dict, List, Optional
+from typing import Callable, Dict, List, Optional
 
 from src.CardGames.Core.Card import Card, standard_deck
 from src.CardGames.Core.CardCounter import CardCounter
@@ -11,6 +11,9 @@ from src.CardGames.Holdem.HandEvaluator import HandCategory, evaluate
 from src.CardGames.Holdem.Rules import Rules
 
 __author__ = 'frank.ma'
+
+
+MAX_REDRAWS = 30
 
 
 def _share(mine, others) -> float:
@@ -39,11 +42,14 @@ class EquityResult(object):
 
 def simulate_equity(hole: List[Card], board: List[Card], n_opponents: int, n_sims: int,
                     rules: Rules = Rules(), rng: Optional[random.Random] = None,
-                    dead: Optional[List[Card]] = None) -> EquityResult:
+                    dead: Optional[List[Card]] = None,
+                    weights: Optional[List[Callable[[List[Card]], float]]] = None) -> EquityResult:
     """
     Monte Carlo equity against opponents holding random hands: deal each opponent rules.n_hole of the unseen cards
     and the rest of the board, score everyone under the rules, and average the pot share
     :param dead: cards known to be out of play besides hole and board, e.g. ones seen exposed
+    :param weights: for each opponent, the chance in [0, 1] it would hold a hand, for equity against hands that fit
+    what it has shown rather than against random ones; a deal is redrawn until its hands are kept
     """
     rng = rng if rng is not None else random.Random()
     unseen = _unseen(list(hole) + list(board) + list(dead or []))
@@ -54,6 +60,10 @@ def simulate_equity(hole: List[Card], board: List[Card], n_opponents: int, n_sim
     shares, categories = [], Counter()
     for _ in range(n_sims):
         sample = rng.sample(unseen, need)
+        for _ in range(MAX_REDRAWS if weights else 0):
+            if all(rng.random() < w(sample[k * n_hole:(k + 1) * n_hole]) for k, w in enumerate(weights)):
+                break
+            sample = rng.sample(unseen, need)
         full_board = list(board) + sample[n_opponents * n_hole:]
         mine = rules.hand_rank(hole, full_board)
         others = [rules.hand_rank(sample[k * n_hole:(k + 1) * n_hole], full_board) for k in range(n_opponents)]
