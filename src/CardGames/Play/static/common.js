@@ -122,15 +122,22 @@ function rulesPanel(game, note) {
   return { open, close, get isOpen() { return !panel.hidden; } };
 }
 
-// put links to the rules on the terms a text uses, e.g. the coach's reason; terms maps a phrase to a section id
+// put links to the rules on the terms a text uses, e.g. the coach's reason; terms maps a phrase to a section id. All
+// the phrases are matched together, longest first, so 'straight flush' is never read as 'straight', and each section is
+// linked once in a text however many of its phrases appear
 function linkTerms(text, terms) {
   const escape = s => s.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
-  let html = escape(text);
-  Object.keys(terms).sort((a, b) => b.length - a.length).forEach(term => {
-    const re = new RegExp(`(^|[^\\w-])(${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})(?![\\w-])(?![^<]*</a>)`, 'i');
-    html = html.replace(re, (m, pre, word) => `${pre}<a href="#" data-rules="${terms[term]}">${word}</a>`);
+  const phrases = Object.keys(terms).sort((a, b) => b.length - a.length);
+  if (!phrases.length) return escape(text);
+  const sections = Object.fromEntries(phrases.map(p => [p.toLowerCase(), terms[p]]));
+  const alternatives = phrases.map(p => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
+  const linked = new Set();
+  return escape(text).replace(new RegExp(`(^|[^\\w-])(${alternatives})(?![\\w-])`, 'gi'), (match, before, phrase) => {
+    const section = sections[phrase.toLowerCase()];
+    if (linked.has(section)) return match;
+    linked.add(section);
+    return `${before}<a href="#" data-rules="${section}">${phrase}</a>`;
   });
-  return html;
 }
 
 // ---- guided practice: the lesson box above a table in learn mode ----
