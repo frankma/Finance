@@ -177,6 +177,24 @@ class HoldemSession(Session):
             how = describe(r.rank(pot.winners[0])).lower() if r.ranks else 'everyone else folding'
             self.log.append('%s %s %i with %s.' % (names, verb, pot.amount, how))
 
+    # ---- saved between server runs ----
+
+    def progress(self) -> dict:
+        # a hand counts and moves the button when dealt, so one still in play is taken back out
+        in_play = 1 if self.phase == 'play' else 0
+        return {'stacks': list(self.stacks), 'bought': list(self.bought), 'hands': self.hands - in_play,
+                'button': (self.button - in_play) % len(self.stacks), 'followed': self.followed,
+                'decisions': self.decisions}
+
+    def restore(self, progress: dict) -> None:
+        stacks, bought = [int(x) for x in progress['stacks']], [int(x) for x in progress['bought']]
+        if not len(stacks) == len(bought) == len(self.stacks):
+            raise ValueError('saved for a table of %i seats, this one has %i.' % (len(stacks), len(self.stacks)))
+        self.stacks, self.bought, self.button = stacks, bought, int(progress['button']) % len(stacks)
+        self.hands, self.followed, self.decisions = (int(progress['hands']), int(progress['followed']),
+                                                     int(progress['decisions']))
+        self.log.append('Back at the table after the server restarted. Any hand in play did not count.')
+
     # ---- what you see ----
 
     def _coach(self):

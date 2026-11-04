@@ -1,5 +1,6 @@
 import hashlib
 import json
+import logging
 import os
 import random
 import secrets
@@ -14,6 +15,8 @@ from src.CardGames.Play.Session import Session
 
 __author__ = 'frank.ma'
 
+logger = logging.getLogger(__name__)
+
 STATIC = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static')
 # the project's one copy of the paper theme, shared with viz/
 VIZ = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', 'viz')
@@ -22,6 +25,7 @@ LAB = os.path.join(VIZ, 'card_games_lab.html')
 TYPES = {'.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8',
          '.js': 'text/javascript; charset=utf-8'}
 MAX_SESSIONS = 200
+PROGRESS = os.path.join(VIZ, '..', '.card_games')  # git-ignored, next to the code; holds no cards
 CARD_GAMES = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 BUILD_HEADER = 'X-Card-Games-Build'
 SHUTDOWN_HEADER = 'X-Card-Games-Shutdown'
@@ -43,38 +47,121 @@ def build_id(root: str = CARD_GAMES) -> str:
     return digest.hexdigest()[:12]
 
 
+def progress_path(port: int) -> str:
+    # one file per port, as a browser keeps its session ids per address
+    return os.path.join(PROGRESS, 'progress-%i.json' % port)
+
+
 class Sessions(object):
     """
     sessions in memory by id, oldest dropped first; one server process holds every table
+
+    with a path, each session's progress (Session.progress: numbers, never a card) is kept in that file, so a session
+    asked for after the server restarted is rebuilt from it, between hands
     """
 
-    def __init__(self, seed: Optional[int] = None):
+    def __init__(self, seed: Optional[int] = None, path: Optional[str] = None):
         self.rng = random.Random(seed)
         self.lock = threading.Lock()
         self.items = OrderedDict()  # type: OrderedDict
+        self.path = path
+        self.saved = self._read()  # type: OrderedDict
 
-    def create(self, game: str, options: dict) -> Tuple[str, Session]:
+    def _read(self) -> OrderedDict:
+        if self.path is None or not os.path.exists(self.path):
+            return OrderedDict()
+        try:
+            with open(self.path, encoding='utf-8') as f:
+                records = json.load(f)
+            if not isinstance(records, dict):
+                raise ValueError('expect an object of saved sessions.')
+            return OrderedDict(records)
+        except (OSError, ValueError) as e:
+            # never stop the games over a bad file, and never overwrite what might be recoverable from it
+            logger.warning('could not read saved progress in %s: %s', self.path, e)
+            try:
+                os.replace(self.path, self.path + '.unreadable')
+            except OSError:
+                pass
+            return OrderedDict()
+
+    def _write(self) -> None:
+        # to a side file first, so a crash mid-write cannot leave a half-written save
+        try:
+            os.makedirs(os.path.dirname(self.path), exist_ok=True)
+            side = self.path + '.tmp'
+            with open(side, 'w', encoding='utf-8') as f:
+                json.dump(self.saved, f)
+            os.replace(side, self.path)
+        except OSError as e:
+            logger.warning('could not save progress in %s: %s', self.path, e)
+
+    def _record(self, game: str, sid: str, session: Session, options: Optional[dict] = None) -> None:
+        # the caller holds the lock
+        if self.path is None:
+            return
+        progress = session.progress()
+        record = self.saved.get(sid)
+        if record is not None and record['progress'] == progress:
+            return
+        self.saved[sid] = {'game': game, 'options': record['options'] if record else (options or {}),
+                           'progress': progress}
+        self.saved.move_to_end(sid)
+        while len(self.saved) > MAX_SESSIONS:
+            self.saved.popitem(last=False)
+        self._write()
+
+    def _start(self, game: str, options: dict) -> Session:
         entry = BY_NAME.get(game)
         if entry is None or entry.start is None:
             raise KeyError(game)
+        rng = random.Random(self.rng.random())
+        if options.get('mode') == 'learn':
+            # guided practice: the game's lessons, each on a table set up for it
+            if entry.lessons is None:
+                raise ValueError('%s has no lessons yet.' % entry.title)
+            return LessonSession(entry.lessons(), rng)
+        return entry.start(options, rng)
+
+    def _keep(self, sid: str, game: str, session: Session) -> None:
+        self.items[sid] = (game, session)
+        while len(self.items) > MAX_SESSIONS:
+            self.items.popitem(last=False)
+
+    def create(self, game: str, options: dict) -> Tuple[str, Session]:
         with self.lock:
-            rng = random.Random(self.rng.random())
-            if options.get('mode') == 'learn':
-                # guided practice: the game's lessons, each on a table set up for it
-                if entry.lessons is None:
-                    raise ValueError('%s has no lessons yet.' % entry.title)
-                session = LessonSession(entry.lessons(), rng)
-            else:
-                session = entry.start(options, rng)
+            session = self._start(game, options)
             sid = secrets.token_hex(8)
-            self.items[sid] = (game, session)
-            while len(self.items) > MAX_SESSIONS:
-                self.items.popitem(last=False)
+            self._keep(sid, game, session)
+            self._record(game, sid, session, options)
         return sid, session
+
+    def save(self, game: str, sid: str, session: Session) -> None:
+        # after an action; the caller holds the lock
+        self._record(game, sid, session)
+
+    def _restore(self, game: str, sid: str) -> Optional[Session]:
+        # the caller holds the lock
+        record = self.saved.get(sid)
+        if not isinstance(record, dict) or record.get('game') != game:
+            return None
+        try:
+            session = self._start(game, record['options'])
+            session.restore(record['progress'])
+        except (AttributeError, KeyError, TypeError, ValueError) as e:
+            logger.warning('dropping saved session %s: %r', sid, e)
+            del self.saved[sid]
+            return None
+        self._keep(sid, game, session)
+        return session
 
     def get(self, game: str, sid: str) -> Session:
         with self.lock:
             found = self.items.get(sid)
+            if found is None:
+                restored = self._restore(game, sid)
+                if restored is not None:
+                    return restored
         if found is None or found[0] != game:
             raise KeyError(sid)
         return found[1]
@@ -176,6 +263,7 @@ class Handler(BaseHTTPRequestHandler):
                 with self.sessions.lock:
                     session.act(self._body())
                     view = session.view()
+                    self.sessions.save(parts[1], parts[2], session)
                 return self._json(200, view)
             self._json(404, {'error': 'not found'})
         except KeyError:
@@ -194,12 +282,14 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def make_server(host: str = '127.0.0.1', port: int = 8765, seed: Optional[int] = None,
-                quiet: bool = True, build: Optional[str] = None) -> ThreadingHTTPServer:
+                quiet: bool = True, build: Optional[str] = None,
+                progress: Optional[str] = None) -> ThreadingHTTPServer:
     """
     a play server on host:port (port 0 picks a free one); local only by default
     :param build: the build it reports, by default the fingerprint of the code it runs
+    :param progress: a file to keep each session's progress in across restarts, by default none
     """
-    handler = type('PlayHandler', (Handler,), {'sessions': Sessions(seed), 'quiet': quiet,
+    handler = type('PlayHandler', (Handler,), {'sessions': Sessions(seed, progress), 'quiet': quiet,
                                                'build': build if build is not None else build_id()})
     server = ThreadingHTTPServer((host, port), handler)
     server.replaced = False  # set once a newer server has asked this one to stop

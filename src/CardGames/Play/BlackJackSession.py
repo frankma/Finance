@@ -137,6 +137,19 @@ class BlackJackSession(Session):
             'busts' if dealer.is_bust else 'has blackjack' if dealer.is_blackjack else 'makes %i' % dealer.total,
             ', '.join(self.outcomes), self.payoff))
 
+    # ---- saved between server runs ----
+
+    def progress(self) -> dict:
+        return {'bankroll': self.bankroll, 'bought': self.bought, 'rounds': self.rounds, 'last_bet': self.last_bet,
+                'followed': self.followed, 'decisions': self.decisions}
+
+    def restore(self, progress: dict) -> None:
+        self.bankroll, self.bought = float(progress['bankroll']), float(progress['bought'])
+        self.rounds, self.last_bet = int(progress['rounds']), int(progress['last_bet'])
+        self.followed, self.decisions = int(progress['followed']), int(progress['decisions'])
+        self.log.append('Back at the table after the server restarted, with a fresh shoe. Any round in play did not '
+                        'count.')
+
     # ---- what you see ----
 
     def _count(self, observation=None) -> dict:

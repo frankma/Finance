@@ -15,7 +15,7 @@ from http.server import ThreadingHTTPServer
 from typing import List, Optional, Tuple
 
 from src.CardGames.Play.Registry import lobby, playable
-from src.CardGames.Play.Server import BUILD_HEADER, SHUTDOWN_HEADER, build_id, make_server
+from src.CardGames.Play.Server import BUILD_HEADER, SHUTDOWN_HEADER, build_id, make_server, progress_path
 
 __author__ = 'frank.ma'
 
@@ -52,7 +52,7 @@ def _replace(port: int, running: str, start, wait: float = 5.0) -> Optional[Thre
             time.sleep(0.1)
 
 
-def claim(port: int, quiet: bool = True) -> Tuple[Optional[ThreadingHTTPServer], str]:
+def claim(port: int, quiet: bool = True, progress: Optional[str] = None) -> Tuple[Optional[ThreadingHTTPServer], str]:
     """
     a server running this code on the port, and how it was got: 'started' on a free port, 'replaced' after asking a
     card games server running other code to stop; or None and why not: 'running' when this code is already serving
@@ -62,7 +62,7 @@ def claim(port: int, quiet: bool = True) -> Tuple[Optional[ThreadingHTTPServer],
     current = build_id()
 
     def start():
-        return make_server(port=port, quiet=quiet, build=current)
+        return make_server(port=port, quiet=quiet, build=current, progress=progress)
     try:
         return start(), 'started'
     except OSError as e:
@@ -94,8 +94,9 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument('--port', type=int, default=8765)
     parser.add_argument('--no-browser', action='store_true', help='do not open a browser window')
     parser.add_argument('--verbose', action='store_true', help='log every request')
+    parser.add_argument('--no-save', action='store_true', help='do not keep progress across server restarts')
     args = parser.parse_args(argv)
-    server, how = claim(args.port, quiet=not args.verbose)
+    server, how = claim(args.port, quiet=not args.verbose, progress=None if args.no_save else progress_path(args.port))
     url = 'http://127.0.0.1:%i/%s' % (server.server_address[1] if server else args.port, args.game or '')
     if how == 'running':
         # a server from an earlier run, on this same code, is still up: use it rather than start another
