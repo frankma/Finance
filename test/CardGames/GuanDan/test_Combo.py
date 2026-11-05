@@ -1,7 +1,7 @@
 import random
 from unittest import TestCase
 
-from src.CardGames.Core.Card import Card, Rank
+from src.CardGames.Core.Card import Card, Rank, Suit
 from src.CardGames.GuanDan.Combo import ComboType, generate_moves, group_value, interpret, is_wild, sort_hand
 from src.CardGames.GuanDan.Round import deal
 
@@ -95,6 +95,31 @@ class TestGenerateMoves(TestCase):
         self.assertEqual([m.describe() for m in flushes], ['straight flush to 9'], 'the wild as the 9, not the 4.')
         keys = [(m.type, m.cards) for m in moves]
         self.assertEqual(len(keys), len(set(keys)), 'one reading per type for any set of cards.')
+
+    def test_two_wilds_read_with_either_rank_as_the_triple(self):
+        fulls = [m for m in generate_moves(P('2H 2H 3S 4S 4D'), L2) if m.type == ComboType.FULL_HOUSE and m.n == 5]
+        self.assertIn('full house of 4s with 3s', [m.describe() for m in fulls])
+        self.assertNotIn('full house of 3s with 4s', [m.describe() for m in fulls], 'the same cards read weaker.')
+        target = best('3S 3D 3C 5S 5D', L2)
+        self.assertTrue(any(m.beats(target) for m in fulls), 'the 4s beat a full house of 3s.')
+
+    def test_a_natural_card_in_hand_does_not_hide_the_higher_window(self):
+        # the natural jack fills the window to J, so no window builds 8 9 T with two wilds as the straight flush to Q it is
+        moves = generate_moves(P('2H 2H 8S 9S TS JS'), L2)
+        flushes = {m.cards: m.value for m in moves if m.type == ComboType.STRAIGHT_FLUSH}
+        for cards, value in flushes.items():
+            strongest = max(r.value for r in interpret(list(cards), L2) if r.type == ComboType.STRAIGHT_FLUSH)
+            self.assertEqual(value, strongest, str(cards))
+
+    def test_every_move_is_its_strongest_reading_with_both_wilds_in_hand(self):
+        rng = random.Random(2)
+        for _ in range(20):
+            level = Rank(rng.randint(2, 14))
+            hand = deal(rng)[0]
+            hand = [card for card in hand if not is_wild(card, level)][:25] + [Card(level, Suit.HEART)] * 2
+            for move in generate_moves(hand, level):
+                values = [r.value for r in interpret(list(move.cards), level) if r.type == move.type]
+                self.assertEqual(move.value, max(values), str(move))
 
     def test_every_move_is_a_reading_of_its_cards(self):
         rng = random.Random(1)

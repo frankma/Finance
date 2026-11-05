@@ -47,6 +47,8 @@ class ComboType(Enum):
 
 
 BOMBS = (ComboType.BOMB, ComboType.STRAIGHT_FLUSH, ComboType.JOKERS)
+# the types whose cards can read more than one way once they hold a wild
+MANY_READINGS = (ComboType.FULL_HOUSE, ComboType.STRAIGHT, ComboType.STRAIGHT_FLUSH, ComboType.TUBE, ComboType.PLATE)
 
 
 @dataclass(frozen=True)
@@ -206,8 +208,9 @@ def interpret(cards: List[Card], level: Rank) -> List[Combo]:
 
 def generate_moves(hand: List[Card], level: Rank) -> List[Combo]:
     """
-    every combination the hand can play, using wilds only where natural cards run short; other readings of the same
-    cards (another suit of a rank, a wild in another role) are legal too, see Round.is_legal
+    every combination the hand can play, using wilds only where natural cards run short, each set of cards listed as
+    its strongest reading of a type; other readings of the same cards (another suit of a rank, a wild in another role)
+    are legal too, see Round.is_legal
     """
     wild = [card for card in hand if is_wild(card, level)]
     n_wild = len(wild)
@@ -215,20 +218,19 @@ def generate_moves(hand: List[Card], level: Rank) -> List[Combo]:
     for card in hand:
         if not is_wild(card, level):
             by_rank.setdefault(card.rank.value, []).append(card)
-    moves, seen = [], {}  # (type, cards) -> index in moves
+    moves, seen = [], set()  # (type, cards)
 
     def add(combo_type, cards, value, rank, pair_rank=None):
-        # the same cards may read as more than one combination of a type, e.g. a wild ending a straight low or high:
-        # keep the strongest reading, which beats everything the weaker one does
         combo = make(combo_type, cards, value, rank, pair_rank)
         key = (combo_type, combo.cards)
         if key in seen:
-            if combo.value > moves[seen[key]].value:
-                moves[seen[key]] = combo
-            return None
-        seen[key] = len(moves)
+            return
+        seen.add(key)
+        if combo_type in MANY_READINGS and any(is_wild(card, level) for card in cards):
+            # list these cards as their strongest reading, which beats everything a weaker one does; only interpret
+            # knows it, as the window or triple that built them may be a weak one
+            combo = next(reading for reading in interpret(cards, level) if reading.type == combo_type)
         moves.append(combo)
-        return combo
 
     trips, pairs = [], []  # (rank, cards, wilds used)
     for r in list(range(2, 15)) + [BLACK_JOKER, RED_JOKER]:

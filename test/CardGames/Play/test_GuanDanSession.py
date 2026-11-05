@@ -92,6 +92,20 @@ class TestGuanDanSession(TestCase):
         self.assertEqual(session.round.history[0][1].describe(), 'straight to 9')
         self.assertIsNone(session.view()['choices'])
 
+    def test_the_coach_sees_the_strongest_reading(self):
+        # with two wilds these cards are a full house of 3s or of 4s, and only the 4s beat West's 3s
+        session = GuanDanSession({}, random.Random(1))
+        seat(session, [Card.parse_many(h) for h in ('2H 2H 3H 4S 4D', '6S 7D 8C', '6D 7C 8H', '3S 3D 3C 5S 5D KS')],
+             leader=3)
+        session.act({'type': 'deal'})
+        self.assertEqual(session.view()['trick']['desc'], 'full house of 3s with 5s')
+        advice = session.advice()
+        self.assertEqual(advice['move']['desc'], 'full house of 4s with 3s')
+        session.act({'type': 'play', 'cards': advice['move']['cards']})
+        self.assertIsNone(session.view()['choices'], 'the 3s reading cannot be played here, so there is nothing to pick.')
+        self.assertEqual(session.round.history[1][1].describe(), 'full house of 4s with 3s')
+        self.assertEqual(session.view()['seats'][0]['count'], 0, 'and that takes you out.')
+
     def test_tribute(self):
         # you went out first last hand and West last, so West pays you and you hand a card back
         session = GuanDanSession({}, random.Random(4))
