@@ -1,13 +1,17 @@
 import json
 import random
+import tempfile
 from unittest import TestCase
 
 from src.CardGames.Core.Card import Card
+from src.CardGames.Core.Player import Strategy
 from src.CardGames.Core.Shoe import Shoe
 from src.CardGames.Holdem.Equity import simulate_equity
-from src.CardGames.Holdem.Round import Street
+from src.CardGames.Holdem.Round import Action, Street
+from src.CardGames.Holdem.Strategy import CallingStation
 from src.CardGames.Play.HoldemLessons import _heads_up
 from src.CardGames.Play.HoldemSession import HoldemSession
+from src.CardGames.Play.Server import Sessions
 
 __author__ = 'frank.ma'
 
@@ -154,3 +158,65 @@ class TestFairPlay(TestCase):
         o = session.round.observation(0)
         plain = simulate_equity(list(o.hole), list(o.board), 1, 2000, rng=random.Random(1)).equity.mean
         self.assertLess(session.advice()['equity'], plain - 0.03)
+
+
+class Raiser(Strategy):
+    # bets the minimum whenever it may
+    def decide(self, observation, legal_moves):
+        return next((m for m in legal_moves if m.action == Action.RAISE), legal_moves[0])
+
+
+class TestOmaha(TestCase):
+    def test_a_coached_session(self):
+        session = HoldemSession({'variant': 'omaha', 'seats': '4'}, random.Random(21))
+        play_coached(session, 4)
+        view = session.view()
+        self.assertEqual((view['variant'], view['n_hole']), ('omaha', 4))
+        self.assertEqual(sum(session.stacks), sum(session.bought), 'chips are only moved, never made.')
+        self.assertEqual(len(view['seats'][0]['cards']), 4)
+        json.dumps(view)
+        with self.assertRaises(ValueError):
+            HoldemSession({'variant': 'stud'})
+
+    def test_the_two_plus_three_rule_reaches_the_table(self):
+        # a board of four hearts and an ace of hearts alone: hold'em would call this a flush, Omaha does not
+        session = HoldemSession({'variant': 'omaha', 'seats': 2}, random.Random(22))
+        stack(session, '3S AH 4S 2D 5S 7C 6S 9S 8C KH QH JH 8D TH 8S 3C')
+        session.bots[1] = CallingStation()
+        session.act({'type': 'deal'})
+        session.act({'type': 'move', 'move': 'call'})
+        self.assertEqual(session.view()['board'], ['KH', 'QH', 'JH'])
+        self.assertEqual(session.view()['made'], 'Ace high', 'one heart in hand is no flush draw made good.')
+        self.assertIsNotNone(session.advice()['outs'])
+
+    def test_the_coach_does_not_read_bets(self):
+        session = HoldemSession({'variant': 'omaha', 'seats': 2}, random.Random(23))
+        session.bots[1] = Raiser()
+        session.act({'type': 'deal'})
+        session.act({'type': 'move', 'move': 'call'})
+        self.assertEqual((session.phase, session.round.history[-1][0]), ('play', 1), 'the other seat has just bet.')
+        self.assertEqual(session.view()['to_call'] > 0, True)
+        self.assertFalse(session.advice()['read_betting'])
+
+    def test_other_hands_stay_hidden(self):
+        # two tables alike in everything you can see, different in the other seat's four cards
+        views, advice = [], []
+        for other in ('2D 7C 3C 9D', 'KD KC QD QS'):
+            session = HoldemSession({'variant': 'omaha', 'seats': 2}, random.Random(24))
+            a = other.split()
+            stack(session, '%s AS %s AH %s KH %s TS' % (a[0], a[1], a[2], a[3]))
+            session.act({'type': 'deal'})
+            views.append(json.dumps(session.view(), sort_keys=True))
+            advice.append(session.advice())
+            self.assertIsNone(session.view()['seats'][1]['cards'])
+            for card in a:
+                self.assertNotIn('"%s"' % card, views[-1])
+        self.assertEqual(views[0], views[1])
+        self.assertEqual(advice[0], advice[1])
+
+    def test_progress_keeps_the_game(self):
+        # the variant is an option of the table, so a restart rebuilds Omaha, not hold'em
+        with tempfile.TemporaryDirectory() as folder:
+            path = folder + '/progress.json'
+            sid, _ = Sessions(path=path).create('holdem', {'variant': 'omaha', 'seats': '2'})
+            self.assertEqual(Sessions(path=path).get('holdem', sid).view()['variant'], 'omaha')

@@ -4,7 +4,7 @@ from unittest import TestCase
 
 from src.CardGames.Core.Card import Card, Rank
 from src.CardGames.GuanDan.Combo import ComboType, interpret
-from src.CardGames.Holdem.HandEvaluator import HandCategory, evaluate
+from src.CardGames.Holdem.HandEvaluator import HandCategory, describe, evaluate, evaluate_omaha
 from src.CardGames.Play.Registry import GAMES
 from src.CardGames.Play.Server import STATIC
 
@@ -71,6 +71,13 @@ class TestRulesText(TestCase):
         trick = re.search(r'<section id="tricks">(.*?)</section>', html, re.S).group(1)
         plays = [interpret(Card.parse_many(c), level)[0] for c in re.findall(r'data-cards="([^"]+)"', trick)]
         self.assertTrue(all(b.beats(a) for a, b in zip(plays, plays[1:])))
+
+    def test_omaha_example_reads_as_described(self):
+        body = re.search(r'<section id="omaha">(.*?)</section>', read('rules-holdem.html'), re.S).group(1)
+        hole, board = [Card.parse_many(c) for c in re.findall(r'data-cards="([^"]+)"', body)]
+        self.assertEqual(evaluate(hole + board).category, HandCategory.STRAIGHT_FLUSH, 'a royal flush in hold\'em.')
+        self.assertEqual(describe(evaluate_omaha(hole, board)), 'Ace high')
+        self.assertEqual(describe(evaluate_omaha(Card.parse_many('AH 9H 7C 2S'), board)), 'Flush, ace high')
 
     def test_holdem_showdown_example_splits(self):
         board = Card.parse_many('7D 8S 9H TD JS')

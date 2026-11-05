@@ -116,7 +116,7 @@
       </div>
       <div class="box fair-note">
         <span class="kicker">What the coach knows</span>
-        <p>Your two cards, the board, the pot, the stacks and every bet made. Never another seat's cards or the order of the deck: the server never sends them to this page. Equity is estimated by dealing the other seats hands from the cards you have not seen, favouring hands that fit their public bets. The computer seats also see only their own cards, and do not read bets.</p>
+        <p>Your own cards, the board, the pot, the stacks and every bet made. Never another seat's cards or the order of the deck: the server never sends them to this page. Equity is estimated by dealing the other seats hands from the cards you have not seen, favouring hands that fit their public bets (in hold'em; in Omaha it deals them at random). The computer seats also see only their own cards, and do not read bets.</p>
       </div>
     </aside>
   </div>
@@ -127,7 +127,7 @@ const table = seat('holdem', MODE);
 let view = null, advice = null;
 // the rules text, beside the table; terms in the coach's reasons link to their section
 const rules = rulesPanel('holdem', () => $('rules').textContent);
-const TERMS = { 'equity': 'equity', 'pot odds': 'pot-odds', 'for value': 'equity', 'a bluff': 'moves' };
+const TERMS = { 'equity': 'equity', 'pot odds': 'pot-odds', 'for value': 'equity', 'a bluff': 'moves', 'exactly two': 'omaha' };
 const NAMES = { fold: 'Fold', check: 'Check', call: 'Call', raise: 'Raise' };
 const pct = (x, d = 0) => fmt(100 * x, d) + '%';
 
@@ -179,7 +179,7 @@ function renderSeat(s) {
   el.className = 'seat' + (s.to_act ? ' to-act' : '') + (!s.in_hand && view.phase !== 'deal' ? ' folded' : '');
   const cards = document.createElement('div'); cards.className = 'cards';
   // backs for a seat still holding cards; its faces only once they are turned over at showdown
-  drawCards(cards, s.cards || (s.in_hand && view.phase !== 'deal' ? [null, null] : []));
+  drawCards(cards, s.cards || (s.in_hand && view.phase !== 'deal' ? Array(view.n_hole).fill(null) : []));
   const head = document.createElement('div'); head.className = 'seat-head';
   head.innerHTML = `<b>${s.name}</b><span class="stack">${fmt(s.stack)}</span>`;
   const foot = document.createElement('div'); foot.className = 'seat-foot';
@@ -203,9 +203,11 @@ function setRaise(to) {
 function render() {
   const v = view, you = v.seats[0];
   renderLesson($('lesson'), v.lesson, act, TERMS);
-  $('rules').textContent = `No-limit, blinds ${v.blinds[0]}/${v.blinds[1]} · ${v.n_seats} seats · buy-in ${fmt(v.buy_in)}`;
+  const omaha = v.variant === 'omaha';
+  if (omaha) { document.title = 'Omaha Table'; document.querySelector('h1').textContent = 'Omaha'; }
+  $('rules').textContent = `No-limit${omaha ? ' Omaha: four hole cards, play exactly two with three from the board' : ''}, blinds ${v.blinds[0]}/${v.blinds[1]} · ${v.n_seats} seats · buy-in ${fmt(v.buy_in)}`;
   // the rules open at side pots once someone is all in, else at the top
-  $('rulesLink').dataset.rules = v.phase !== 'deal' && v.seats.some(s => s.in_hand && s.stack === 0) ? 'side-pots' : '';
+  $('rulesLink').dataset.rules = v.phase !== 'deal' && v.seats.some(s => s.in_hand && s.stack === 0) ? 'side-pots' : omaha ? 'omaha' : '';
   $('opponents').replaceChildren(...v.seats.slice(1).map(renderSeat));
   // board: dealt cards, then empty slots for the ones to come
   const board = $('board'); drawCards(board, v.board);
