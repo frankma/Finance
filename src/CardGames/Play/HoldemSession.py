@@ -23,6 +23,10 @@ STYLES = [
 SEATS = ((4, 'Four-handed'), (6, 'Six-handed'), (2, 'Heads-up'))  # the lobby offers the first by default
 VERBS = {Action.FOLD: 'fold', Action.CHECK: 'check', Action.CALL: 'call', Action.RAISE: 'raise'}
 BOT_SIMS, COACH_SIMS = 400, 2000
+# scoring an Omaha hand tries every two hole cards with every three board cards, about 50 times the work, so it gets
+# fewer simulations to stay quick at the table, and answers about twice as noisy
+OMAHA_BOT_SIMS, OMAHA_COACH_SIMS = 120, 600
+VARIANTS = (('holdem', "Texas hold'em"), ('omaha', 'Omaha'))
 
 
 class HoldemSession(Session):
@@ -37,14 +41,21 @@ class HoldemSession(Session):
         n_seats = int(options.get('seats', 4))
         if n_seats not in dict(SEATS):
             raise ValueError('seats %i should be one of %s.' % (n_seats, sorted(dict(SEATS))))
-        self.rules = Rules(small_blind=1, big_blind=2)
+        self.variant = options.get('variant', 'holdem')
+        if self.variant not in dict(VARIANTS):
+            raise ValueError('variant %r should be one of %s.' % (self.variant, sorted(dict(VARIANTS))))
+        omaha = self.variant == 'omaha'
+        self.rules = Rules(small_blind=1, big_blind=2, n_hole=4, omaha=True) if omaha else \
+            Rules(small_blind=1, big_blind=2)
+        self.coach_sims = OMAHA_COACH_SIMS if omaha else COACH_SIMS
         self.buy_in = int(options.get('stack', 200))
         if not 20 <= self.buy_in <= 2000:
             raise ValueError('stack %i should be between 20 and 2000.' % self.buy_in)
         self.rng = rng if rng is not None else random.Random()
         self.seed = self.rng.getrandbits(32)  # seeds the coach, so asking twice at one decision gives one answer
         self.names = ['You'] + ['%s %i' % (STYLES[k][0], k + 2) for k in range(n_seats - 1)]
-        self.bots = [None] + [MonteCarloStrategy(BOT_SIMS, rng=random.Random(self.rng.random()), **STYLES[k][1])
+        self.bots = [None] + [MonteCarloStrategy(OMAHA_BOT_SIMS if omaha else BOT_SIMS,
+                                                 rng=random.Random(self.rng.random()), **STYLES[k][1])
                               for k in range(n_seats - 1)]
         self.stacks = [self.buy_in] * n_seats
         self.bought = [self.buy_in] * n_seats  # chips each seat has bought in for
@@ -201,7 +212,7 @@ class HoldemSession(Session):
         # one Monte Carlo answer per decision, from your observation only
         key = len(self.round.history)
         if self._advice is None or self._advice[0] != (self.hands, key):
-            coach = MonteCarloStrategy(COACH_SIMS, rng=random.Random('%i-%i-%i' % (self.seed, self.hands, key)),
+            coach = MonteCarloStrategy(self.coach_sims, rng=random.Random('%i-%i-%i' % (self.seed, self.hands, key)),
                                        reads_betting=True)
             self._advice = ((self.hands, key), coach.advise(self.round.observation(0), self.round.legal_moves(0)))
         return self._advice[1]
@@ -243,7 +254,8 @@ class HoldemSession(Session):
     def view(self) -> dict:
         n = len(self.stacks)
         out = {
-            'game': 'holdem', 'phase': self.phase, 'blinds': [self.rules.small_blind, self.rules.big_blind],
+            'game': 'holdem', 'variant': self.variant, 'n_hole': self.rules.n_hole, 'phase': self.phase,
+            'blinds': [self.rules.small_blind, self.rules.big_blind],
             'buy_in': self.buy_in, 'seats': self._seat_views(), 'board': [], 'pot': 0, 'street': None,
             'legal': [], 'to_call': 0, 'raise': None, 'your_turn': False, 'made': None,
             'payoff': None, 'log': self.log[-14:], 'can_rebuy': self.phase != 'play' and self.stacks[0] < self.rules.big_blind,

@@ -35,11 +35,14 @@ function drawCards(host, codes) { host.replaceChildren(...codes.map(cardEl)); }
 function showError(e) { const el = $('err'); el.hidden = !e; el.textContent = e ? e.message || String(e) : ''; }
 const cap = s => s[0].toUpperCase() + s.slice(1);
 
-// your seat at one game on the play server, kept across reloads by its session id in this browser; mode 'learn'
-// keeps the game's lessons apart from free play
+// your seat at one game on the play server, kept across reloads by its session id in this browser; lessons (mode
+// 'learn') and each table the page's address asks for, e.g. ?variant=omaha&seats=6, keep their own session
 function seat(game, mode) {
   let sid = null;
-  const key = game + (mode ? '-' + mode : '') + '-session';
+  const asked = new URLSearchParams(location.search);
+  asked.delete('mode');
+  asked.sort();
+  const key = game + (mode ? '-' + mode : '') + (asked.toString() ? '?' + asked : '') + '-session';
   return {
     // resume this browser's session, or sit down at a new table with these options
     async open(fresh, options) {
