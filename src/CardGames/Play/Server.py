@@ -10,7 +10,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Optional, Tuple
 
 from src.CardGames.Play.Lesson import LessonSession
-from src.CardGames.Play.Registry import BY_NAME, lobby
+from src.CardGames.Play.Registry import BY_NAME, lessons_for, lobby
 from src.CardGames.Play.Session import Session
 
 __author__ = 'frank.ma'
@@ -118,9 +118,10 @@ class Sessions(object):
         rng = random.Random(self.rng.random())
         if options.get('mode') == 'learn':
             # guided practice: the game's lessons, each on a table set up for it
-            if entry.lessons is None:
+            lessons = lessons_for(entry, options)
+            if lessons is None:
                 raise ValueError('%s has no lessons yet.' % entry.title)
-            return LessonSession(entry.lessons(), rng)
+            return LessonSession(lessons(), rng)
         return entry.start(options, rng)
 
     def _keep(self, sid: str, game: str, session: Session) -> None:

@@ -147,6 +147,12 @@ function linkTerms(text, terms) {
 
 // 'learn' when the page was opened with ?mode=learn, else '' for free play
 const MODE = new URLSearchParams(location.search).get('mode') === 'learn' ? 'learn' : '';
+// where a lesson's page leads for free play: its address without the mode, so Omaha's lessons lead to an Omaha table
+function freePlayHref() {
+  const q = new URLSearchParams(location.search);
+  q.delete('mode');
+  return location.pathname + (q.toString() ? '?' + q : '');
+}
 
 // draw the lesson in front of you into host; act sends the page's actions, terms links words to the rules
 function renderLesson(host, lesson, act, terms) {
@@ -164,7 +170,7 @@ function renderLesson(host, lesson, act, terms) {
     ${lesson.prompt ? `<p class="lesson-prompt">${linkTerms(lesson.prompt, terms)}</p>` : ''}
     ${lesson.complete ? `<div class="row"><button type="button" class="primary" data-lesson="${Math.min(lesson.index + 1, lesson.lessons.length - 1)}" ${lesson.index + 1 >= lesson.lessons.length ? 'hidden' : ''}>Next lesson</button>
       <button type="button" data-lesson="${lesson.index}">Try it again</button>
-      ${lesson.index + 1 >= lesson.lessons.length ? '<span class="small">That was the last lesson. <a href="?">Play freely</a> with the coach, or pick any lesson again.</span>' : ''}</div>` : ''}
+      ${lesson.index + 1 >= lesson.lessons.length ? `<span class="small">That was the last lesson. <a href="${freePlayHref()}">Play freely</a> with the coach, or pick any lesson again.</span>` : ''}</div>` : ''}
     <ol class="lesson-list">${lesson.lessons.map((x, k) => `<li class="${k === lesson.index ? 'current' : ''}">
       <a href="#" data-lesson="${k}">${x.title}</a>${x.done ? ' <span class="tick" aria-label="done">✓</span>' : ''}</li>`).join('')}</ol>`;
   host.querySelectorAll('[data-lesson]').forEach(el => el.onclick = e => { e.preventDefault(); act({ type: 'lesson', index: +el.dataset.lesson }); });

@@ -21,6 +21,7 @@ class GameEntry(object):
     start: Optional[Callable[[dict, random.Random], Session]]  # None until the game can be played
     options: tuple = ()  # (key, label, choices as (value, label) pairs) for the lobby
     lessons: Optional[Callable[[], List[Lesson]]] = None  # guided practice hands, played with mode=learn
+    variant_lessons: tuple = ()  # (variant, title, lessons) for a variant with guided hands of its own
 
 
 GAMES = [
@@ -33,7 +34,7 @@ GAMES = [
               'equity against the pot odds, from your cards and the public play only.',
               'holdem.html', HoldemSession, (('variant', 'Game', VARIANTS),
                                              ('seats', 'Table', tuple((str(n), label) for n, label in SEATS))),
-              HoldemLessons.lessons),
+              HoldemLessons.lessons, (('omaha', 'Omaha', HoldemLessons.omaha_lessons),)),
     GameEntry('guandan', 'GuanDan', 'The partnership climbing game from 2 to A, with a computer partner against two '
               'computer opponents. The coach plans your hand from your cards and the public play.',
               'guandan.html', GuanDanSession, (), GuanDanLessons.lessons),
@@ -45,8 +46,26 @@ def playable() -> List[str]:
     return [game.name for game in GAMES if game.start is not None]
 
 
+def lessons_for(game: GameEntry, options: dict) -> Optional[Callable[[], List[Lesson]]]:
+    for variant, _, lessons in game.variant_lessons:
+        if options.get('variant') == variant:
+            return lessons
+    return game.lessons
+
+
+def _practice(game: GameEntry) -> List[dict]:
+    # the links to a game's guided hands; only a game with variants needs to say which one each link is for
+    if game.lessons is None:
+        return []
+    out = [{'label': 'Practice %s' % game.title if game.variant_lessons else 'Practice', 'query': 'mode=learn',
+            'n': len(game.lessons())}]
+    for variant, title, lessons in game.variant_lessons:
+        out.append({'label': 'Practice %s' % title, 'query': 'mode=learn&variant=%s' % variant, 'n': len(lessons())})
+    return out
+
+
 def lobby() -> List[dict]:
     return [{'name': g.name, 'title': g.title, 'blurb': g.blurb, 'available': g.start is not None,
-             'lessons': len(g.lessons()) if g.lessons else 0,
+             'lessons': len(g.lessons()) if g.lessons else 0, 'practice': _practice(g),
              'options': [{'key': k, 'label': label, 'choices': [{'value': v, 'label': t} for v, t in choices]}
                          for k, label, choices in g.options]} for g in GAMES]

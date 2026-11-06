@@ -127,7 +127,7 @@ const table = seat('holdem', MODE);
 let view = null, advice = null;
 // the rules text, beside the table; terms in the coach's reasons link to their section
 const rules = rulesPanel('holdem', () => $('rules').textContent);
-const TERMS = { 'equity': 'equity', 'pot odds': 'pot-odds', 'for value': 'equity', 'a bluff': 'moves', 'exactly two': 'omaha' };
+const TERMS = { 'equity': 'equity', 'pot odds': 'pot-odds', 'for value': 'equity', 'a bluff': 'moves', 'exactly two': 'omaha', 'a wrap': 'omaha', 'outs': 'outs' };
 const NAMES = { fold: 'Fold', check: 'Check', call: 'Call', raise: 'Raise' };
 const pct = (x, d = 0) => fmt(100 * x, d) + '%';
 
@@ -204,7 +204,7 @@ function render() {
   const v = view, you = v.seats[0];
   renderLesson($('lesson'), v.lesson, act, TERMS);
   const omaha = v.variant === 'omaha';
-  if (omaha) { document.title = 'Omaha Table'; document.querySelector('h1').textContent = 'Omaha'; }
+  if (omaha) { document.title = 'Omaha Table'; document.querySelector('h1').textContent = MODE ? 'Omaha practice' : 'Omaha'; }
   $('rules').textContent = `No-limit${omaha ? ' Omaha: four hole cards, play exactly two with three from the board' : ''}, blinds ${v.blinds[0]}/${v.blinds[1]} · ${v.n_seats} seats · buy-in ${fmt(v.buy_in)}`;
   // the rules open at side pots once someone is all in, else at the top
   $('rulesLink').dataset.rules = v.phase !== 'deal' && v.seats.some(s => s.in_hand && s.stack === 0) ? 'side-pots' : omaha ? 'omaha' : '';
@@ -265,7 +265,9 @@ $('rebuy').onclick = () => { showError(null); act({ type: 'rebuy' }); };
 $('ask').onclick = ask;
 $('newSession').onclick = e => { e.preventDefault(); start(true); };
 // lessons and free play are separate tables: the link switches between them
-if (MODE) { document.querySelector('h1').textContent = "Hold'em practice"; $('modeLink').textContent = 'Free play'; $('modeLink').href = location.pathname; $('newSession').textContent = 'Restart lessons'; }
+if (MODE) { document.querySelector('h1').textContent = "Hold'em practice"; $('modeLink').textContent = 'Free play'; $('newSession').textContent = 'Restart lessons'; }
+// the table's seats do not matter to a lesson, so every hold'em table shares one set of lessons and Omaha another
+$('modeLink').href = MODE ? freePlayHref() : new URLSearchParams(location.search).get('variant') === 'omaha' ? '?mode=learn&variant=omaha' : '?mode=learn';
 $('auto').checked = prefs.get('auto-coach', false);
 $('auto').onchange = e => { prefs.set('auto-coach', e.target.checked); if (e.target.checked && view.your_turn) ask(); else { advice = null; renderAdvice(); } };
 document.addEventListener('keydown', e => {
