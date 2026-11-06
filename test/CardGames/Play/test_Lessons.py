@@ -1,12 +1,20 @@
 import json
+import os
 import random
+from tempfile import TemporaryDirectory
 from unittest import TestCase
 
+from src.CardGames.Core.Card import Card
+from src.CardGames.Holdem.Equity import outs, simulate_equity
+from src.CardGames.Holdem.HandEvaluator import HandCategory, describe
 from src.CardGames.Holdem.Round import Action, Street
+from src.CardGames.Holdem.Rules import Rules
 from src.CardGames.Play import GuanDanLessons, HoldemLessons
 from src.CardGames.Play.BlackJackLessons import lessons
 from src.CardGames.Play.HoldemLessons import Scripted
 from src.CardGames.Play.Lesson import LessonSession, Step
+from src.CardGames.Play.Registry import lobby
+from src.CardGames.Play.Server import Sessions
 
 __author__ = 'frank.ma'
 
@@ -144,6 +152,97 @@ class TestHoldemLessons(TestCase):
         seat, street, move = r.history[-1]
         self.assertEqual((seat, street, move.action, move.to), (1, Street.FLOP, Action.RAISE, 2), 'half the pot of 4.')
         self.assertEqual(Scripted().decide(r.observation(0), r.legal_moves(0)).action, Action.CALL)
+
+
+class TestOmahaLessons(TestCase):
+    def setUp(self):
+        self.lessons = HoldemLessons.omaha_lessons()
+        self.rules = Rules(small_blind=1, big_blind=2, n_hole=4, omaha=True)
+
+    def table(self, key):
+        return next(lesson for lesson in self.lessons if lesson.key == key).setup(random.Random(0))
+
+    def test_every_lesson_plays_as_written(self):
+        session = LessonSession(self.lessons, random.Random(30))
+        for k, lesson in enumerate(session.lessons):
+            session.act({'type': 'lesson', 'index': k})
+            first = session.view()
+            self.assertEqual((first['variant'], first['n_hole']), ('omaha', 4))
+            self.assertEqual(len(first['seats'][0]['cards']), 4)
+            self.assertIsNone(first['seats'][1]['cards'], 'the opponent is face down in a lesson too.')
+            follow(session)
+            self.assertTrue(session.view()['lesson']['complete'], lesson.key)
+            json.dumps(session.view())
+        self.assertTrue(all(x['done'] for x in session.view()['lesson']['lessons']))
+
+    def test_later_hands_are_omaha_and_shuffled(self):
+        session = LessonSession(self.lessons, random.Random(31))
+        follow(session)  # ends with a fold
+        session.act({'type': 'deal'})
+        view = session.view()
+        self.assertEqual(len(view['seats'][0]['cards']), 4)
+        self.assertNotEqual(view['seats'][0]['cards'], ['AH', 'TC', '6D', '3S'], 'the next hand is not stacked.')
+
+    def test_one_heart_never_makes_a_flush(self):
+        session = LessonSession(self.lessons, random.Random(32))
+        session.act({'type': 'move', 'move': 'call'})
+        session.act({'type': 'move', 'move': 'check'})
+        view = session.view()
+        self.assertEqual((view['pot'], view['to_call']), (8, 4), 'a pot-size bet of 4 into 4, as the prompt says.')
+        self.assertEqual(view['made'], 'Ace high', 'four hearts on the board, and the ace of hearts in hand.')
+        session.act({'type': 'move', 'move': 'call'})
+        self.assertEqual(session.feedback['kind'], 'hint', 'calling is the mistake.')
+        session.act({'type': 'move', 'move': 'fold'})
+        self.assertEqual((session.view()['phase'], session.view()['payoff']), ('done', -2))
+
+    def test_the_counted_cards_are_as_the_lessons_say(self):
+        for hole, board, expected in (('AH 9H 7C 2S', 'KH 8H 3C', {HandCategory.FLUSH: 9, HandCategory.PAIR: 18}),
+                                      ('JS TD 7C 6H', '9S 8D 2C', {HandCategory.STRAIGHT: 20, HandCategory.PAIR: 9})):
+            found = outs(Card.parse_many(hole), Card.parse_many(board), self.rules)
+            self.assertEqual({category: len(cards) for category, cards in found.by_category.items()}, expected)
+        wrap = outs(Card.parse_many('JS TD 7C 6H'), Card.parse_many('9S 8D 2C'), self.rules)
+        ranks = sorted(card.rank.value for card in wrap.by_category[HandCategory.STRAIGHT])
+        self.assertEqual({r: ranks.count(r) for r in set(ranks)}, {12: 4, 11: 3, 10: 3, 7: 3, 6: 3, 5: 4})
+
+    def test_the_hands_made_are_as_the_lessons_say(self):
+        two = Card.parse_many('AH 9H 7C 2S')
+        self.assertEqual(describe(self.rules.hand_rank(two, Card.parse_many('KH 8H 3C 5H'))), 'Flush, ace high')
+        wrap = Card.parse_many('JS TD 7C 6H')
+        self.assertEqual(describe(self.rules.hand_rank(wrap, Card.parse_many('9S 8D 2C QH'))), 'Straight, queen high')
+        sevens = Card.parse_many('7S 7D 7C 2H')
+        self.assertEqual(describe(self.rules.hand_rank(sevens, Card.parse_many('KS QS JS'))), 'Pair of sevens')
+
+    def test_the_equities_quoted_are_about_right(self):
+        quoted = (('AH TC 6D 3S', '', 0.46), ('AH TC 6D 3S', '8H JH 2H', 0.21), ('AH TC 6D 3S', '8H JH 2H 5H', 0.16),
+                  ('AH 9H 7C 2S', '', 0.49), ('AH 9H 7C 2S', 'KH 8H 3C', 0.54), ('AH 9H 7C 2S', 'KH 8H 3C 5H', 0.96),
+                  ('JS TD 7C 6H', '', 0.48), ('JS TD 7C 6H', '9S 8D 2C', 0.62), ('JS TD 7C 6H', '9S 8D 2C QH', 0.92),
+                  ('7S 7D 7C 2H', '', 0.32), ('7S 7D 7C 2H', 'KS QS JS', 0.16))
+        for hole, board, equity in quoted:
+            found = simulate_equity(Card.parse_many(hole), Card.parse_many(board) if board else [], 1, 2000, self.rules,
+                                    random.Random(33)).equity.mean
+            self.assertAlmostEqual(found, equity, delta=0.04, msg='%s on %s' % (hole, board))
+
+    def test_the_lobby_and_server_offer_them_apart_from_holdem(self):
+        entry = next(g for g in lobby() if g['name'] == 'holdem')
+        self.assertEqual([(p['label'], p['query'], p['n']) for p in entry['practice']],
+                         [("Practice Hold'em", 'mode=learn', 4), ('Practice Omaha', 'mode=learn&variant=omaha', 4)])
+        self.assertEqual([p['label'] for p in next(g for g in lobby() if g['name'] == 'guandan')['practice']],
+                         ['Practice'])
+        sessions = Sessions()
+        _, omaha = sessions.create('holdem', {'mode': 'learn', 'variant': 'omaha'})
+        self.assertEqual(omaha.view()['lesson']['title'], 'One heart is not a flush')
+        _, holdem = sessions.create('holdem', {'mode': 'learn'})
+        self.assertEqual(holdem.view()['lesson']['title'], 'Call when the price is right')
+
+    def test_a_restart_keeps_them_omaha(self):
+        with TemporaryDirectory() as folder:
+            path = os.path.join(folder, 'progress.json')
+            sessions = Sessions(path=path)
+            sid, session = sessions.create('holdem', {'mode': 'learn', 'variant': 'omaha'})
+            session.act({'type': 'lesson', 'index': 2})
+            sessions.save('holdem', sid, session)
+            view = Sessions(path=path).get('holdem', sid).view()
+            self.assertEqual((view['lesson']['title'], view['variant']), ('Four cards make a wrap', 'omaha'))
 
 
 def follow_guandan(session: LessonSession) -> None:
