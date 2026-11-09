@@ -26,7 +26,7 @@ class TestBuildCardGamesLab(TestCase):
             page = f.read()
         self.assertNotIn('/*__THEME__*/', page)
         self.assertNotIn('/*__DATA__*/', page)
-        self.assertIn('--bg: #fff1e5', page, 'the paper theme is inlined.')
+        self.assertIn('--bg: #f4f0e8', page, 'the Kinari theme is inlined.')
         embedded = page.split('const DATA = ', 1)[1].split(';\n', 1)[0]
         self.assertEqual(json.loads(embedded)['sizes'], data['sizes'])
         self.assertTrue(data['quick'])

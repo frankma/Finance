@@ -1,168 +1,164 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SABR Smile Lab</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <style>
 /* Layout: salmon-paper lab bench -- sticky parameter rail on the left, 2x2 grid of boxed chart exhibits on the
    right; stacks to one column on phones. Paper theme first, then this page's aliases and layout. */
-/* paper-theme: salmon-paper financial-newspaper house style.
-   Tokens first (light, then dark twice: OS preference unless the host forces light, and host-forced dark),
-   then base elements. Page-specific CSS goes after this block and uses only these tokens. */
+/* Kinari: unbleached paper, sumi ink, one beni red. Newspaper structure, MUJI restraint.
+   Colour budget: paper ~60, sumi ~30, beni ~10. Page chrome uses only these three families
+   (plus at most one optional fourth); --ai, --koke, --kuri and --nezumi are for chart drawing code only (series 2 is --beni). */
 :root {
-  /* surfaces and ink */
-  --bg: #fff1e5;        /* paper */
-  --surface: #fff7f0;   /* boxed exhibits, inputs, tiles */
-  --ink: #33302e;
-  --muted: #66605c;
-  --line: #ccc1b7;      /* hairline rules and borders */
-  --grid: #ecdccd;      /* chart gridlines */
-  --axis: #a39a92;      /* chart axis lines */
-  --code: #f2dfce;      /* wheat: code, table stripes, empty cells */
-  /* named accents (UI, not chart series) */
-  --claret: #990f3d; --claret-soft: #f4d6db;
-  --oxford: #0f5499; --oxford-soft: #d6e2ef;
-  --teal: #0d7680;   --teal-soft: #d4e7e3;
-  --mandarin: #cc5a0a; --mandarin-soft: #ffe2c8;
-  /* roles */
-  --label: var(--claret);      /* eyebrows, kicker labels */
-  --link: var(--oxford);
-  --accent: var(--oxford);     /* highlight in diagrams, selected state */
-  --accent-soft: var(--oxford-soft);
-  --tail: var(--claret);       /* losses, breaches, the bad outcome */
-  --tail-soft: var(--claret-soft);
-  --hedge: var(--teal);        /* gains, offsets, the good outcome */
-  --hedge-soft: var(--teal-soft);
-  /* categorical chart slots, in this order; validated on --bg and --surface (CVD, contrast, lightness) */
-  --s1: #0f5499; --s2: #990f3d; --s3: #0a8f9c; --s4: #cc5a0a; --s5: #6f45ad; --s6: #008a4c;
-  /* status: reserved, always with an icon or a word */
-  --good: #0b7a3e; --warning: #b36b00; --critical: #c00000;
-  --good-ink: #0b6b36; --warning-ink: #8a5300; --critical-ink: #a30000;
-  /* type */
-  --display: 'Source Serif 4', Georgia, 'Times New Roman', serif;
-  --body: 'Source Serif 4', Georgia, 'Times New Roman', serif;
-  --sans: 'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif;
-  --mono: 'IBM Plex Mono', 'SF Mono', Menlo, Consolas, monospace;
+  /* paper family (~60%) */
+  --bg: #f4f0e8;        /* unbleached paper */
+  --surface: #faf8f3;   /* rare: inputs, a single boxed note */
+  --washi: #d6c9b2;     /* fills only: meters, bars, histogram bodies. Never a line or text */
+  /* sumi family (~30%) */
+  --ink: #2e2a26;
+  --muted: #6b645b;     /* standfirst, side labels, secondary text */
+  --faint: #716b63;     /* source lines, axis ticks */
+  --line: #d9d1c3;      /* hairlines */
+  --grid: #e6dfd2;      /* chart gridlines */
+  /* beni (~10%): the one accent */
+  --beni: #8f1f2e;
+  /* chart series, drawing code only; all clear 3:1 on --bg */
+  --ai: #2f4a6d;        /* indigo (藍) */
+  --koke: #5d6b3c;      /* moss (苔) */
+  --kuri: #8f6a3e;      /* chestnut brown (栗) */
+  --nezumi: #8a8379;    /* stone grey (鼠): context series */
+  /* type: Arial 400 and 700, Courier New 400 for code only. No italic. No web fonts to load */
+  --sans: Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --mono: 'Courier New', Courier, monospace; /* code only; numbers stay in Arial */
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #1f1b19; --surface: #292421; --ink: #f2e6dc; --muted: #b3a69b; --line: #4a423c; --grid: #352f2b;
-    --axis: #6b625b; --code: #352f2b;
-    --claret: #ef7a9c; --claret-soft: #4a2130; --oxford: #7fb2e8; --oxford-soft: #1c2b3d;
-    --teal: #5fc3c9; --teal-soft: #1d3a3c; --mandarin: #ffa25c; --mandarin-soft: #4a3020;
-    --s1: #4f95e3; --s2: #c4456d; --s3: #22a3b2; --s4: #d9762a; --s5: #9b73d6; --s6: #3aad5c;
-    --good: #4cc27a; --warning: #e6a23c; --critical: #f0605a;
-    --good-ink: #4cc27a; --warning-ink: #e6a23c; --critical-ink: #f0605a;
+    --bg: #1d1b18; --surface: #252220; --washi: #5a4f40;
+    --ink: #ece6db; --muted: #a8a094; --faint: #8f887e; --line: #3a3530; --grid: #2c2824;
+    --beni: #e0707a;
+    --ai: #8fa8c8; --koke: #a9b67e; --kuri: #c9a46e; --nezumi: #9a938a;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #1f1b19; --surface: #292421; --ink: #f2e6dc; --muted: #b3a69b; --line: #4a423c; --grid: #352f2b;
-  --axis: #6b625b; --code: #352f2b;
-  --claret: #ef7a9c; --claret-soft: #4a2130; --oxford: #7fb2e8; --oxford-soft: #1c2b3d;
-  --teal: #5fc3c9; --teal-soft: #1d3a3c; --mandarin: #ffa25c; --mandarin-soft: #4a3020;
-  --s1: #4f95e3; --s2: #c4456d; --s3: #22a3b2; --s4: #d9762a; --s5: #9b73d6; --s6: #3aad5c;
-  --good: #4cc27a; --warning: #e6a23c; --critical: #f0605a;
-  --good-ink: #4cc27a; --warning-ink: #e6a23c; --critical-ink: #f0605a;
+  --bg: #1d1b18; --surface: #252220; --washi: #5a4f40;
+  --ink: #ece6db; --muted: #a8a094; --faint: #8f887e; --line: #3a3530; --grid: #2c2824;
+  --beni: #e0707a;
+  --ai: #8fa8c8; --koke: #a9b67e; --kuri: #c9a46e; --nezumi: #9a938a;
   color-scheme: dark;
 }
 
 /* base */
 html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
-body { background: var(--bg); color: var(--ink); font: 400 17px/1.6 var(--body); margin: 0; }
-h1, h2, h3 { font-family: var(--display); font-weight: 600; margin: 0; text-wrap: balance; }
-h1 { font-size: clamp(32px, 5vw, 48px); line-height: 1.08; letter-spacing: -0.01em; }
-h2 { font-size: 26px; line-height: 1.15; }
-h3 { font-size: 19px; line-height: 1.25; }
-p { margin: 0; }
-a { color: var(--link); }
-.eyebrow, .kicker { font: 600 12px/1.2 var(--sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--label); }
-.lede, .standfirst { font-size: 20px; line-height: 1.5; color: var(--muted); max-width: 60ch; }
-.rule-top { border-top: 4px solid var(--ink); padding-top: 10px; }
-code { font-family: var(--mono); font-size: 0.85em; background: var(--code); padding: 1px 5px; border-radius: 0; }
-pre { font-family: var(--mono); font-size: 13px; line-height: 1.55; background: var(--code); padding: 14px 16px; margin: 0; overflow-x: auto; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 400 17px/1.75 var(--sans); }
+h1, h2, h3 { font-family: var(--sans); font-weight: 400; margin: 0; text-wrap: balance; color: var(--ink); }
+h1 { font-size: clamp(30px, 4.6vw, 42px); line-height: 1.2; letter-spacing: -0.005em; }
+h2 { font-size: 24px; line-height: 1.3; }
+h3 { font-size: 15px; line-height: 1.4; font-weight: 700; }
+h1, h2 { color: var(--beni); }   /* titles carry the accent; h3 stays ink */
+p { margin: 0; max-width: 64ch; }
+a { color: var(--ink); text-decoration-color: var(--beni); text-underline-offset: 3px; }
+.lede, .standfirst { font-size: 19px; line-height: 1.6; color: var(--muted); }
+em, i, cite { font-style: normal; }   /* no italic: emphasis is colour (beni) or Arial 700 */
+b, strong { font-weight: 700; }
+.mark { display: inline-flex; align-items: center; gap: 8px; font: 700 13px/1.5 var(--sans); color: var(--ink); letter-spacing: 0.02em; }
+.mark::before { content: ""; width: 7px; height: 7px; background: var(--beni); }
+.em { color: var(--beni); }
+code { font-family: var(--mono); font-size: 0.85em; color: var(--ink); }
+pre { font-family: var(--mono); font-size: 13px; line-height: 1.55; background: var(--surface); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 14px 16px; margin: 0; overflow-x: auto; }
 figure { margin: 0; }
-figcaption { font: 400 13.5px/1.5 var(--sans); color: var(--muted); }
-table { border-collapse: collapse; width: 100%; font: 400 14px/1.4 var(--sans); font-variant-numeric: tabular-nums; }
-th { font: 600 11.5px/1.2 var(--sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted);
-     text-align: left; padding: 7px 10px; border-bottom: 2px solid var(--ink); vertical-align: bottom; }
-td { padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
-td.num, th.num { text-align: right; font-family: var(--mono); }
-button { font: 600 14px/1 var(--sans); padding: 10px 14px; border: 1px solid var(--line); border-radius: 0;
-         background: var(--surface); color: var(--ink); cursor: pointer; }
+figcaption { font: 400 12.5px/1.5 var(--sans); color: var(--faint); border-top: 1px solid var(--line); padding-top: 8px; }
+table { border-collapse: collapse; width: 100%; font: 400 14px/1.45 var(--sans); font-variant-numeric: tabular-nums; }
+th { font: 400 12.5px/1.3 var(--sans); color: var(--muted); text-align: left; padding: 8px 10px 8px 0; border-bottom: 1px solid var(--ink); vertical-align: bottom; }
+td { padding: 9px 10px 9px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+th.num { text-align: right; }
+button { font: 700 14px/1 var(--sans); padding: 10px 14px; border: 1px solid var(--line); border-radius: 0; background: transparent; color: var(--ink); cursor: pointer; }
 button:hover:not(:disabled) { border-color: var(--ink); }
-button.primary, button[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--surface); }
+button.primary, button[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--bg); }
 button:disabled { opacity: 0.4; cursor: default; }
-:focus-visible { outline: 2px solid var(--oxford); outline-offset: 2px; }
-input, select { font: 400 15px/1.2 var(--mono); color: var(--ink); background: var(--bg); border: 1px solid var(--line);
-                border-radius: 0; padding: 7px 8px; }
-footer { font: 400 13px/1.5 var(--sans); color: var(--muted); border-top: 1px solid var(--line); padding-top: 16px; }
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+input, select { font: 400 15px/1.2 var(--sans); color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 0; padding: 7px 8px; }
+footer { font: 400 12.5px/1.5 var(--sans); color: var(--faint); border-top: 1px solid var(--line); padding-top: 16px; }
 /* charts and diagrams stretch to their figure; never style bare `svg`, or MathJax formulas blow up in Safari */
 figure > svg, .fig-scroll > svg { display: block; width: 100%; height: auto; }
 mjx-container svg { display: inline; max-width: none; }
 mjx-container[display="true"] { overflow-x: auto; overflow-y: hidden; max-width: 100%; }
 
+/* compatibility: older pages were written against the salmon-paper tokens. These aliases map every old name onto
+   Kinari so those pages need no renaming. New CSS uses the Kinari tokens above directly. */
+:root {
+  --axis: var(--faint); --code: var(--surface);
+  --display: var(--sans); --body: var(--sans);
+  --claret: var(--beni); --claret-soft: color-mix(in srgb, var(--beni) 12%, var(--bg));
+  --oxford: var(--ink);  --oxford-soft: var(--surface);
+  --teal: var(--koke);     --teal-soft: color-mix(in srgb, var(--koke) 12%, var(--bg));
+  --mandarin: var(--ink); --mandarin-soft: var(--surface);
+  --label: var(--ink); --link: var(--ink);
+  --accent: var(--beni); --accent-soft: color-mix(in srgb, var(--beni) 12%, var(--bg));
+  --tail: var(--beni); --tail-soft: color-mix(in srgb, var(--beni) 12%, var(--bg));
+  --hedge: var(--koke); --hedge-soft: color-mix(in srgb, var(--koke) 12%, var(--bg));
+  --good: var(--ink); --good-ink: var(--ink);
+  --warning: var(--ink); --warning-ink: var(--ink);
+  --critical: var(--beni); --critical-ink: var(--beni);
+}
+.eyebrow, .kicker { font: 700 13px/1.5 var(--sans); letter-spacing: 0.02em; text-transform: none; color: var(--ink); }
+.rule-top { border-top: 1px solid var(--line); padding-top: 10px; }
+
 /* the page's own token names, mapped onto the paper theme */
 :root {
   --panel: var(--surface); --rule: var(--line);
-  --accent: var(--s1); --warm: var(--s2); --green: var(--s3); --neg: var(--critical);
-  --accent-soft: var(--oxford-soft); --neg-soft: color-mix(in srgb, var(--critical) 22%, transparent);
-  --warm-soft: color-mix(in srgb, var(--s2) 28%, transparent);
-  /* sequential ramp for the vol surface: one hue, oxford light to dark (low to high vol) */
-  --seq1: #d6e2ef; --seq2: #9ab8d8; --seq3: #5b8cc0; --seq4: #2f68a8; --seq5: #0f5499; --seq6: #0a3a6b;
+  --accent: var(--ink); --series: var(--ai); --series-soft: color-mix(in srgb, var(--ai) 14%, transparent); --warm: var(--beni); --green: var(--koke); --neg: var(--critical);
+  --neg-soft: color-mix(in srgb, var(--critical) 22%, transparent);
+  --warm-soft: color-mix(in srgb, var(--beni) 28%, transparent);
+  /* sequential ramp for the vol surface: one hue, indigo light to dark (low to high vol) */
+  --seq1: color-mix(in srgb, var(--ai) 12%, var(--bg)); --seq2: color-mix(in srgb, var(--ai) 28%, var(--bg)); --seq3: color-mix(in srgb, var(--ai) 45%, var(--bg)); --seq4: color-mix(in srgb, var(--ai) 62%, var(--bg)); --seq5: color-mix(in srgb, var(--ai) 80%, var(--bg)); --seq6: var(--ai);
   --font-display: var(--display); --font-body: var(--sans); --font-mono: var(--mono);
 }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) { --seq1: #0a3a6b; --seq2: #0f5499; --seq3: #2f68a8; --seq4: #5b8cc0; --seq5: #9ab8d8; --seq6: #d6e2ef; }
-}
-:root[data-theme="dark"] { --seq1: #0a3a6b; --seq2: #0f5499; --seq3: #2f68a8; --seq4: #5b8cc0; --seq5: #9ab8d8; --seq6: #d6e2ef; }
 * { box-sizing: border-box; }
 body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 14px; line-height: 1.45; }
 .wrap { max-width: 1320px; margin: 0 auto; padding-inline: 20px; padding-block: 24px 40px; }
 header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 24px; margin-bottom: 20px; }
 h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(30px, 4vw, 40px); line-height: 1.08; margin: 0; text-wrap: balance; }
 header .eyebrow { flex-basis: 100%; }
-.sde { font-family: var(--font-mono); font-size: 13px; color: var(--muted); }
-.sde b { color: var(--ink); font-weight: 500; }
+.sde { font-family: var(--sans); font-size: 13px; color: var(--muted); }
+.sde b { color: var(--ink); font-weight: 400; }
 .layout { display: grid; grid-template-columns: 290px minmax(0, 1fr); gap: 20px; align-items: start; }
 @media (max-width: 860px) { .layout { grid-template-columns: minmax(0, 1fr); } }
 
 aside { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); background: var(--panel); border: 1px solid var(--rule); border-radius: 0; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
 @media (max-width: 860px) { aside { position: static; } }
-.label { font-family: var(--font-body); font-size: 11.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--label); }
+.label { font-family: var(--font-body); font-size: 11.5px; font-weight: 700; letter-spacing: .08em; text-transform: none; color: var(--label); }
 .presets { display: flex; flex-wrap: wrap; gap: 6px; }
-.presets button, .seg button { font: 500 12.5px var(--font-body); color: var(--ink); background: transparent; border: 1px solid var(--rule); border-radius: 0; padding: 5px 10px; cursor: pointer; }
+.presets button, .seg button { font: 400 12.5px var(--font-body); color: var(--ink); background: transparent; border: 1px solid var(--rule); border-radius: 0; padding: 5px 10px; cursor: pointer; }
 .presets button:hover, .seg button:hover { border-color: var(--accent); }
 .presets button.on { background: var(--ink); border-color: var(--ink); color: var(--panel); }
 button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .ctl { display: flex; flex-direction: column; gap: 4px; }
 .ctl-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
-.ctl-head span:first-child { font-weight: 600; }
-.ctl-head output, .ctl-head .val { font-family: var(--font-mono); font-size: 13px; font-variant-numeric: tabular-nums; }
+.ctl-head span:first-child { font-weight: 700; }
+.ctl-head output, .ctl-head .val { font-family: var(--sans); font-size: 13px; font-variant-numeric: tabular-nums; }
 .hint { font-size: 12px; color: var(--muted); }
 input[type=range] { width: 100%; accent-color: var(--accent); margin: 2px 0; }
-input[type=number] { width: 100%; font: 13px var(--font-mono); color: var(--ink); background: var(--bg); border: 1px solid var(--rule); border-radius: 0; padding: 6px 8px; }
+input[type=number] { width: 100%; font: 13px var(--sans); color: var(--ink); background: var(--bg); border: 1px solid var(--rule); border-radius: 0; padding: 6px 8px; }
 .seg { display: flex; gap: 6px; }
 .seg button.on { background: var(--ink); border-color: var(--ink); color: var(--panel); }
-.check { display: flex; gap: 8px; align-items: center; font-weight: 500; cursor: pointer; }
+.check { display: flex; gap: 8px; align-items: center; font-weight: 400; cursor: pointer; }
 .check input { accent-color: var(--accent); width: 16px; height: 16px; }
 hr { border: 0; border-top: 1px solid var(--rule); margin: 0; }
 .err { color: var(--neg); font-size: 12.5px; }
 
 main { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
-.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 1px; background: var(--rule); border-top: 4px solid var(--ink); border-bottom: 1px solid var(--rule); }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 1px; background: var(--rule); border-top: 1px solid var(--line); border-bottom: 1px solid var(--rule); }
 .stat { background: var(--bg); padding: 10px 14px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .stat .label { text-transform: none; letter-spacing: .02em; font-size: 12.5px; }
-.stat .v { font-family: var(--font-mono); font-size: 17px; font-weight: 500; font-variant-numeric: tabular-nums; }
-.pill { display: inline-block; font: 600 12px var(--font-body); padding: 2px 8px; border-radius: 0; align-self: flex-start; margin-top: 2px; }
+.stat .v { font-family: var(--sans); font-size: 17px; font-weight: 400; font-variant-numeric: tabular-nums; }
+.pill { display: inline-block; font: 700 12px var(--font-body); padding: 2px 8px; border-radius: 0; align-self: flex-start; margin-top: 2px; }
 .pill.ok { color: var(--good-ink); border: 1px solid var(--good); }
-.pill.bad { color: var(--panel); background: var(--neg); border: 1px solid var(--neg); }
+.pill.bad { color: var(--beni); border: 1px solid var(--beni); }
 .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 @media (max-width: 1100px) { .grid { grid-template-columns: minmax(0, 1fr); } }
-.card { background: var(--panel); border: 1px solid var(--rule); border-radius: 0; padding: 14px 14px 8px; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
-.card h2 { font: 600 15px/1.35 var(--sans); color: var(--ink); margin: 0; }
+.card { background: transparent; border: 0; border-top: 1px solid var(--rule); padding: 12px 0 8px; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.card h2 { font: 700 15px/1.35 var(--sans); color: var(--ink); margin: 0; }
 .card p { margin: 0; color: var(--muted); font-size: 12.5px; max-width: 65ch; }
 .legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted); }
 .legend i { display: inline-block; width: 18px; height: 0; border-top: 2px solid; vertical-align: middle; margin-right: 6px; }
@@ -170,14 +166,14 @@ main { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 .legend i.box { height: 9px; border: 0; }
 .chart { position: relative; width: 100%; touch-action: pan-y; }
 .chart svg { display: block; width: 100%; height: auto; overflow: visible; }
-.chart text { font-family: var(--font-mono); font-size: 11px; fill: var(--muted); }
+.chart text { font-family: var(--sans); font-size: 11px; fill: var(--muted); }
 .chart .axlab { font-family: var(--font-body); font-size: 11.5px; }
-.tip { position: absolute; pointer-events: none; background: var(--panel); border: 1px solid var(--rule); border-radius: 0; padding: 6px 8px; font: 12px var(--font-mono); font-variant-numeric: tabular-nums; white-space: nowrap; z-index: 2; }
+.tip { position: absolute; pointer-events: none; background: var(--panel); border: 1px solid var(--rule); border-radius: 0; padding: 6px 8px; font: 12px var(--sans); font-variant-numeric: tabular-nums; white-space: nowrap; z-index: 2; }
 .tip div { display: flex; gap: 10px; justify-content: space-between; }
 .tip .k { color: var(--muted); }
 .card.wide { grid-column: 1 / -1; }
 .surf-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
-.colorbar { display: flex; align-items: center; gap: 8px; font: 12px var(--font-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.colorbar { display: flex; align-items: center; gap: 8px; font: 12px var(--sans); color: var(--muted); font-variant-numeric: tabular-nums; }
 .colorbar .ramp { width: 140px; height: 8px; background: linear-gradient(90deg, var(--seq1), var(--seq2), var(--seq3), var(--seq4), var(--seq5), var(--seq6)); }
 .surface { position: relative; width: 100%; height: clamp(300px, 44vw, 460px); cursor: grab; touch-action: pan-y; }
 .surface:active { cursor: grabbing; }
@@ -650,7 +646,7 @@ footer code { font-family: var(--font-mono); font-size: 11.5px; }
   }
 
   // ---------- 3D surface ----------
-  // low to high vol along the one-hue oxford ramp (--seq1..6), read live so dark mode follows
+  // low to high vol along the one-hue indigo ramp (--seq1..6), read live so dark mode follows
   const hexRgb = h => { h = h.replace('#', ''); if (h.length === 3) h = [...h].map(c => c + c).join(''); return [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16)); };
   let STOPS = [];
   function ramp(u) {
@@ -679,7 +675,8 @@ footer code { font-family: var(--font-mono); font-size: 11.5px; }
     const ctx = canvas.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
     const css = getComputedStyle(document.documentElement), tok = n => css.getPropertyValue(n).trim();
     const C = { muted: tok('--muted'), grid: tok('--grid'), axis: tok('--axis'), ink: tok('--ink'), accent: tok('--claret'), panel: tok('--surface') };
-    STOPS = ['--seq1', '--seq2', '--seq3', '--seq4', '--seq5', '--seq6'].map(n => hexRgb(tok(n)));
+    const paper = hexRgb(tok('--bg')), hue = hexRgb(tok('--ai'));  // --seq1..6 are tints of --ai over paper
+    STOPS = [0.12, 0.28, 0.45, 0.62, 0.8, 1].map(w => paper.map((v, j) => Math.round(v + (hue[j] - v) * w)));
     const mesh = hexRgb(C.panel);
 
     const Z = surf.kind === 'B' ? d.zB : d.zN, cur = d.cur[surf.kind];
@@ -709,7 +706,7 @@ footer code { font-family: var(--font-mono); font-size: 11.5px; }
     const ox = W / 2 - S * (bx0 + bx1) / 2, oy = H / 2 - S * (by0 + by1) / 2;
     const P = (x, y, z) => { const r = raw(x, y, z); return { x: ox + S * r.X, y: oy + S * r.Y, d: r.D }; };
 
-    ctx.font = '11px "IBM Plex Mono", ui-monospace, monospace';
+    ctx.font = '11px Arial, sans-serif';
     ctx.lineJoin = 'round';
     const line = (a, b, color, w) => { ctx.strokeStyle = color; ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); };
 
@@ -766,7 +763,7 @@ footer code { font-family: var(--font-mono); font-size: 11.5px; }
       line(q, { x: q.x - 5, y: q.y }, C.axis, 1);
       ctx.fillStyle = C.muted; ctx.textAlign = 'right'; ctx.textBaseline = 'middle'; ctx.fillText(fmtZ(v), q.x - 8, q.y);
     });
-    ctx.font = '12px "IBM Plex Sans", system-ui, sans-serif';
+    ctx.font = '12px Arial, sans-serif';
     const kMid = P(0, nearY, 0), tMid = P(nearX, 0, 0), zTop = P(cornerXY[0], cornerXY[1], 1);
     label(kMid, 'Strike K', side(kMid), 34);
     label(tMid, 'Expiry T', side(tMid), 40);
@@ -848,14 +845,14 @@ footer code { font-family: var(--font-mono); font-size: 11.5px; }
     // smile
     const smile = Ks.map(K => blackVol(p, F, K));
     const cev = Ks.map(K => blackVol({ ...p, nu: 0 }, F, K));
-    legend('lg-smile', [{ name: 'SABR σ_B', color: 'var(--accent)' }, { name: 'ν = 0 (CEV)', color: 'var(--muted)', dash: true }]);
+    legend('lg-smile', [{ name: 'SABR σ_B', color: 'var(--series)' }, { name: 'ν = 0 (CEV)', color: 'var(--muted)', dash: true }]);
     plot($('c-smile'), {
       aria: 'Implied Black volatility against strike', x0: kMin, x1: kMax, xlabel: 'Strike K', ylabel: 'Black vol σ_B',
       xfmt, yfmt: v => (v * 100).toFixed(Math.abs(v) < 0.1 ? 1 : 0) + '%', tipfmt: v => pct(v, 2),
       vlines: [{ x: F, label: 'F' }],
       series: [
         { xs: Ks, ys: cev, color: 'var(--muted)', dash: '5 4', width: 1.5, name: 'ν = 0', tip: true },
-        { xs: Ks, ys: smile, color: 'var(--accent)', width: 2.4, name: 'SABR', tip: true },
+        { xs: Ks, ys: smile, color: 'var(--series)', width: 2.4, name: 'SABR', tip: true },
       ],
     });
 
@@ -867,8 +864,8 @@ footer code { font-family: var(--font-mono); font-size: 11.5px; }
     let negMass = 0, negFrom = null, minDen = Infinity;
     den.forEach((d, i) => { if (d < 0) { negMass -= d * h; if (negFrom === null) negFrom = Kden[i]; } minDen = Math.min(minDen, d); });
 
-    const denSeries = [{ xs: Kden, ys: den, type: 'area0', color: 'var(--accent)', fillPos: 'var(--accent-soft)', fillNeg: 'var(--neg-soft)', width: 2, name: 'Hagan', tip: true }];
-    const lg = [{ name: 'From Hagan smile', color: 'var(--accent)' }];
+    const denSeries = [{ xs: Kden, ys: den, type: 'area0', color: 'var(--series)', fillPos: 'var(--series-soft)', fillNeg: 'var(--neg-soft)', width: 2, name: 'Hagan', tip: true }];
+    const lg = [{ name: 'From Hagan smile', color: 'var(--series)' }];
     let mcNote = '';
     if ($('mc').checked) {
       const key = JSON.stringify([F, p, kMin, kMax]);
@@ -894,7 +891,7 @@ footer code { font-family: var(--font-mono); font-size: 11.5px; }
 
     // backbone
     const fwds = [0.85, 1, 1.15].map(x => x * F);
-    const colors = ['var(--s1)', 'var(--s2)', 'var(--s3)'];
+    const colors = ['var(--ai)', 'var(--beni)', 'var(--koke)'];
     const bbSeries = fwds.map((f, i) => ({ xs: Ks, ys: Ks.map(K => blackVol(p, f, K)), color: colors[i], width: 2, name: `F=${f.toFixed(dec)}`, tip: true }));
     bbSeries.push({ xs: Ks, ys: Ks.map(K => blackVol(p, K, K)), color: 'var(--ink)', dash: '6 4', width: 1.5, name: 'ATM', tip: true });
     legend('lg-bb', [...fwds.map((f, i) => ({ name: `F = ${f.toFixed(dec)}${i === 1 ? ' (base)' : ''}`, color: colors[i] })), { name: 'Backbone σ(K, K)', color: 'var(--ink)', dash: true }]);
@@ -911,13 +908,13 @@ footer code { font-family: var(--font-mono); font-size: 11.5px; }
       const call = K >= F, px = blackPrice(F, K, T, smile[i], call);
       return bachelierVol(px, F, K, T, call, 6 * smile[i] * Math.max(F, K)) * nUnit;
     });
-    legend('lg-nrm', [{ name: 'Hagan normal expansion', color: 'var(--accent)' }, { name: 'Black smile → Bachelier', color: 'var(--warm)', dash: true }]);
+    legend('lg-nrm', [{ name: 'Hagan normal expansion', color: 'var(--series)' }, { name: 'Black smile → Bachelier', color: 'var(--warm)', dash: true }]);
     plot($('c-nrm'), {
       aria: 'Normal implied volatility against strike', x0: kMin, x1: kMax, xlabel: 'Strike K', ylabel: nLab,
       xfmt, yfmt: v => sig(v, 3), tipfmt: v => sig(v, 4),
       vlines: [{ x: F, label: 'F' }],
       series: [
-        { xs: Ks, ys: nHagan, color: 'var(--accent)', width: 2.4, name: 'Hagan N', tip: true },
+        { xs: Ks, ys: nHagan, color: 'var(--series)', width: 2.4, name: 'Hagan N', tip: true },
         { xs: Ks, ys: nConv, color: 'var(--warm)', width: 2, dash: '6 4', name: 'B→N', tip: true },
       ],
     });
