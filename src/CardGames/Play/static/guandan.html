@@ -4,9 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>GuanDan Table</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="/static/theme.css">
 <link rel="stylesheet" href="/static/common.css">
 <style>
@@ -17,16 +14,16 @@
 .seat.to-act { border: 2px solid var(--oxford); padding: 7px 9px; }
 .seat.out { opacity: 0.6; }
 .seat-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 8px; }
-.seat-head b { font: 600 14px/1.2 var(--sans); }
-.count { font: 500 14px/1 var(--mono); font-variant-numeric: tabular-nums; }
-.tag { font: 600 11px/1 var(--sans); border: 1px solid var(--line); padding: 2px 5px; color: var(--muted); }
+.seat-head b { font: 700 14px/1.2 var(--sans); }
+.count { font: 400 14px/1 var(--sans); font-variant-numeric: tabular-nums; }
+.tag { font: 700 11px/1 var(--sans); border: 1px solid var(--line); padding: 2px 5px; color: var(--muted); }
 .tag.mate { border-color: var(--teal); color: var(--teal); }
 .played { display: flex; flex-direction: column; gap: 4px; font: 400 12.5px/1.3 var(--sans); color: var(--muted); min-height: 20px; }
 .mini { display: flex; flex-wrap: wrap; gap: 2px; }
 .mini .card { width: 30px; height: 42px; font-size: 13px; padding: 2px 3px; flex-direction: row; justify-content: flex-start; gap: 1px; }
 .mini .card .s { font-size: 13px; align-self: flex-start; }
 .center { grid-area: center; border: 1px solid var(--line); background: var(--surface); padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-.center .what { font: 600 15px/1.3 var(--sans); }
+.center .what { font: 700 15px/1.3 var(--sans); }
 .bomb { color: var(--claret); }
 /* your hand: one column per rank, the cards in it overlapping so each shows its corner */
 .hand { display: flex; flex-wrap: wrap; gap: 6px 4px; padding-top: 4px; }
@@ -40,13 +37,13 @@
 .col .card:focus-visible { outline: 2px solid var(--oxford); outline-offset: 1px; }
 @media (max-width: 420px) { .col .card { width: 38px; height: 54px; font-size: 14px; } .col .card .s { font-size: 14px; } .col .card + .card { margin-top: -32px; } }
 .actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-.result { font: 600 18px/1.3 var(--display); }
+.result { font: 700 18px/1.3 var(--display); }
 .coach .alt { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 6px; font-size: 13.5px; }
 .coach button { padding: 5px 9px; font-size: 12.5px; }
 #log { max-height: 340px; overflow-y: auto; }
 table.unseen { width: 100%; border-collapse: collapse; font: 400 13px/1.3 var(--sans); }
 table.unseen td { padding: 4px 0; border-bottom: 1px solid var(--line); }
-table.unseen td.num { text-align: right; font: 500 13px/1.3 var(--mono); font-variant-numeric: tabular-nums; }
+table.unseen td.num { text-align: right; font: 400 13px/1.3 var(--sans); font-variant-numeric: tabular-nums; }
 </style>
 </head>
 <body>
@@ -164,7 +161,7 @@ function renderAdvice() {
   box.innerHTML = `<b>Coach: ${advice.move.kind === 'pass' ? 'pass' : 'play the ' + advice.move.desc}.</b> ${advice.reason ? linkTerms(cap(advice.reason), TERMS) + '.' : ''}` +
     line(advice, 0) + advice.alternatives.map((a, k) => line(a, k + 1)).join('');
   const all = [advice, ...advice.alternatives];
-  box.querySelectorAll('[data-use]').forEach(b => b.onclick = () => { sel = indicesOf(all[+b.dataset.use].move.cards); renderHand(); });
+  box.querySelectorAll('[data-use]').forEach(b => b.onclick = () => { sel = indicesOf(all[+b.dataset.use].move.cards); selectionChanged(); renderHand(); });
 }
 
 function renderSeat(k) {
@@ -216,6 +213,11 @@ function renderHand() {
   $('play').disabled = !n;
 }
 
+// the reading buttons answer for the cards they were offered about, so they go once the selection changes
+function selectionChanged() {
+  if (view && view.choices) { view.choices = null; $('choices').hidden = true; }
+}
+
 function toggle(i) {
   const v = view;
   if (v.tribute) {
@@ -225,6 +227,7 @@ function toggle(i) {
     $('returnBtn').disabled = false; $('returnBtn').textContent = `Hand back the ${cardName(code)}`;
   } else if (v.your_turn) {
     sel.has(i) ? sel.delete(i) : sel.add(i);
+    selectionChanged();
   }
   renderHand();
 }
@@ -312,7 +315,7 @@ function playSel(reading) {
 
 $('play').onclick = () => playSel();
 $('pass').onclick = () => act({ type: 'pass' });
-$('clear').onclick = () => { sel.clear(); renderHand(); };
+$('clear').onclick = () => { sel.clear(); selectionChanged(); renderHand(); };
 $('returnBtn').onclick = () => { if (pick) act({ type: 'return', card: pick }); };
 $('deal').onclick = () => view.phase === 'over' ? start(true) : act({ type: 'deal' });
 $('ask').onclick = ask;
@@ -327,7 +330,7 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && view.your_turn && sel.size) { e.preventDefault(); playSel(); }
   else if (e.key === 'Enter' && ['deal', 'done'].includes(view.phase)) { e.preventDefault(); act({ type: 'deal' }); }
   else if (key === 'x' && view.can_pass) { e.preventDefault(); act({ type: 'pass' }); }
-  else if (e.key === 'Escape') { sel.clear(); renderHand(); }
+  else if (e.key === 'Escape') { sel.clear(); selectionChanged(); renderHand(); }
   else if (key === 'a') { e.preventDefault(); ask(); }
 });
 start(false).catch(showError);

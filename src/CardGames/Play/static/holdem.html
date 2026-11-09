@@ -4,9 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Hold'em Table</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="/static/theme.css">
 <link rel="stylesheet" href="/static/common.css">
 <style>
@@ -16,26 +13,26 @@
 .seat.to-act { border: 2px solid var(--oxford); padding: 7px 9px; }
 .seat.folded { opacity: 0.55; }
 .seat-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 8px; }
-.seat-head b { font: 600 14px/1.2 var(--sans); }
-.stack { font: 500 14px/1 var(--mono); font-variant-numeric: tabular-nums; }
+.seat-head b { font: 700 14px/1.2 var(--sans); }
+.stack { font: 400 14px/1 var(--sans); font-variant-numeric: tabular-nums; }
 .seat .cards { min-height: 0; gap: 4px; }
 .seat .card { width: 40px; height: 58px; font-size: 15px; padding: 3px 4px; }
 .seat .card .s { font-size: 17px; }
 .seat-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font: 400 12.5px/1.3 var(--sans); color: var(--muted); min-height: 18px; }
-.tag { font: 600 11px/1 var(--sans); border: 1px solid var(--ink); padding: 2px 5px; color: var(--ink); }
+.tag { font: 700 11px/1 var(--sans); border: 1px solid var(--ink); padding: 2px 5px; color: var(--ink); }
 .tag.btn { background: var(--ink); color: var(--surface); }
-.betamt { font: 500 12.5px/1 var(--mono); color: var(--ink); }
+.betamt { font: 400 12.5px/1 var(--sans); color: var(--ink); }
 .middle { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; padding: 12px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
 .board { min-height: 86px; }
 .slot { width: 58px; height: 84px; border: 1px dashed var(--line); }
 @media (max-width: 420px) { .slot { width: 48px; height: 70px; } }
 .pot { display: flex; flex-direction: column; gap: 2px; }
-.pot .v { font: 500 22px/1.1 var(--mono); font-variant-numeric: tabular-nums; }
+.pot .v { font: 400 22px/1.1 var(--sans); font-variant-numeric: tabular-nums; }
 .you { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 12px 20px; }
 .you .info { display: flex; flex-direction: column; gap: 6px; }
 .you .info h2 { font-size: 20px; }
 .made { font: 400 14px/1.3 var(--sans); }
-.result { font: 600 18px/1.3 var(--display); }
+.result { font: 700 18px/1.3 var(--display); }
 .actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .actions button.advised { outline: 2px solid var(--oxford); outline-offset: 2px; }
 .sizer { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
@@ -46,7 +43,7 @@
 @media (max-width: 520px) { .numbers { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .numbers div { background: var(--surface); padding: 6px 8px; display: flex; flex-direction: column; gap: 2px; }
 .numbers span { font: 400 11.5px/1.2 var(--sans); color: var(--muted); }
-.numbers b { font: 500 15px/1.1 var(--mono); font-variant-numeric: tabular-nums; }
+.numbers b { font: 400 15px/1.1 var(--sans); font-variant-numeric: tabular-nums; }
 </style>
 </head>
 <body>

@@ -4,9 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Blackjack Table</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="/static/theme.css">
 <link rel="stylesheet" href="/static/common.css">
 <style>
@@ -14,7 +11,7 @@
 .seat { display: flex; flex-direction: column; gap: 8px; }
 .seat-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; }
 .seat-head h2 { font-size: 20px; }
-.total { font: 500 15px/1 var(--mono); color: var(--muted); }
+.total { font: 400 15px/1 var(--sans); color: var(--muted); }
 .hands { display: flex; flex-wrap: wrap; gap: 14px; }
 .hand { border: 1px solid var(--line); padding: 10px; display: flex; flex-direction: column; gap: 8px; background: var(--bg); min-width: 0; }
 .hand.active { border: 2px solid var(--oxford); padding: 9px; }
@@ -23,7 +20,7 @@
 .actions button.advised { outline: 2px solid var(--oxford); outline-offset: 2px; }
 .betbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .betbar input { width: 96px; }
-.result { font: 600 18px/1.3 var(--display); }
+.result { font: 700 18px/1.3 var(--display); }
 .count .v.hidden { color: var(--muted); }
 hr.thin { border: 0; border-top: 1px solid var(--line); margin: 0; }
 </style>
@@ -109,6 +106,9 @@ const rules = rulesPanel('blackjack', () => $('rules').textContent);
 const TERMS = { 'basic strategy': 'basic-strategy', 'soft 17': 'values', 'true count': 'counting', 'edge': 'counting',
                 'Kelly': 'kelly', 'surrender': 'moves', 'split': 'splitting', 'double': 'moves' };
 const NAMES = { hit: 'Hit', stand: 'Stand', double: 'Double', split: 'Split', surrender: 'Surrender' };
+// a blackjack or a surrender on an odd bet leaves half a chip, so show one decimal when it is needed
+const decimals = x => Number.isInteger(x) ? 0 : 1;
+const money = x => fmt(x, decimals(x));
 const OUTCOME = { win: ['Win', 'good'], blackjack: ['Blackjack', 'good'], lose: ['Lose', 'bad'], bust: ['Bust', 'bad'],
                   'dealer blackjack': ['Dealer blackjack', 'bad'], surrendered: ['Surrendered', 'bad'], push: ['Push', 'even'] };
 
@@ -150,11 +150,11 @@ function render() {
     const cards = document.createElement('div'); cards.className = 'cards'; drawCards(cards, h.cards);
     const out = h.outcome ? `<span class="chip ${OUTCOME[h.outcome][1]}">${OUTCOME[h.outcome][0]}</span>` : '';
     const meta = document.createElement('div'); meta.className = 'meta';
-    meta.innerHTML = `<span class="total">${h.soft ? 'soft ' : ''}${h.total}</span><span class="muted">bet ${fmt(h.bet)}</span>${out}`;
+    meta.innerHTML = `<span class="total">${h.soft ? 'soft ' : ''}${h.total}</span><span class="muted">bet ${money(h.bet)}</span>${out}`;
     el.append(cards, meta);
     return el;
   }));
-  $('result').textContent = v.phase === 'done' ? (v.payoff > 0 ? `You win ${fmt(v.payoff)}` : v.payoff < 0 ? `You lose ${fmt(-v.payoff)}` : 'Push') : '';
+  $('result').textContent = v.phase === 'done' ? (v.payoff > 0 ? `You win ${money(v.payoff)}` : v.payoff < 0 ? `You lose ${money(-v.payoff)}` : 'Push') : '';
   // actions while a hand is in play, the bet bar between rounds
   const playing = v.phase === 'play';
   $('actions').hidden = !playing;
@@ -169,8 +169,8 @@ function render() {
   $('deal').disabled = v.broke;
   if (v.broke) showError(new Error('The bankroll is below the minimum bet. Start a new session to play on.'));
   // rail
-  $('bankroll').textContent = fmt(v.bankroll);
-  $('net').textContent = signed(v.stats.net) + ' this session';
+  $('bankroll').textContent = money(v.bankroll);
+  $('net').textContent = signed(v.stats.net, decimals(v.stats.net)) + ' this session';
   $('rounds').textContent = fmt(v.stats.rounds);
   $('followed').textContent = v.stats.decisions ? `followed the coach on ${v.stats.followed} of ${v.stats.decisions} play${v.stats.decisions === 1 ? '' : 's'}` : 'no plays yet';
   const hide = $('hideCount').checked;
