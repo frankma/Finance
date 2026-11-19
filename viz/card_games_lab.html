@@ -578,15 +578,18 @@ function renderOdds() {
 
 /* ---------- play: link to the tables when the local game server is up ---------- */
 // served by the play server at /lab, use it; opened as a file, look for it on the default port
-const PLAY = location.protocol.startsWith('http') && location.pathname.replace(/\/$/, '') === '/lab' ? location.origin : 'http://127.0.0.1:8765';
+// the tables live next to this page when it is served with them, at /lab on the local server or <site>/lab/ on the
+// static site; opened as a file, it looks for the local server
+const PLAY = location.protocol.startsWith('http') && /\/lab\/?$/.test(location.pathname)
+  ? new URL(location.pathname.endsWith('/') ? '..' : '.', location.href).href.replace(/\/$/, '') : 'http://127.0.0.1:8765';
 async function checkPlay() {
   let games = null;
   try { const r = await fetch(PLAY + '/api/games', { cache: 'no-store' }); if (r.ok) games = await r.json(); } catch (e) {}
   const links = $('play-links');
   if (games) {
-    const howTo = games.filter(g => g.available).map(g => `<a href="${PLAY}/${g.name}/rules">${g.title}</a>`).join(', ');
-    $('play-msg').innerHTML = `The game server is running. Sit down at a table, with the coach at your shoulder, or first read how to play ${howTo}.`;
-    links.innerHTML = games.filter(g => g.available).map((g, k) => `<a class="${k ? '' : 'primary'}" href="${PLAY}/${g.name}">Play ${g.title}</a>`).join('') +
+    const howTo = games.filter(g => g.available).map(g => `<a href="${PLAY}/${g.name}/rules/">${g.title}</a>`).join(', ');
+    $('play-msg').innerHTML = `The tables are open. Sit down at a table, with the coach at your shoulder, or first read how to play ${howTo}.`;
+    links.innerHTML = games.filter(g => g.available).map((g, k) => `<a class="${k ? '' : 'primary'}" href="${PLAY}/${g.name}/">Play ${g.title}</a>`).join('') +
       `<a href="${PLAY}/">All games</a>`;
     links.hidden = false;
     return;

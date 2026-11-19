@@ -3,9 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<base href="/">
 <title>Hold'em Table</title>
-<link rel="stylesheet" href="/static/theme.css">
-<link rel="stylesheet" href="/static/common.css">
+<link rel="stylesheet" href="static/theme.css">
+<link rel="stylesheet" href="static/common.css">
 <style>
 .felt { gap: 16px; }
 .opponents { display: grid; grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); gap: 10px; }
@@ -54,7 +55,7 @@
       <h1>Hold'em</h1>
       <span class="small muted" id="rules"></span>
     </div>
-    <nav class="links"><a href="/">Lobby</a><a href="/lab">Card Games Lab</a><a href="#" id="rulesLink" data-rules="">Rules<kbd>?</kbd></a><a href="?mode=learn" id="modeLink">Lessons</a><a href="#" id="newSession">New session</a></nav>
+    <nav class="links"><a href="./">Lobby</a><a href="lab/">Card Games Lab</a><a href="#" id="rulesLink" data-rules="">Rules<kbd>?</kbd></a><a id="modeLink">Lessons</a><a href="#" id="newSession">New session</a></nav>
   </div>
 
   <div class="layout">
@@ -113,12 +114,12 @@
       </div>
       <div class="box fair-note">
         <span class="kicker">What the coach knows</span>
-        <p>Your own cards, the board, the pot, the stacks and every bet made. Never another seat's cards or the order of the deck: the server never sends them to this page. Equity is estimated by dealing the other seats hands from the cards you have not seen, favouring hands that fit their public bets (in hold'em; in Omaha it deals them at random). The computer seats also see only their own cards, and do not read bets.</p>
+        <p>Your own cards, the board, the pot, the stacks and every bet made. Never another seat's cards or the order of the deck: <span data-static="this web version runs the game in your browser, so they sit in the page's memory, where a determined player could find them, but the coach never reads them">the server never sends them to this page</span>. Equity is estimated by dealing the other seats hands from the cards you have not seen, favouring hands that fit their public bets (in hold'em; in Omaha it deals them at random). The computer seats also see only their own cards, and do not read bets.</p>
       </div>
     </aside>
   </div>
 </div>
-<script src="/static/common.js"></script>
+<script src="static/common.js"></script>
 <script>
 const table = seat('holdem', MODE);
 let view = null, advice = null;
@@ -264,7 +265,7 @@ $('newSession').onclick = e => { e.preventDefault(); start(true); };
 // lessons and free play are separate tables: the link switches between them
 if (MODE) { document.querySelector('h1').textContent = "Hold'em practice"; $('modeLink').textContent = 'Free play'; $('newSession').textContent = 'Restart lessons'; }
 // the table's seats do not matter to a lesson, so every hold'em table shares one set of lessons and Omaha another
-$('modeLink').href = MODE ? freePlayHref() : new URLSearchParams(location.search).get('variant') === 'omaha' ? '?mode=learn&variant=omaha' : '?mode=learn';
+$('modeLink').href = MODE ? freePlayHref() : learnHref(new URLSearchParams(location.search).get('variant') === 'omaha' ? ['variant'] : []);
 $('auto').checked = prefs.get('auto-coach', false);
 $('auto').onchange = e => { prefs.set('auto-coach', e.target.checked); if (e.target.checked && view.your_turn) ask(); else { advice = null; renderAdvice(); } };
 document.addEventListener('keydown', e => {

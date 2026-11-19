@@ -3,7 +3,46 @@ const $ = id => document.getElementById(id);
 const SUIT = { S: ['♠', false], H: ['♥', true], D: ['♦', true], C: ['♣', false] };
 const RANK = { T: '10' };
 
+// the static site (GitHub Pages) marks its pages: there the game runs in the browser, in a worker, not on a server
+const STATIC = document.documentElement.dataset.mode === 'static';
+const PROGRESS = 'cg-progress';
+let engine = null;
+
+// the worker running the game's Python, started on the first request; it answers what the server would
+function startEngine() {
+  if (engine) return engine;
+  const worker = new Worker(new URL('static/engine.js', document.baseURI));
+  const waiting = new Map();
+  let next = 0, failed = null;
+  const note = document.createElement('p');
+  note.className = 'engine-note small'; note.hidden = true;
+  document.body.prepend(note);
+  worker.onmessage = e => {
+    const m = e.data;
+    if ('save' in m) { try { localStorage.setItem(PROGRESS, m.save); } catch (_) {} return; }
+    if ('loading' in m) {
+      note.hidden = !m.loading; note.textContent = m.loading ? m.loading + '…' : '';
+      if (m.failed) { failed = m.failed; showError(new Error('The game engine could not start: ' + failed)); }
+      return;
+    }
+    const resolve = waiting.get(m.id); waiting.delete(m.id); resolve(m);
+  };
+  let saved = null;
+  try { saved = localStorage.getItem(PROGRESS); } catch (_) {}
+  worker.postMessage({ init: saved });
+  engine = (method, path, body) => new Promise(resolve => {
+    const id = next++; waiting.set(id, resolve); worker.postMessage({ id, method, path, body });
+  });
+  return engine;
+}
+
+// a request to the game: the local server over the network, or the worker on the static site, answering alike
 async function api(method, path, body) {
+  if (STATIC) {
+    const { status, payload } = await startEngine()(method, path, body);
+    if (status !== 200) { const e = new Error(payload.error || 'error ' + status); e.status = status; throw e; }
+    return payload;
+  }
   const res = await fetch(path, { method, headers: { 'Content-Type': 'application/json' },
                                   body: body === undefined ? undefined : JSON.stringify(body) });
   const data = await res.json().catch(() => ({ error: 'bad response' }));
@@ -47,13 +86,13 @@ function seat(game, mode) {
     // resume this browser's session, or sit down at a new table with these options
     async open(fresh, options) {
       sid = fresh ? null : prefs.get(key, null);
-      if (sid) { try { return await api('GET', `/api/${game}/${sid}`); } catch (e) { sid = null; } }
-      const made = await api('POST', `/api/${game}/new`, options || {});
+      if (sid) { try { return await api('GET', `api/${game}/${sid}`); } catch (e) { sid = null; } }
+      const made = await api('POST', `api/${game}/new`, options || {});
       sid = made.id; prefs.set(key, sid);
       return made.view;
     },
-    act: action => api('POST', `/api/${game}/${sid}/act`, action),
-    advice: () => api('GET', `/api/${game}/${sid}/advice`),
+    act: action => api('POST', `api/${game}/${sid}/act`, action),
+    advice: () => api('GET', `api/${game}/${sid}/advice`),
   };
 }
 
@@ -68,6 +107,12 @@ const prefs = {
 
 // ---- how to play: one rules text per game (static/rules-<game>.html), shown as its own page and in a table's panel ----
 
+// on the static site, texts about the server say instead how the web version works: [data-static] holds that wording
+function staticWording(root) {
+  if (STATIC) root.querySelectorAll('[data-static]').forEach(el => { el.textContent = el.dataset.static; });
+}
+staticWording(document);
+
 // examples in a rules text: <span data-cards="AS KD"></span> draws those cards, '_' a face-down one
 function drawExamples(root) {
   root.querySelectorAll('[data-cards]').forEach(el => {
@@ -79,7 +124,7 @@ function drawExamples(root) {
 const rulesCache = {};
 async function loadRules(game) {
   if (!rulesCache[game]) {
-    const res = await fetch(`/static/rules-${game}.html`);
+    const res = await fetch(`static/rules-${game}.html`);
     if (!res.ok) throw new Error('Could not load the rules.');
     rulesCache[game] = await res.text();
   }
@@ -92,14 +137,14 @@ function rulesPanel(game, note) {
   const panel = document.createElement('aside');
   panel.className = 'rules-panel'; panel.hidden = true; panel.setAttribute('aria-label', 'How to play');
   panel.innerHTML = `<div class="rules-head"><span class="kicker">How to play</span>
-    <a href="/${game}/rules" target="_blank" rel="noopener">Open as a page</a>
+    <a href="${game}/rules/" target="_blank" rel="noopener">Open as a page</a>
     <button type="button" class="rules-close">Close<kbd>Esc</kbd></button></div>
     <p class="this-table small" hidden></p><div class="rules"></div>`;
   document.body.append(panel);
   const body = panel.querySelector('.rules');
   const close = () => { panel.hidden = true; };
   async function open(section) {
-    if (!body.childElementCount) { body.innerHTML = await loadRules(game); drawExamples(body); }
+    if (!body.childElementCount) { body.innerHTML = await loadRules(game); drawExamples(body); staticWording(body); }
     const line = panel.querySelector('.this-table'), text = note ? note() : '';
     line.hidden = !text; line.textContent = text ? 'This table: ' + text : '';
     panel.hidden = false;
@@ -147,6 +192,15 @@ function linkTerms(text, terms) {
 
 // 'learn' when the page was opened with ?mode=learn, else '' for free play
 const MODE = new URLSearchParams(location.search).get('mode') === 'learn' ? 'learn' : '';
+// the page's path after the site's root, e.g. ['blackjack', 'rules']: the root is / at the local server and /<repo>/
+// on GitHub Pages, as the page's <base> says
+const ROUTE = location.pathname.slice(new URL(document.baseURI).pathname.length).split('/').filter(Boolean);
+// where a table's Lessons link leads: this page in learn mode, keeping only the choices that pick a set of lessons
+function learnHref(keep = []) {
+  const now = new URLSearchParams(location.search), q = new URLSearchParams({ mode: 'learn' });
+  keep.forEach(k => { if (now.get(k)) q.set(k, now.get(k)); });
+  return location.pathname + '?' + q;
+}
 // where a lesson's page leads for free play: its address without the mode, so Omaha's lessons lead to an Omaha table
 function freePlayHref() {
   const q = new URLSearchParams(location.search);
