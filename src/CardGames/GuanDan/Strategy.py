@@ -40,6 +40,12 @@ class PlannerStrategy(Advisor):
     the trick), so what it treats as unseen is every card it has not seen, wherever those cards are
     """
 
+    def __init__(self, names: Optional[List[str]] = None):
+        self.names = names  # what to call each seat in a reason, 'seat 3' without them
+
+    def _who(self, seat: int) -> str:
+        return self.names[seat] if self.names else 'seat %i' % seat
+
     def rank(self, observation: Observation, legal_moves: List[Optional[Combo]]) -> List[Candidate]:
         o = observation
         hand, level, counts, seat = list(o.hand), o.level, o.counts, o.seat
@@ -63,10 +69,11 @@ class PlannerStrategy(Advisor):
                 reason = 'nothing in hand beats the %s' % o.target.describe()
             else:
                 cost += 3.0
+                who = self._who(o.target_seat)
                 if threat <= 8:
                     cost += (9 - threat) * 3.0
-                    reason = 'passing lets seat %i (only %s) keep control, which is risky' % (o.target_seat,
-                                                                                             _cards(threat))
+                    reason = ('%s is out, so passing may let their partner lead (catching the wind)' % who if threat == 0
+                              else 'passing lets %s (only %s) keep control, which is risky' % (who, _cards(threat)))
                 else:
                     reason = 'beating the %s would cost more than it gains' % o.target.describe()
             candidates.append(Candidate(PASS, reason, cost, base))
@@ -119,7 +126,9 @@ class PlannerStrategy(Advisor):
                 if move.is_bomb:
                     if threat <= 6:
                         cost += 3.0
-                        why.append('seat %i has only %s, so a bomb is worth spending' % (o.target_seat, _cards(threat)))
+                        who = self._who(o.target_seat)
+                        why.append('%s is out, so a bomb is worth spending to stop their partner leading' % who
+                                   if threat == 0 else '%s has only %s, so a bomb is worth spending' % (who, _cards(threat)))
                     elif after.turns <= 1:
                         cost += 2.0
                         why.append('a bomb takes the lead and the rest of the hand can follow')

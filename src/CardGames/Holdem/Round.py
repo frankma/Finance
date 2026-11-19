@@ -57,6 +57,7 @@ class Observation(object):
     bets: Tuple[int, ...] = ()  # every seat's bet on this street
     in_hand: Tuple[bool, ...] = ()  # who has not folded
     history: Tuple[Tuple[int, 'Street', 'Move'], ...] = ()  # (seat, street, move) for every move so far
+    posted: Tuple[int, ...] = ()  # what each seat posted as a blind before any move
 
 
 @dataclass(frozen=True)
@@ -78,6 +79,7 @@ class _Seat(object):
         self.all_in = False
         self.acted = False
         self.faced = 0  # full raises seen when it last acted
+        self.posted = 0  # its blind this hand
 
     @property
     def in_hand(self) -> bool:
@@ -127,8 +129,8 @@ class Round(Game):
         heads_up = sum(seated(seat) for seat in self.seats) == 2
         self.small_blind_seat = self.button if heads_up else self._next(self.button, seated)
         self.big_blind_seat = self._next(self.small_blind_seat, seated)
-        self._post(self.small_blind_seat, rules.small_blind)
-        self._post(self.big_blind_seat, rules.big_blind)
+        self.seats[self.small_blind_seat].posted = self._post(self.small_blind_seat, rules.small_blind)
+        self.seats[self.big_blind_seat].posted = self._post(self.big_blind_seat, rules.big_blind)
         self.current_bet = rules.big_blind
         self.to_act = self.big_blind_seat
         self._advance()
@@ -298,7 +300,7 @@ class Round(Game):
                            sizes[0] if sizes else None, sizes[1] if sizes else None, n_opponents,
                            self.rules.big_blind, self.rules, self.button, tuple(self.stacks),
                            tuple(other.bet for other in self.seats), tuple(other.in_hand for other in self.seats),
-                           tuple(self.history))
+                           tuple(self.history), tuple(other.posted for other in self.seats))
 
     def payoffs(self) -> List[float]:
         if not self.finished:

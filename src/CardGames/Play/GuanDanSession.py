@@ -60,7 +60,7 @@ class GuanDanSession(Session):
         self.rng = rng if rng is not None else random.Random()
         self.match = Match(self.rng)
         self.bots = [None] + [PlannerStrategy() for _ in range(N_SEATS - 1)]
-        self.coach = PlannerStrategy()
+        self.coach = PlannerStrategy(NAMES)
         self.round = None  # type: Optional[Round]
         self.leader = 0
         self.tributes = []  # type: List[Tribute]
@@ -71,6 +71,7 @@ class GuanDanSession(Session):
         self.last_trick = []  # type: List[Tuple[int, Optional[Combo]]]
         self.won = 0  # hands your team won
         self.hands_before = 0  # hands of this match played before the server last restarted
+        self.played_declarer = None  # type: Optional[int]  # whose level the finished hand was played at
         self.followed = 0  # decisions where you made the coach's move
         self.decisions = 0
         self.log = []  # type: List[str]
@@ -178,6 +179,11 @@ class GuanDanSession(Session):
         if not self._your_turn():
             raise ValueError('it is not your turn.')
         cards = self._parse(codes)
+        if reading is None:
+            self.choices = None  # a new selection, asked about afresh
+        elif not self.choices or Counter(self.choices[0].cards) != Counter(cards):
+            # a reading is an answer about the cards it was offered for, never about others selected since
+            raise ValueError('These cards have changed: press Play to see how they read.')
         if Counter(cards) - Counter(self.round.hands[0]):
             raise ValueError('you do not hold %s.' % ' '.join(_cards(cards)))
         level = self.round.level
@@ -249,6 +255,7 @@ class GuanDanSession(Session):
 
     def _settle(self) -> None:
         result = self.round.result
+        self.played_declarer = self.match.declarer
         record = self.match.record(self.round, self.leader, self.tributes)
         ours = result.winning_team == 0
         self.won += ours
@@ -309,11 +316,14 @@ class GuanDanSession(Session):
 
     def view(self) -> dict:
         m = self.match
+        # a finished hand stays on the table until the next deal, so it describes that hand; levels has the new score
+        finished = self.waiting is None and self.round is not None and self.round.result is not None
+        level, declarer = (self.round.level, self.played_declarer) if finished else (m.level, m.declarer)
         out = {
             'game': 'guandan', 'phase': self.phase,
             'levels': {'you': rank_name(m.levels[0]), 'them': rank_name(m.levels[1])},
-            'level': rank_name(m.level.value), 'declarer': None if m.declarer is None else
-            ('you' if m.declarer == 0 else 'them'), 'a_fails': list(m.a_fails),
+            'level': rank_name(level.value), 'declarer': None if declarer is None else
+            ('you' if declarer == 0 else 'them'), 'a_fails': list(m.a_fails),
             'hand': [], 'wild': None, 'seats': [], 'trick': None, 'last_trick': [], 'your_turn': False,
             'can_pass': False, 'choices': None, 'tribute': None, 'result': None, 'unseen': [],
             'match': {'hands': self._hands_played(), 'won': self.won, 'winner': None if m.winner is None else

@@ -79,6 +79,39 @@ class TestBlackJackSession(TestCase):
         self.assertIn('reshuffled', session.log[0])
 
 
+class TestCoachedBets(TestCase):
+    def test_the_bet_is_sized_for_the_shoe_it_is_dealt_from(self):
+        session = BlackJackSession({}, random.Random(7))
+        session.table.counter.running_count = 40.0  # a very high count
+        self.assertGreater(session.advice()['bet'], 5, 'with the shoe still in play, the count is worth betting on.')
+        session.table.shoe.draw_many(250)  # past the cut card, so the next deal comes from a reshuffled shoe
+        session.table.counter.running_count = 40.0
+        self.assertTrue(session.view()['shoe']['reshuffle_next'])
+        advice = session.advice()
+        self.assertEqual(advice['bet'], 5, 'a fresh shoe has no count, so the table minimum.')
+        self.assertIn('reshuffled', advice['reason'])
+
+    def test_half_chips_are_not_rounded(self):
+        session = BlackJackSession({'rules': 'h17'}, random.Random(8))
+        stack(session, 'TS 9D 6H KC')
+        session.act({'type': 'deal', 'bet': 5})
+        session.act({'type': 'move', 'move': 'surrender'})
+        self.assertEqual(session.bankroll, 997.5)
+        self.assertTrue(session.log[-1].endswith('surrendered: -2.5.'), session.log[-1])
+        stack(session, 'AS 6D KH 9C')
+        session.act({'type': 'deal', 'bet': 5})
+        self.assertEqual(session.bankroll, 1005.0)
+        self.assertTrue(session.log[-1].endswith('blackjack: +7.5.'), session.log[-1])
+        stack(session, 'TS 7D 8H KC')
+        session.act({'type': 'deal', 'bet': 10})
+        session.act({'type': 'move', 'move': 'stand'})
+        self.assertTrue(session.log[-1].endswith('win: +10.') or session.log[-1].endswith('push: +0.'), session.log[-1])
+        session.bankroll = 7.5
+        with self.assertRaises(ValueError) as error:
+            session.act({'type': 'deal', 'bet': 10})
+        self.assertIn('bankroll of 7.5', str(error.exception))
+
+
 class TestFairPlay(TestCase):
     def test_the_page_never_gets_the_hole_card(self):
         # two tables alike in everything shown, different in the hole card and the shoe behind it

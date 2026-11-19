@@ -21,6 +21,11 @@ def describe(rules: Rules) -> str:
                                               ', late surrender' if rules.surrender else '')
 
 
+def _chips(amount: float, sign: bool = False) -> str:
+    # a blackjack or a surrender on an odd bet leaves half a chip, so one decimal when it is needed: 7.5, 20, +10
+    return (('%+.1f' if sign else '%.1f') % amount).rstrip('0').rstrip('.')
+
+
 def _outcome(hand: Hand, dealer: Hand, payoff: float) -> str:
     if hand.surrendered:
         return 'surrendered'
@@ -103,7 +108,7 @@ class BlackJackSession(Session):
         if not self.min_bet <= bet <= self.max_bet:
             raise ValueError('bet %i should be between %i and %i.' % (bet, self.min_bet, self.max_bet))
         if bet > self.bankroll:
-            raise ValueError('bet %i is more than the bankroll of %.0f.' % (bet, self.bankroll))
+            raise ValueError('bet %i is more than the bankroll of %s.' % (bet, _chips(self.bankroll)))
         if self.table.shoe.needs_shuffle:
             self.table.shoe.reshuffle()
             self.log.append('The cut card came out: the shoe is reshuffled and the count starts again.')
@@ -133,9 +138,9 @@ class BlackJackSession(Session):
         self.rounds += 1
         dealer = self.round.dealer_hand
         self.outcomes = [_outcome(hand, dealer, self.round.hand_payoff(k)) for k, hand in enumerate(self.round.hands)]
-        self.log.append('Dealer %s; %s: %+.0f.' % (
+        self.log.append('Dealer %s; %s: %s.' % (
             'busts' if dealer.is_bust else 'has blackjack' if dealer.is_blackjack else 'makes %i' % dealer.total,
-            ', '.join(self.outcomes), self.payoff))
+            ', '.join(self.outcomes), _chips(self.payoff, sign=True)))
 
     # ---- saved between server runs ----
 
@@ -199,7 +204,9 @@ class BlackJackSession(Session):
         if self.phase == 'play':
             advice = self.coach.advise(self.round.observation(0), self.legal())
             return {'kind': 'move', 'move': advice.move.value, 'reason': advice.reason}
-        true = self.table.counter.true_count()
+        # past the cut card the next deal comes from a reshuffled shoe, where the count starts again
+        reshuffled = self.table.shoe.needs_shuffle
+        true = 0.0 if reshuffled else self.table.counter.true_count()
         edge = self.sizer.edge(true)
         stake = self.sizer.bet(self.bankroll, true)
         bet = int(min(self.bankroll, max(self.min_bet, round(stake / self.min_bet) * self.min_bet)))
@@ -208,6 +215,8 @@ class BlackJackSession(Session):
                       'bet the table minimum of %i' % (true, 100 * edge, self.min_bet))
         else:
             reason = ('true count %+.1f: the estimated edge is %+.2f%%; Kelly stakes edge / variance = %.2f%% of the '
-                      'bankroll of %.0f, about %i' % (true, 100 * edge, 100 * edge / self.sizer.variance,
-                                                      self.bankroll, bet))
+                      'bankroll of %s, about %i' % (true, 100 * edge, 100 * edge / self.sizer.variance,
+                                                    _chips(self.bankroll), bet))
+        if reshuffled:
+            reason = 'the cut card is out, so this bet is dealt from a reshuffled shoe; ' + reason
         return {'kind': 'bet', 'bet': bet, 'reason': reason}
