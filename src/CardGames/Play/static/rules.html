@@ -3,9 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<base href="/">
 <title>How to Play</title>
-<link rel="stylesheet" href="/static/theme.css">
-<link rel="stylesheet" href="/static/common.css">
+<link rel="stylesheet" href="static/theme.css">
+<link rel="stylesheet" href="static/common.css">
 <style>
 .page { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 32px; align-items: start; }
 @media (max-width: 860px) { .page { grid-template-columns: minmax(0, 1fr); gap: 18px; } }
@@ -24,7 +25,7 @@
       <h1 id="title">How to play</h1>
       <p class="lede" id="lede"></p>
     </div>
-    <nav class="links"><a href="/">Lobby</a><a href="/lab">Card Games Lab</a></nav>
+    <nav class="links"><a href="./">Lobby</a><a href="lab/">Card Games Lab</a></nav>
   </div>
   <div class="page">
     <nav class="toc box" id="toc" aria-label="Contents"><span class="kicker">Contents</span></nav>
@@ -32,13 +33,13 @@
   </div>
   <p class="err" id="err" hidden></p>
 </div>
-<script src="/static/common.js"></script>
+<script src="static/common.js"></script>
 <script>
 (async () => {
-  // the game is the first part of the path: /blackjack/rules
-  const game = location.pathname.split('/').filter(Boolean)[0];
+  // the game is the first part of the path after the site's root: blackjack/rules/
+  const game = ROUTE[0];
   try {
-    const games = await api('GET', '/api/games');
+    const games = await api('GET', 'api/games');
     const entry = games.find(g => g.name === game);
     document.title = `${entry.title} Rules`;
     $('title').textContent = 'How to play ' + entry.title;
@@ -46,14 +47,15 @@
     const body = $('rules');
     body.innerHTML = await loadRules(game);
     drawExamples(body);
+    staticWording(body);
     body.querySelectorAll('section[id] > h2').forEach(h => {
-      const a = document.createElement('a'); a.href = '#' + h.parentElement.id; a.textContent = h.textContent; $('toc').append(a);
+      const a = document.createElement('a'); a.href = location.pathname + '#' + h.parentElement.id; a.textContent = h.textContent; $('toc').append(a);
     });
     const play = document.createElement('button'); play.type = 'button'; play.className = 'primary play';
-    play.textContent = 'Play ' + entry.title; play.onclick = () => { location.href = '/' + game; };
+    play.textContent = 'Play ' + entry.title; play.onclick = () => { location.href = new URL(game + '/', document.baseURI).href; };
     $('toc').append(play);
     if (entry.lessons) {
-      const learn = document.createElement('a'); learn.href = `/${game}?mode=learn`;
+      const learn = document.createElement('a'); learn.href = `${game}/?mode=learn`;
       learn.textContent = `Practice: ${entry.lessons} guided hands`; $('toc').append(learn);
     }
     if (location.hash) { const t = document.getElementById(location.hash.slice(1)); if (t) t.scrollIntoView(); }

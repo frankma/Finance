@@ -3,9 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<base href="/">
 <title>Card Games</title>
-<link rel="stylesheet" href="/static/theme.css">
-<link rel="stylesheet" href="/static/common.css">
+<link rel="stylesheet" href="static/theme.css">
+<link rel="stylesheet" href="static/common.css">
 <style>
 .games { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 8px; }
 @media (max-width: 860px) { .games { grid-template-columns: minmax(0, 1fr); } }
@@ -24,20 +25,20 @@
       <h1>Pick a table</h1>
       <p class="lede">Play against the computer with a coach at your shoulder. The coach suggests a move and tells you why, using only what your seat can see.</p>
     </div>
-    <nav class="links"><a href="/lab">Card Games Lab</a></nav>
+    <nav class="links"><a href="lab/">Card Games Lab</a></nav>
   </div>
   <div class="box fair-note">
     <span class="kicker">Fair play</span>
-    <p>The game runs on this computer's Python server, and your browser is only ever sent your seat's view: your own cards, the cards shown and the public moves. Hidden cards never leave the server, so neither the page nor the coach can peek.</p>
+    <p data-static="This web version runs the whole game in your browser, with the same Python code as the version you run on your own computer. So the hidden cards sit in the page&#39;s memory, where a determined player could find them. The coach and the computer seats still use only what their seat can see. The version you run yourself, with python -m src.CardGames.Play, keeps hidden cards on its server and away from the page.">The game runs on this computer's Python server, and your browser is only ever sent your seat's view: your own cards, the cards shown and the public moves. Hidden cards never leave the server, so neither the page nor the coach can peek.</p>
   </div>
   <div class="games" id="games"></div>
   <p class="err" id="err" hidden></p>
 </div>
-<script src="/static/common.js"></script>
+<script src="static/common.js"></script>
 <script>
 (async () => {
   try {
-    const games = await api('GET', '/api/games');
+    const games = await api('GET', 'api/games');
     $('games').innerHTML = games.map(g => `
       <div class="box game ${g.available ? '' : 'soon'}">
         <span class="kicker">${g.available ? 'Open' : 'Coming soon'}</span>
@@ -46,13 +47,13 @@
         ${g.options.map(o => `<label for="${g.name}-${o.key}">${o.label}</label>
           <select id="${g.name}-${o.key}" data-key="${o.key}">${o.choices.map(c => `<option value="${c.value}">${c.label}</option>`).join('')}</select>`).join('')}
         <button class="primary" ${g.available ? '' : 'disabled'} data-game="${g.name}">${g.available ? 'Sit down' : 'Not yet'}</button>
-        <a class="small" href="/${g.name}/rules">How to play ${g.title}</a>
-        ${g.practice.map(p => `<a class="small" href="/${g.name}?${p.query}">${p.label}: ${p.n} guided hands</a>`).join('')}
+        <a class="small" href="${g.name}/rules/">How to play ${g.title}</a>
+        ${g.practice.map(p => `<a class="small" href="${g.name}/?${p.query}">${p.label}: ${p.n} guided hands</a>`).join('')}
       </div>`).join('');
     document.querySelectorAll('[data-game]').forEach(b => b.onclick = () => {
       const q = new URLSearchParams();
       b.parentElement.querySelectorAll('select').forEach(s => q.set(s.dataset.key, s.value));
-      location.href = '/' + b.dataset.game + '?' + q.toString();
+      location.href = new URL(b.dataset.game + '/?' + q.toString(), document.baseURI).href;
     });
   } catch (e) { $('err').hidden = false; $('err').textContent = 'Could not reach the play server: ' + e.message; }
 })();

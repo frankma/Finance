@@ -3,9 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<base href="/">
 <title>Blackjack Table</title>
-<link rel="stylesheet" href="/static/theme.css">
-<link rel="stylesheet" href="/static/common.css">
+<link rel="stylesheet" href="static/theme.css">
+<link rel="stylesheet" href="static/common.css">
 <style>
 .felt { gap: 18px; }
 .seat { display: flex; flex-direction: column; gap: 8px; }
@@ -33,7 +34,7 @@ hr.thin { border: 0; border-top: 1px solid var(--line); margin: 0; }
       <h1>Blackjack</h1>
       <span class="small muted" id="rules"></span>
     </div>
-    <nav class="links"><a href="/">Lobby</a><a href="/lab">Card Games Lab</a><a href="#" id="rulesLink" data-rules="">Rules<kbd>?</kbd></a><a href="?mode=learn" id="modeLink">Lessons</a><a href="#" id="newSession">New session</a></nav>
+    <nav class="links"><a href="./">Lobby</a><a href="lab/">Card Games Lab</a><a href="#" id="rulesLink" data-rules="">Rules<kbd>?</kbd></a><a id="modeLink">Lessons</a><a href="#" id="newSession">New session</a></nav>
   </div>
 
   <div class="layout">
@@ -92,12 +93,12 @@ hr.thin { border: 0; border-top: 1px solid var(--line); margin: 0; }
       </div>
       <div class="box fair-note">
         <span class="kicker">What the coach knows</span>
-        <p>Your cards, the dealer's up card, the rules and every card shown since the shuffle. Never the dealer's hole card or the order of the shoe: the server never sends them to this page.</p>
+        <p>Your cards, the dealer's up card, the rules and every card shown since the shuffle. Never the dealer's hole card or the order of the shoe: <span data-static="this web version runs the game in your browser, so they sit in the page's memory, where a determined player could find them, but the coach never reads them">the server never sends them to this page</span>.</p>
       </div>
     </aside>
   </div>
 </div>
-<script src="/static/common.js"></script>
+<script src="static/common.js"></script>
 <script>
 const table = seat('blackjack', MODE);
 let view = null, advice = null;
@@ -192,7 +193,8 @@ $('betCoach').onclick = () => { if (advice && advice.kind === 'bet') $('bet').va
 $('ask').onclick = ask;
 $('newSession').onclick = e => { e.preventDefault(); start(true); };
 // lessons and free play are separate tables: the link switches between them
-if (MODE) { document.querySelector('h1').textContent = 'Blackjack practice'; $('modeLink').textContent = 'Free play'; $('modeLink').href = location.pathname; $('newSession').textContent = 'Restart lessons'; }
+if (MODE) { document.querySelector('h1').textContent = 'Blackjack practice'; $('modeLink').textContent = 'Free play'; $('newSession').textContent = 'Restart lessons'; }
+$('modeLink').href = MODE ? freePlayHref() : learnHref();
 $('auto').checked = prefs.get('auto-coach', false);
 $('auto').onchange = e => { prefs.set('auto-coach', e.target.checked); if (e.target.checked) ask(); else { advice = null; renderAdvice(); } };
 $('hideCount').checked = prefs.get('hide-count', false);

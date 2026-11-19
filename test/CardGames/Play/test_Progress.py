@@ -11,7 +11,7 @@ from src.CardGames.Play.BlackJackSession import BlackJackSession
 from src.CardGames.Play.GuanDanSession import GuanDanSession
 from src.CardGames.Play.HoldemSession import HoldemSession
 from src.CardGames.Play.Lesson import LessonSession
-from src.CardGames.Play.Server import MAX_SESSIONS, Sessions
+from src.CardGames.Play.Api import MAX_SESSIONS, Sessions
 from test.CardGames.Play.helpers import Served, play_hand, stack_blackjack
 
 __author__ = 'frank.ma'
@@ -169,7 +169,7 @@ class TestAcrossRestarts(TestCase):
         for content in ('not json {', '[1, 2]'):
             with open(self.path, 'w', encoding='utf-8') as f:
                 f.write(content)
-            with self.assertLogs('src.CardGames.Play.Server', 'WARNING'):
+            with self.assertLogs('src.CardGames.Play.Api', 'WARNING'):
                 sessions = Sessions(path=self.path)
             self.assertEqual(sessions.saved, {})
             self.assertTrue(os.path.exists(self.path + '.unreadable'), 'kept, in case it can be recovered.')
@@ -181,7 +181,7 @@ class TestAcrossRestarts(TestCase):
             json.dump({'bad': {'game': 'blackjack', 'options': {}, 'progress': {'bankroll': 'lots'}},
                        'worse': 'not a record'}, f)
         sessions = Sessions(path=self.path)
-        with self.assertLogs('src.CardGames.Play.Server', 'WARNING'), self.assertRaises(KeyError):
+        with self.assertLogs('src.CardGames.Play.Api', 'WARNING'), self.assertRaises(KeyError):
             sessions.get('blackjack', 'bad')
         self.assertNotIn('bad', sessions.saved)
         with self.assertRaises(KeyError):

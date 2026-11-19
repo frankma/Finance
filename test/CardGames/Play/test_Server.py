@@ -36,7 +36,9 @@ class TestServer(TestCase):
     def test_pages(self):
         for path in ('/', '/blackjack', '/holdem', '/guandan', '/blackjack/rules', '/holdem/rules', '/guandan/rules',
                      '/static/rules-guandan.html', '/static/rules.html', '/static/holdem.html', '/static/theme.css',
-                     '/static/common.js', '/static/common.css', '/lab'):
+                     '/static/common.js', '/static/common.css', '/static/engine.js', '/lab',
+                     # the pages link with a trailing slash, as the static site serves folders
+                     '/blackjack/', '/holdem/', '/guandan/', '/blackjack/rules/', '/lab/'):
             self.assertEqual(self.request('GET', path)[0], 200, path)
         for path in ('/poker', '/poker/rules', '/blackjack/rules/x', '/static/Server.py', '/static/..%2FServer.py',
                      '/nothing'):
