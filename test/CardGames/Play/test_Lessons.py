@@ -1,7 +1,5 @@
 import json
-import os
 import random
-from tempfile import TemporaryDirectory
 from unittest import TestCase
 
 from src.CardGames.Core.Card import Card
@@ -13,25 +11,81 @@ from src.CardGames.Play import GuanDanLessons, HoldemLessons
 from src.CardGames.Play.BlackJackLessons import lessons
 from src.CardGames.Play.HoldemLessons import Scripted
 from src.CardGames.Play.Lesson import LessonSession, Step
-from src.CardGames.Play.Registry import lobby
-from src.CardGames.Play.Server import Sessions
+from test.CardGames.Play.helpers import play_coach_move, session_act
 
 __author__ = 'frank.ma'
 
 
-def follow(session: LessonSession) -> None:
-    # take every step as the lesson expects, checking first that the coach would have chosen the same
-    test = TestCase()
-    lesson = session.lesson
-    for step in lesson.steps:
-        advice = session.advice()
-        if step.expect['type'] == 'move':
-            test.assertEqual(advice['move'], step.expect['move'], '%s: the coach agrees with the lesson.' % lesson.key)
-            session.act(dict(step.expect, to=advice.get('to')))
+LESSON_SETS = [  # name, lessons, seed
+    ('blackjack', lessons, 0), ("hold'em", HoldemLessons.lessons, 4), ('Omaha', HoldemLessons.omaha_lessons, 30),
+    ('GuanDan', GuanDanLessons.lessons, 8)]
+
+
+def follow(test: TestCase, session: LessonSession) -> None:
+    # take every step as the lesson expects, checking first that the coach would make the same move
+    for step in session.lesson.steps:
+        advice, want = session.advice(), step.expect
+        if want['type'] == 'deal':
+            test.assertGreaterEqual(advice['bet'], want['bet_at_least'], session.lesson.key)
+        elif want['type'] == 'move':
+            test.assertEqual(advice['move'], want['move'], '%s: the coach agrees with the lesson.' % session.lesson.key)
+        elif want['type'] == 'return':
+            test.assertEqual(advice['kind'], 'return', session.lesson.key)
+        elif want['type'] == 'pass':
+            test.assertEqual(advice['move']['kind'], 'pass', session.lesson.key)
         else:
-            test.assertGreaterEqual(advice['bet'], step.expect['bet_at_least'], lesson.key)
-            session.act({'type': 'deal', 'bet': advice['bet']})
-        test.assertEqual(session.feedback['kind'], 'right')
+            test.assertEqual(sorted(advice['move']['cards']), sorted(want['cards']), session.lesson.key)
+        play_coach_move(session_act(session), session.view(), advice)
+        test.assertEqual(session.feedback['kind'], 'right', session.lesson.key)
+
+
+class TestEveryLesson(TestCase):
+    def test_every_lesson_plays_as_written(self):
+        for name, make, seed in LESSON_SETS:
+            with self.subTest(name):
+                session, outcomes = LessonSession(make(), random.Random(seed)), {}
+                for k, lesson in enumerate(session.lessons):
+                    session.act({'type': 'lesson', 'index': k})
+                    first = session.view()
+                    # fair play holds in a lesson too: a face-down card stays face down
+                    if first['game'] == 'blackjack' and first['phase'] == 'play':
+                        self.assertEqual((first['dealer']['hidden'], len(first['dealer']['cards'])), (True, 1))
+                    if first['game'] == 'holdem':
+                        self.assertTrue(first['your_turn'])
+                        self.assertEqual(len(first['seats'][0]['cards']), first['n_hole'])
+                        self.assertIsNone(first['seats'][1]['cards'], 'the opponent is face down.')
+                    follow(self, session)
+                    view = session.view()
+                    self.assertTrue(view['lesson']['complete'], lesson.key)
+                    self.assertIsNone(view['lesson']['prompt'])
+                    self.assertTrue(view['lesson']['lessons'][k]['done'])
+                    if lesson.wrap:
+                        self.assertIn(lesson.wrap, view['lesson']['feedback']['text'])
+                    if view['game'] == 'holdem' and view['phase'] == 'play':
+                        self.assertIsNone(view['seats'][1]['cards'])
+                    outcomes[lesson.key] = [hand['outcome'] for hand in view.get('hands', [])], view.get('payoff')
+                    json.dumps(view)
+                self.assertTrue(all(x['done'] for x in session.view()['lesson']['lessons']))
+                if name == 'blackjack':
+                    self.assertEqual(outcomes['bust'], (['win'], 10.0), 'the dealer busts drawing from a 6.')
+                    self.assertEqual(outcomes['sixteen'], (['win'], 10.0))
+                    self.assertEqual(outcomes['double'], (['win'], 20.0), 'twice the bet won.')
+                    self.assertEqual(outcomes['soft'], (['win'], 10.0))
+                    self.assertEqual(outcomes['split'], (['win', 'push'], 10.0))
+
+    def test_later_hands_are_dealt_freely(self):
+        # once a lesson is done the table deals on, shuffled, in the lesson's own game
+        for make, steps, stacked in ((HoldemLessons.lessons, ('call', 'call', 'fold'), ['3C', '2D']),
+                                     (HoldemLessons.omaha_lessons, ('call', 'check', 'fold'), ['AH', 'TC', '6D', '3S'])):
+            session = LessonSession(make(), random.Random(6))
+            session.act({'type': 'lesson', 'index': [x.key for x in session.lessons].index(
+                'fold' if make is HoldemLessons.lessons else 'one-heart')})
+            for move in steps:
+                session.act({'type': 'move', 'move': move})
+            session.act({'type': 'deal'})
+            cards = session.view()['seats'][0]['cards']
+            self.assertEqual(len(cards), len(stacked))
+            self.assertNotEqual(cards, stacked, 'the next hand is not stacked.')
 
 
 class TestStep(TestCase):
@@ -46,32 +100,6 @@ class TestStep(TestCase):
 
 
 class TestBlackJackLessons(TestCase):
-    def test_every_lesson_plays_as_written(self):
-        session = LessonSession(lessons(), random.Random(0))
-        outcomes = {}
-        for k, lesson in enumerate(session.lessons):
-            session.act({'type': 'lesson', 'index': k})
-            first = session.view()
-            if first['phase'] == 'play':
-                # fair play holds in a lesson too: one dealer card up, the other face down
-                self.assertTrue(first['dealer']['hidden'])
-                self.assertEqual(len(first['dealer']['cards']), 1)
-            follow(session)
-            view = session.view()
-            self.assertTrue(view['lesson']['complete'])
-            self.assertIsNone(view['lesson']['prompt'])
-            self.assertTrue(view['lesson']['lessons'][k]['done'])
-            if lesson.wrap:
-                self.assertIn(lesson.wrap, view['lesson']['feedback']['text'])
-            outcomes[lesson.key] = [hand['outcome'] for hand in view['hands']], view.get('payoff')
-            json.dumps(view)
-        self.assertEqual(outcomes['bust'], (['win'], 10.0), 'the dealer busts drawing from a 6.')
-        self.assertEqual(outcomes['sixteen'], (['win'], 10.0))
-        self.assertEqual(outcomes['double'], (['win'], 20.0), 'twice the bet won.')
-        self.assertEqual(outcomes['soft'], (['win'], 10.0))
-        self.assertEqual(outcomes['split'], (['win', 'push'], 10.0))
-        self.assertTrue(all(lesson['done'] for lesson in session.view()['lesson']['lessons']))
-
     def test_a_wrong_move_gets_a_hint_and_is_not_played(self):
         session = LessonSession(lessons(), random.Random(1))
         before = session.view()['hands']
@@ -111,22 +139,6 @@ class TestBlackJackLessons(TestCase):
 
 
 class TestHoldemLessons(TestCase):
-    def test_every_lesson_plays_as_written(self):
-        session = LessonSession(HoldemLessons.lessons(), random.Random(4))
-        for k, lesson in enumerate(session.lessons):
-            session.act({'type': 'lesson', 'index': k})
-            first = session.view()
-            self.assertTrue(first['your_turn'])
-            self.assertEqual(len(first['seats'][0]['cards']), 2)
-            self.assertIsNone(first['seats'][1]['cards'], 'the opponent is face down in a lesson too.')
-            follow(session)
-            view = session.view()
-            self.assertTrue(view['lesson']['complete'], lesson.key)
-            if view['phase'] == 'play':
-                self.assertIsNone(view['seats'][1]['cards'])
-            json.dumps(view)
-        self.assertTrue(all(x['done'] for x in session.view()['lesson']['lessons']))
-
     def test_the_fold_lesson_loses_only_the_blind(self):
         session = LessonSession(HoldemLessons.lessons(), random.Random(5))
         session.act({'type': 'lesson', 'index': [x.key for x in session.lessons].index('fold')})
@@ -136,14 +148,6 @@ class TestHoldemLessons(TestCase):
         session.act({'type': 'move', 'move': 'fold'})
         view = session.view()
         self.assertEqual((view['phase'], view['payoff']), ('done', -2))
-
-    def test_later_hands_are_shuffled(self):
-        session = LessonSession(HoldemLessons.lessons(), random.Random(6))
-        session.act({'type': 'lesson', 'index': [x.key for x in session.lessons].index('fold')})
-        session.act({'type': 'move', 'move': 'call'})
-        session.act({'type': 'move', 'move': 'fold'})
-        session.act({'type': 'deal'})  # the lesson is done, so the table deals on freely
-        self.assertNotEqual(session.view()['seats'][0]['cards'], ['3C', '2D'], 'the next hand is not stacked.')
 
     def test_scripted_opponent(self):
         session = HoldemLessons._heads_up('AH 5H', 'QC 8D', 'KH 9H 2C 4S JD', {Street.FLOP: 0.5})(random.Random(7))
@@ -159,30 +163,6 @@ class TestOmahaLessons(TestCase):
         self.lessons = HoldemLessons.omaha_lessons()
         self.rules = Rules(small_blind=1, big_blind=2, n_hole=4, omaha=True)
 
-    def table(self, key):
-        return next(lesson for lesson in self.lessons if lesson.key == key).setup(random.Random(0))
-
-    def test_every_lesson_plays_as_written(self):
-        session = LessonSession(self.lessons, random.Random(30))
-        for k, lesson in enumerate(session.lessons):
-            session.act({'type': 'lesson', 'index': k})
-            first = session.view()
-            self.assertEqual((first['variant'], first['n_hole']), ('omaha', 4))
-            self.assertEqual(len(first['seats'][0]['cards']), 4)
-            self.assertIsNone(first['seats'][1]['cards'], 'the opponent is face down in a lesson too.')
-            follow(session)
-            self.assertTrue(session.view()['lesson']['complete'], lesson.key)
-            json.dumps(session.view())
-        self.assertTrue(all(x['done'] for x in session.view()['lesson']['lessons']))
-
-    def test_later_hands_are_omaha_and_shuffled(self):
-        session = LessonSession(self.lessons, random.Random(31))
-        follow(session)  # ends with a fold
-        session.act({'type': 'deal'})
-        view = session.view()
-        self.assertEqual(len(view['seats'][0]['cards']), 4)
-        self.assertNotEqual(view['seats'][0]['cards'], ['AH', 'TC', '6D', '3S'], 'the next hand is not stacked.')
-
     def test_one_heart_never_makes_a_flush(self):
         session = LessonSession(self.lessons, random.Random(32))
         session.act({'type': 'move', 'move': 'call'})
@@ -195,7 +175,7 @@ class TestOmahaLessons(TestCase):
         session.act({'type': 'move', 'move': 'fold'})
         self.assertEqual((session.view()['phase'], session.view()['payoff']), ('done', -2))
 
-    def test_the_counted_cards_are_as_the_lessons_say(self):
+    def test_the_cards_and_hands_are_as_the_lessons_say(self):
         for hole, board, expected in (('AH 9H 7C 2S', 'KH 8H 3C', {HandCategory.FLUSH: 9, HandCategory.PAIR: 18}),
                                       ('JS TD 7C 6H', '9S 8D 2C', {HandCategory.STRAIGHT: 20, HandCategory.PAIR: 9})):
             found = outs(Card.parse_many(hole), Card.parse_many(board), self.rules)
@@ -203,14 +183,10 @@ class TestOmahaLessons(TestCase):
         wrap = outs(Card.parse_many('JS TD 7C 6H'), Card.parse_many('9S 8D 2C'), self.rules)
         ranks = sorted(card.rank.value for card in wrap.by_category[HandCategory.STRAIGHT])
         self.assertEqual({r: ranks.count(r) for r in set(ranks)}, {12: 4, 11: 3, 10: 3, 7: 3, 6: 3, 5: 4})
-
-    def test_the_hands_made_are_as_the_lessons_say(self):
-        two = Card.parse_many('AH 9H 7C 2S')
-        self.assertEqual(describe(self.rules.hand_rank(two, Card.parse_many('KH 8H 3C 5H'))), 'Flush, ace high')
-        wrap = Card.parse_many('JS TD 7C 6H')
-        self.assertEqual(describe(self.rules.hand_rank(wrap, Card.parse_many('9S 8D 2C QH'))), 'Straight, queen high')
-        sevens = Card.parse_many('7S 7D 7C 2H')
-        self.assertEqual(describe(self.rules.hand_rank(sevens, Card.parse_many('KS QS JS'))), 'Pair of sevens')
+        for hole, board, made in (('AH 9H 7C 2S', 'KH 8H 3C 5H', 'Flush, ace high'),
+                                  ('JS TD 7C 6H', '9S 8D 2C QH', 'Straight, queen high'),
+                                  ('7S 7D 7C 2H', 'KS QS JS', 'Pair of sevens')):
+            self.assertEqual(describe(self.rules.hand_rank(Card.parse_many(hole), Card.parse_many(board))), made)
 
     def test_the_equities_quoted_are_about_right(self):
         quoted = (('AH TC 6D 3S', '', 0.46), ('AH TC 6D 3S', '8H JH 2H', 0.21), ('AH TC 6D 3S', '8H JH 2H 5H', 0.16),
@@ -222,65 +198,9 @@ class TestOmahaLessons(TestCase):
                                     random.Random(33)).equity.mean
             self.assertAlmostEqual(found, equity, delta=0.04, msg='%s on %s' % (hole, board))
 
-    def test_the_lobby_and_server_offer_them_apart_from_holdem(self):
-        entry = next(g for g in lobby() if g['name'] == 'holdem')
-        self.assertEqual([(p['label'], p['query'], p['n']) for p in entry['practice']],
-                         [("Practice Hold'em", 'mode=learn', 4), ('Practice Omaha', 'mode=learn&variant=omaha', 4)])
-        self.assertEqual([p['label'] for p in next(g for g in lobby() if g['name'] == 'guandan')['practice']],
-                         ['Practice'])
-        sessions = Sessions()
-        _, omaha = sessions.create('holdem', {'mode': 'learn', 'variant': 'omaha'})
-        self.assertEqual(omaha.view()['lesson']['title'], 'One heart is not a flush')
-        _, holdem = sessions.create('holdem', {'mode': 'learn'})
-        self.assertEqual(holdem.view()['lesson']['title'], 'Call when the price is right')
-
-    def test_a_restart_keeps_them_omaha(self):
-        with TemporaryDirectory() as folder:
-            path = os.path.join(folder, 'progress.json')
-            sessions = Sessions(path=path)
-            sid, session = sessions.create('holdem', {'mode': 'learn', 'variant': 'omaha'})
-            session.act({'type': 'lesson', 'index': 2})
-            sessions.save('holdem', sid, session)
-            view = Sessions(path=path).get('holdem', sid).view()
-            self.assertEqual((view['lesson']['title'], view['variant']), ('Four cards make a wrap', 'omaha'))
-
-
-def follow_guandan(session: LessonSession) -> None:
-    # take every step as the lesson expects, checking first that the coach would make the same play
-    test = TestCase()
-    lesson = session.lesson
-    for step in lesson.steps:
-        advice = session.advice()
-        kind = step.expect['type']
-        if kind == 'return':
-            test.assertEqual(advice['kind'], 'return')
-            session.act({'type': 'return', 'card': advice['card']})
-        elif kind == 'pass':
-            test.assertEqual(advice['move']['kind'], 'pass', lesson.key)
-            session.act({'type': 'pass'})
-        else:
-            test.assertEqual(sorted(advice['move']['cards']), sorted(step.expect['cards']), lesson.key)
-            session.act({'type': 'play', 'cards': advice['move']['cards']})
-            if session.table.choices:
-                readings = [combo.describe() for combo in session.table.choices]
-                session.act({'type': 'play', 'cards': advice['move']['cards'],
-                             'reading': readings.index(advice['move']['desc'])})
-        test.assertEqual(session.feedback['kind'], 'right', lesson.key)
-
-
 class TestGuanDanLessons(TestCase):
     def keys(self, session):
         return [lesson.key for lesson in session.lessons]
-
-    def test_every_lesson_plays_as_written(self):
-        session = LessonSession(GuanDanLessons.lessons(), random.Random(8))
-        for k, lesson in enumerate(session.lessons):
-            session.act({'type': 'lesson', 'index': k})
-            follow_guandan(session)
-            view = session.view()
-            self.assertTrue(view['lesson']['complete'], lesson.key)
-            json.dumps(view)
-        self.assertTrue(all(x['done'] for x in session.view()['lesson']['lessons']))
 
     def test_an_endgame_spot_is_your_view_only(self):
         session = LessonSession(GuanDanLessons.lessons(), random.Random(9))

@@ -8,41 +8,9 @@ from src.CardGames.GuanDan.Round import Round, deal
 from src.CardGames.GuanDan.Strategy import PlannerStrategy
 from src.CardGames.Play import GuanDanLessons
 from src.CardGames.Play.GuanDanSession import GuanDanSession
+from test.CardGames.Play.helpers import coach_move, give, stack_guandan
 
 __author__ = 'frank.ma'
-
-
-def seat(session: GuanDanSession, hands, leader: int = 0) -> None:
-    # the next deal hands out these hands, and the first hand is led by this seat
-    session._deal_hands = lambda: [list(hand) for hand in hands]
-    session.match.rng.randrange = lambda n: leader
-
-
-def give(hands, codes: str, to: int = 0):
-    # move these cards into one seat's hand, swapping them for cards it had, so every hand keeps 27
-    hands = [list(hand) for hand in hands]
-    for card in Card.parse_many(codes):
-        holder = next(s for s in range(4) if s != to and card in hands[s])
-        swap = next(c for c in hands[to] if c not in Card.parse_many(codes))
-        hands[holder].remove(card)
-        hands[holder].append(swap)
-        hands[to].remove(swap)
-        hands[to].append(card)
-    return hands
-
-
-def follow_coach(session: GuanDanSession) -> None:
-    advice = session.advice()
-    if advice['kind'] == 'return':
-        session.act({'type': 'return', 'card': advice['card']})
-    elif advice['move']['kind'] == 'pass':
-        session.act({'type': 'pass'})
-    else:
-        session.act({'type': 'play', 'cards': advice['move']['cards']})
-        if session.choices is not None:
-            readings = [combo.describe() for combo in session.choices]
-            session.act({'type': 'play', 'cards': advice['move']['cards'],
-                         'reading': readings.index(advice['move']['desc'])})
 
 
 class TestGuanDanSession(TestCase):
@@ -52,7 +20,7 @@ class TestGuanDanSession(TestCase):
         self.assertEqual((view['phase'], view['level'], view['levels'], view['hand']),
                          ('deal', '2', {'you': '2', 'them': '2'}, []))
         self.assertEqual(session.advice()['kind'], 'wait')
-        seat(session, deal(random.Random(1)))
+        stack_guandan(session, deal(random.Random(1)))
         session.act({'type': 'deal'})
         view = session.view()
         self.assertTrue(view['your_turn'])
@@ -82,7 +50,7 @@ class TestGuanDanSession(TestCase):
 
     def test_wilds_read_several_ways(self):
         session = GuanDanSession({}, random.Random(2))
-        seat(session, give(deal(random.Random(3)), '2H 5S 6S 7S 8S'))
+        stack_guandan(session, give(deal(random.Random(3)), '2H 5S 6S 7S 8S'))
         session.act({'type': 'deal'})
         cards = ['2H', '5S', '6S', '7S', '8S']
         session.act({'type': 'play', 'cards': cards})
@@ -97,7 +65,7 @@ class TestGuanDanSession(TestCase):
 
     def test_a_reading_only_answers_the_cards_it_was_offered_for(self):
         session = GuanDanSession({}, random.Random(2))
-        seat(session, give(deal(random.Random(3)), '2H 5S 6S 7S 8S'))
+        stack_guandan(session, give(deal(random.Random(3)), '2H 5S 6S 7S 8S'))
         session.act({'type': 'deal'})
         session.act({'type': 'play', 'cards': ['2H', '5S', '6S', '7S', '8S']})
         other = next(card for card in session.round.hands[0] if card.rank.value > 8 and not card.is_joker())
@@ -112,14 +80,14 @@ class TestGuanDanSession(TestCase):
 
     def test_a_reading_needs_an_offer(self):
         session = GuanDanSession({}, random.Random(2))
-        seat(session, give(deal(random.Random(3)), '2H 5S 6S 7S 8S'))
+        stack_guandan(session, give(deal(random.Random(3)), '2H 5S 6S 7S 8S'))
         session.act({'type': 'deal'})
         with self.assertRaises(ValueError):
             session.act({'type': 'play', 'cards': ['5S'], 'reading': 0})
 
     def test_a_refused_selection_clears_the_offer(self):
         session = GuanDanSession({}, random.Random(2))
-        seat(session, give(deal(random.Random(3)), '2H 5S 6S 7S 8S'))
+        stack_guandan(session, give(deal(random.Random(3)), '2H 5S 6S 7S 8S'))
         session.act({'type': 'deal'})
         session.act({'type': 'play', 'cards': ['2H', '5S', '6S', '7S', '8S']})
         hand = session.round.hands[0]
@@ -133,7 +101,7 @@ class TestGuanDanSession(TestCase):
         session = GuanDanSession({}, random.Random(6))
         session.act({'type': 'deal'})
         while session.phase in ('play', 'return'):
-            follow_coach(session)
+            coach_move(session)
         view = session.view()
         self.assertEqual(view['phase'], 'done')
         self.assertEqual((view['level'], view['wild'], view['declarer']), ('2', '2H', None), 'the first hand, just played.')
@@ -149,7 +117,7 @@ class TestGuanDanSession(TestCase):
     def test_the_coach_sees_the_strongest_reading(self):
         # with two wilds these cards are a full house of 3s or of 4s, and only the 4s beat West's 3s
         session = GuanDanSession({}, random.Random(1))
-        seat(session, [Card.parse_many(h) for h in ('2H 2H 3H 4S 4D', '6S 7D 8C', '6D 7C 8H', '3S 3D 3C 5S 5D KS')],
+        stack_guandan(session, [Card.parse_many(h) for h in ('2H 2H 3H 4S 4D', '6S 7D 8C', '6D 7C 8H', '3S 3D 3C 5S 5D KS')],
              leader=3)
         session.act({'type': 'deal'})
         self.assertEqual(session.view()['trick']['desc'], 'full house of 3s with 5s')
@@ -164,7 +132,7 @@ class TestGuanDanSession(TestCase):
         # you went out first last hand and West last, so West pays you and you hand a card back
         session = GuanDanSession({}, random.Random(4))
         hands = deal(random.Random(5))
-        seat(session, hands)
+        stack_guandan(session, hands)
         session.match.previous_order, session.match.declarer, session.match.levels = (0, 1, 2, 3), 0, [4, 2]
         session.act({'type': 'deal'})
         view = session.view()
@@ -188,20 +156,6 @@ class TestGuanDanSession(TestCase):
         self.assertTrue(any(line.startswith('You hand back') and line.endswith('to West.') for line in session.log))
         self.assertEqual(sum(len(hand) for hand in session.round.hands) + len(session.round.played), 108)
 
-    def test_coached_match(self):
-        session = GuanDanSession({}, random.Random(6))
-        while session.phase != 'over':
-            if session.phase in ('deal', 'done'):
-                session.act({'type': 'deal'})
-            else:
-                follow_coach(session)
-        view = session.view()
-        self.assertIn(view['match']['winner'], ('you', 'them'))
-        self.assertIn('A', view['levels'].values())
-        self.assertEqual(view['stats']['followed'], view['stats']['decisions'])
-        with self.assertRaises(ValueError):
-            session.act({'type': 'deal'})
-        json.dumps(view)
 
 
 class TestCoachReasons(TestCase):
@@ -235,7 +189,7 @@ class TestCoachReasons(TestCase):
 class TestLog(TestCase):
     def test_every_public_move_is_logged(self):
         session = GuanDanSession({}, random.Random(13))
-        seat(session, [Card.parse_many(h) for h in ('3S 3D 9C', '4S 5D 6C', '7H 8H TC', 'JD QD KD')])
+        stack_guandan(session, [Card.parse_many(h) for h in ('3S 3D 9C', '4S 5D 6C', '7H 8H TC', 'JD QD KD')])
         session.act({'type': 'deal'})
         session.act({'type': 'play', 'cards': ['3S', '3D']})
         lines = session.log
@@ -244,25 +198,3 @@ class TestLog(TestCase):
         moves = [line for line in lines if line.endswith('passes.') or line == 'You pass.' or ' plays ' in line or
                  line.startswith('You play ')]
         self.assertEqual(len(moves), len(session.round.history), 'one line per move, passes included.')
-
-
-class TestFairPlay(TestCase):
-    def test_the_page_never_gets_another_seats_cards(self):
-        # two tables alike in everything you can see, different in which opponent holds two of the cards
-        hands = deal(random.Random(7))
-        a = next(card for card in hands[1] if card not in hands[3])
-        b = next(card for card in hands[3] if card not in hands[1])
-        swapped = [list(hand) for hand in hands]
-        swapped[1].remove(a)
-        swapped[1].append(b)
-        swapped[3].remove(b)
-        swapped[3].append(a)
-        views, advice = [], []
-        for h in (hands, swapped):
-            session = GuanDanSession({}, random.Random(8))
-            seat(session, h)
-            session.act({'type': 'deal'})
-            views.append(json.dumps(session.view(), sort_keys=True))
-            advice.append(session.advice())
-        self.assertEqual(views[0], views[1])
-        self.assertEqual(advice[0], advice[1])

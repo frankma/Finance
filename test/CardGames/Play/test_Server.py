@@ -1,11 +1,8 @@
-import json
-import threading
-import urllib.error
-import urllib.request
 from unittest import TestCase
 
 from src.CardGames.Play.Registry import lobby, playable
-from src.CardGames.Play.Server import build_id, make_server
+from src.CardGames.Play.Server import build_id
+from test.CardGames.Play.helpers import Served, coach_actions
 
 __author__ = 'frank.ma'
 
@@ -13,105 +10,85 @@ __author__ = 'frank.ma'
 class TestServer(TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.server = make_server(port=0, seed=1)
-        cls.base = 'http://127.0.0.1:%i' % cls.server.server_address[1]
-        threading.Thread(target=cls.server.serve_forever, daemon=True).start()
+        cls.served = Served(seed=1)
 
     @classmethod
     def tearDownClass(cls):
-        cls.server.shutdown()
-        cls.server.server_close()
+        cls.served.stop()
 
-    def request(self, method, path, body=None, headers=False):
-        data = json.dumps(body).encode('utf-8') if body is not None else None
-        req = urllib.request.Request(self.base + path, data=data, method=method,
-                                     headers={'Content-Type': 'application/json'})
-        try:
-            with urllib.request.urlopen(req) as res:
-                return (res.status, res.read(), res.headers) if headers else (res.status, res.read())
-        except urllib.error.HTTPError as e:
-            return (e.code, e.read(), e.headers) if headers else (e.code, e.read())
+    def request(self, method, path, body=None):
+        return self.served.request(method, path, body)
+
+    def new(self, game, options=None):
+        return self.served.call('POST', '/api/%s/new' % game, options or {})
 
     def test_only_the_game_list_is_shared(self):
         # the Lab, opened as a file, may ask whether the server is up; no other page may read a game in progress
-        self.assertEqual(self.request('GET', '/api/games', headers=True)[2].get('Access-Control-Allow-Origin'), '*')
-        sid = json.loads(self.request('POST', '/api/blackjack/new', {})[1])['id']
+        self.assertEqual(self.request('GET', '/api/games')[2].get('Access-Control-Allow-Origin'), '*')
+        sid = self.new('blackjack')['id']
         for path in ('/api/blackjack/%s' % sid, '/api/blackjack/%s/advice' % sid, '/'):
-            self.assertIsNone(self.request('GET', path, headers=True)[2].get('Access-Control-Allow-Origin'), path)
+            self.assertIsNone(self.request('GET', path)[2].get('Access-Control-Allow-Origin'), path)
 
     def test_every_response_names_its_build(self):
         for path in ('/', '/api/games', '/nothing'):
-            self.assertEqual(self.request('GET', path, headers=True)[2].get('X-Card-Games-Build'), build_id(), path)
+            self.assertEqual(self.request('GET', path)[2].get('X-Card-Games-Build'), build_id(), path)
 
     def test_pages(self):
         for path in ('/', '/blackjack', '/holdem', '/guandan', '/blackjack/rules', '/holdem/rules', '/guandan/rules',
-                     '/static/rules-guandan.html', '/static/rules.html', '/static/holdem.html', '/static/theme.css', '/static/common.js', '/static/common.css', '/lab'):
+                     '/static/rules-guandan.html', '/static/rules.html', '/static/holdem.html', '/static/theme.css',
+                     '/static/common.js', '/static/common.css', '/lab'):
             self.assertEqual(self.request('GET', path)[0], 200, path)
-        for path in ('/poker', '/poker/rules', '/blackjack/rules/x', '/static/Server.py', '/static/..%2FServer.py', '/nothing'):
+        for path in ('/poker', '/poker/rules', '/blackjack/rules/x', '/static/Server.py', '/static/..%2FServer.py',
+                     '/nothing'):
             self.assertEqual(self.request('GET', path)[0], 404, path)
 
-    def test_api(self):
-        status, body = self.request('GET', '/api/games')
-        self.assertEqual(status, 200)
-        self.assertEqual(json.loads(body), lobby())
+    def test_a_hand_of_each_game_over_the_api(self):
+        # deal, then ask the coach and play its move until the hand is over; a bad action is a 400 with a reason
+        self.assertEqual(self.request('GET', '/api/games')[1], lobby())
         self.assertEqual(playable(), ['blackjack', 'holdem', 'guandan'])
-        status, body = self.request('POST', '/api/blackjack/new', {'rules': 'h17'})
-        made = json.loads(body)
-        sid = made['id']
-        self.assertEqual(made['view']['phase'], 'bet')
-        status, body = self.request('POST', '/api/blackjack/%s/act' % sid, {'type': 'deal', 'bet': 10})
-        self.assertEqual(status, 200)
-        view = json.loads(body)
-        self.assertIn(view['phase'], ('play', 'done'))
-        self.assertEqual(json.loads(self.request('GET', '/api/blackjack/%s' % sid)[1]), view)
-        advice = json.loads(self.request('GET', '/api/blackjack/%s/advice' % sid)[1])
-        self.assertIn('reason', advice)
-        status, body = self.request('POST', '/api/blackjack/%s/act' % sid, {'type': 'move', 'move': 'fly'})
-        self.assertEqual((status, json.loads(body)['error']), (400, "unknown move 'fly'."))
+        for game, options, bad, error in (
+                ('blackjack', {'rules': 'h17'}, {'type': 'move', 'move': 'fly'}, "unknown move 'fly'."),
+                ('holdem', {'seats': '2'}, {'type': 'move', 'move': 'raise', 'to': 1}, 'it is not your turn.'),
+                ('guandan', {}, {'type': 'play', 'cards': ['ZZ']}, "unknown cards ['ZZ'].")):
+            with self.subTest(game):
+                made = self.new(game, options)
+                sid, view = made['id'], made['view']
+                route = '/api/%s/%s' % (game, sid)
+                for _ in range(200 if game != 'guandan' else 3):
+                    advice = self.served.call('GET', route + '/advice')
+                    if advice['kind'] == 'wait' or (view['phase'] == 'done' and game != 'blackjack'):
+                        view = self.served.call('POST', route + '/act', {'type': 'deal'})
+                        continue
+                    if advice['kind'] == 'move' and game != 'guandan':
+                        self.assertIn(advice['move'], view['legal'])
+                    action = coach_actions(view, advice)[0]
+                    view = self.served.call('POST', route + '/act', action)
+                    if view.get('choices'):
+                        view = self.served.call('POST', route + '/act',
+                                                dict(action, reading=view['choices'].index(advice['move']['desc'])))
+                    self.assertEqual(self.served.call('GET', route), view, 'what the page reads back is what it got.')
+                    if view['phase'] == 'done':
+                        break
+                status, body, _ = self.request('POST', route + '/act', bad)
+                self.assertEqual((status, body['error']), (400, error))
+                self.assertEqual(self.request('GET', '/api/%s/%s' % ('blackjack' if game != 'blackjack' else 'holdem',
+                                                                     sid))[0], 404, 'a session belongs to its game.')
         self.assertEqual(self.request('GET', '/api/blackjack/unknown')[0], 404)
         self.assertEqual(self.request('POST', '/api/poker/new', {})[0], 404)
-        self.assertEqual(self.request('GET', '/api/holdem/%s' % sid)[0], 404, 'a session belongs to its game.')
-
-    def test_holdem_api(self):
-        sid = json.loads(self.request('POST', '/api/holdem/new', {'seats': '2'})[1])['id']
-        view = json.loads(self.request('POST', '/api/holdem/%s/act' % sid, {'type': 'deal'})[1])
-        while view['phase'] == 'play':
-            advice = json.loads(self.request('GET', '/api/holdem/%s/advice' % sid)[1])
-            self.assertIn(advice['move'], view['legal'])
-            status, body = self.request('POST', '/api/holdem/%s/act' % sid,
-                                        {'type': 'move', 'move': advice['move'], 'to': advice['to']})
-            self.assertEqual(status, 200)
-            view = json.loads(body)
-        self.assertEqual(view['phase'], 'done')
-        status, body = self.request('POST', '/api/holdem/%s/act' % sid, {'type': 'move', 'move': 'raise', 'to': 1})
-        self.assertEqual((status, json.loads(body)['error']), (400, 'it is not your turn.'))
-
-    def test_guandan_api(self):
-        sid = json.loads(self.request('POST', '/api/guandan/new', {})[1])['id']
-        view = json.loads(self.request('POST', '/api/guandan/%s/act' % sid, {'type': 'deal'})[1])
-        for _ in range(3):
-            if not view['your_turn']:
-                break
-            advice = json.loads(self.request('GET', '/api/guandan/%s/advice' % sid)[1])
-            move = advice['move']
-            action = {'type': 'pass'} if move['kind'] == 'pass' else {'type': 'play', 'cards': move['cards']}
-            status, body = self.request('POST', '/api/guandan/%s/act' % sid, action)
-            self.assertEqual(status, 200)
-            view = json.loads(body)
-            if view['choices']:
-                action['reading'] = view['choices'].index(move['desc'])
-                view = json.loads(self.request('POST', '/api/guandan/%s/act' % sid, action)[1])
-        status, body = self.request('POST', '/api/guandan/%s/act' % sid, {'type': 'play', 'cards': ['ZZ']})
-        self.assertEqual(status, 400)
 
     def test_lessons(self):
-        status, body = self.request('POST', '/api/blackjack/new', {'mode': 'learn'})
-        self.assertEqual(status, 200)
-        made = json.loads(body)
+        made = self.new('blackjack', {'mode': 'learn'})
         self.assertEqual(made['view']['lesson']['index'], 0)
-        view = json.loads(self.request('POST', '/api/blackjack/%s/act' % made['id'],
-                                       {'type': 'move', 'move': 'stand'})[1])
+        view = self.served.call('POST', '/api/blackjack/%s/act' % made['id'], {'type': 'move', 'move': 'stand'})
         self.assertEqual(view['lesson']['feedback']['kind'], 'right')
-        made = json.loads(self.request('POST', '/api/guandan/new', {'mode': 'learn'})[1])
-        self.assertEqual(made['view']['lesson']['title'], 'Beat it or pass')
-        self.assertEqual([g['lessons'] for g in lobby()], [6, 4, 7])
+        self.assertEqual(self.new('guandan', {'mode': 'learn'})['view']['lesson']['title'], 'Beat it or pass')
+        # Omaha's lessons are apart from hold'em's, each with its own link in the lobby
+        self.assertEqual(self.new('holdem', {'mode': 'learn', 'variant': 'omaha'})['view']['lesson']['title'],
+                         'One heart is not a flush')
+        self.assertEqual(self.new('holdem', {'mode': 'learn'})['view']['lesson']['title'],
+                         'Call when the price is right')
+        games = {g['name']: g for g in lobby()}
+        self.assertEqual([games[name]['lessons'] for name in playable()], [6, 4, 7])
+        self.assertEqual([(p['label'], p['query'], p['n']) for p in games['holdem']['practice']],
+                         [("Practice Hold'em", 'mode=learn', 4), ('Practice Omaha', 'mode=learn&variant=omaha', 4)])
+        self.assertEqual([p['label'] for p in games['guandan']['practice']], ['Practice'])
