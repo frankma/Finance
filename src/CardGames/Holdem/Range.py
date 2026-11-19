@@ -75,8 +75,8 @@ def board_strength(hole: List[Card], board: List[Card], rules) -> float:
 def _actions(o: Observation) -> Dict[int, List[Tuple[Street, Action, float, int]]]:
     # each seat's calls and raises: street, action, its size as a share of the pot, and the raises before it this street
     actions = {}  # type: Dict[int, List[Tuple[Street, Action, float, int]]]
-    pot, street_now, current, raises = o.rules.small_blind + o.rules.big_blind, Street.PREFLOP, o.big_blind, 0
-    bets = {}  # type: Dict[int, int]
+    pot, street_now, current, raises = sum(o.posted), Street.PREFLOP, o.big_blind, 0
+    bets = dict(enumerate(o.posted))  # type: Dict[int, int]  # the blinds are part of what a first move puts in
     for seat, street, move in o.history:
         if street != street_now:
             street_now, current, raises, bets = street, 0, 0, {}

@@ -3,8 +3,8 @@ from unittest import TestCase
 
 from src.CardGames.Core.Card import Card
 from src.CardGames.Holdem.Equity import simulate_equity
-from src.CardGames.Holdem.Range import (FLUSH_DRAW, MADE, NOTHING, TOP_PAIR, LOW_PAIR, WEIGHT_FLOOR, betting_weights,
-                                        board_strength, preflop_percentile)
+from src.CardGames.Holdem.Range import (FLUSH_DRAW, MADE, NOTHING, TOP_PAIR, LOW_PAIR, WEIGHT_FLOOR, _actions,
+                                        betting_weights, board_strength, preflop_percentile)
 from src.CardGames.Holdem.Round import Action, Move, Round
 from src.CardGames.Holdem.Rules import OMAHA, Rules
 from src.CardGames.Core.Shoe import Shoe
@@ -52,6 +52,19 @@ class TestBoardStrength(TestCase):
 
     def test_no_draw_once_the_board_is_complete(self):
         self.assertEqual(board_strength(P('AH 5H'), P('KH 9H 2C 3D 8S'), RULES), NOTHING)
+
+
+class TestBetSize(TestCase):
+    def test_a_bet_is_measured_against_the_real_pot(self):
+        # you raise to 6 from the small blind and the big blind calls: 12 in the pot, so a bet of 6 is half of it
+        game = spot('AH 5D', 'QC 8D', 'KH 9S 2C 4S JD', (0, Action.RAISE, 6), (1, Action.CALL, 6), (1, Action.RAISE, 6))
+        o = game.observation(0)
+        self.assertEqual(o.pot, 18)
+        self.assertEqual(_actions(o)[1][-1][2], 0.5)
+
+    def test_a_short_blind_counts_what_it_posted(self):
+        game = Round([200, 1, 200], RULES, 0, shoe=Shoe(1, rng=random.Random(0)))
+        self.assertEqual(game.observation(0).posted, (0, 1, 2))
 
 
 class TestBettingWeights(TestCase):

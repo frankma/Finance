@@ -2,8 +2,11 @@ import json
 import random
 from unittest import TestCase
 
-from src.CardGames.Core.Card import Card
-from src.CardGames.GuanDan.Round import deal
+from src.CardGames.Core.Card import Card, Rank
+from src.CardGames.GuanDan.Combo import interpret
+from src.CardGames.GuanDan.Round import Round, deal
+from src.CardGames.GuanDan.Strategy import PlannerStrategy
+from src.CardGames.Play import GuanDanLessons
 from src.CardGames.Play.GuanDanSession import GuanDanSession
 
 __author__ = 'frank.ma'
@@ -92,6 +95,57 @@ class TestGuanDanSession(TestCase):
         self.assertEqual(session.round.history[0][1].describe(), 'straight to 9')
         self.assertIsNone(session.view()['choices'])
 
+    def test_a_reading_only_answers_the_cards_it_was_offered_for(self):
+        session = GuanDanSession({}, random.Random(2))
+        seat(session, give(deal(random.Random(3)), '2H 5S 6S 7S 8S'))
+        session.act({'type': 'deal'})
+        session.act({'type': 'play', 'cards': ['2H', '5S', '6S', '7S', '8S']})
+        other = next(card for card in session.round.hands[0] if card.rank.value > 8 and not card.is_joker())
+        count = session.view()['seats'][0]['count']
+        with self.assertRaises(ValueError) as error:
+            session.act({'type': 'play', 'cards': [str(other)], 'reading': 0})
+        self.assertIn('press Play', str(error.exception))
+        self.assertEqual(session.view()['seats'][0]['count'], count, 'nothing is played.')
+        session.act({'type': 'play', 'cards': [str(other)]})  # a new selection, asked for afresh
+        self.assertEqual(session.view()['seats'][0]['count'], count - 1)
+        self.assertIsNone(session.view()['choices'])
+
+    def test_a_reading_needs_an_offer(self):
+        session = GuanDanSession({}, random.Random(2))
+        seat(session, give(deal(random.Random(3)), '2H 5S 6S 7S 8S'))
+        session.act({'type': 'deal'})
+        with self.assertRaises(ValueError):
+            session.act({'type': 'play', 'cards': ['5S'], 'reading': 0})
+
+    def test_a_refused_selection_clears_the_offer(self):
+        session = GuanDanSession({}, random.Random(2))
+        seat(session, give(deal(random.Random(3)), '2H 5S 6S 7S 8S'))
+        session.act({'type': 'deal'})
+        session.act({'type': 'play', 'cards': ['2H', '5S', '6S', '7S', '8S']})
+        hand = session.round.hands[0]
+        low = min((c for c in hand if 2 < c.rank.value <= 14), key=lambda c: c.rank.value)
+        high = max((c for c in hand if 2 < c.rank.value <= 14), key=lambda c: c.rank.value)
+        with self.assertRaises(ValueError):
+            session.act({'type': 'play', 'cards': [str(low), str(high)]})
+        self.assertIsNone(session.view()['choices'])
+
+    def test_the_header_describes_the_hand_on_the_table(self):
+        session = GuanDanSession({}, random.Random(6))
+        session.act({'type': 'deal'})
+        while session.phase in ('play', 'return'):
+            follow_coach(session)
+        view = session.view()
+        self.assertEqual(view['phase'], 'done')
+        self.assertEqual((view['level'], view['wild'], view['declarer']), ('2', '2H', None), 'the first hand, just played.')
+        self.assertIn(view['levels']['you'] if view['result']['winners'] == 'you' else view['levels']['them'],
+                      ('3', '4', '5'), 'the score has moved on.')
+        winners = view['result']['winners']
+        next_level = view['levels'][winners]
+        session.act({'type': 'deal'})
+        view = session.view()
+        self.assertEqual((view['level'], view['declarer']), (next_level, winners), 'the next hand, once it is dealt.')
+        self.assertTrue(view['wild'].startswith(next_level), view['wild'])
+
     def test_the_coach_sees_the_strongest_reading(self):
         # with two wilds these cards are a full house of 3s or of 4s, and only the 4s beat West's 3s
         session = GuanDanSession({}, random.Random(1))
@@ -148,6 +202,34 @@ class TestGuanDanSession(TestCase):
         with self.assertRaises(ValueError):
             session.act({'type': 'deal'})
         json.dumps(view)
+
+
+class TestCoachReasons(TestCase):
+    def reasons(self, hands, leader, scripts):
+        session = GuanDanLessons._spot(hands, leader, scripts)(random.Random(0))
+        advice = session.advice()
+        return ' / '.join([advice['reason']] + [a['reason'] for a in advice['alternatives']])
+
+    def test_seats_go_by_their_names_at_the_table(self):
+        text = self.reasons(['9C 9D 5S 6H JC', '3D 4H KS', 'QH QS TD', '7S 7D AH'], 3, {3: ['7S 7D']})
+        self.assertIn('West (only 1 card)', text)
+        self.assertNotIn('seat ', text)
+
+    def test_a_seat_that_went_out_is_called_out(self):
+        text = self.reasons(['9C 9D 5S 6H JC', '3D 4H KS', 'QH QS TD', '7S 7D'], 3, {3: ['7S 7D']})
+        self.assertIn('West is out', text)
+        self.assertNotIn('0 cards', text)
+
+    def test_a_bomb_on_a_seat_that_went_out(self):
+        text = self.reasons(['9C 9D 9S 9H 5S 6H', '3D 4H KS', 'QH QS TD', '7S 7D'], 3, {3: ['7S 7D']})
+        self.assertNotIn('0 cards', text)
+        self.assertIn('bomb', text)
+
+    def test_the_planner_on_its_own_says_seat(self):
+        o = Round([Card.parse_many(h) for h in ('9C 9D 5S', '3D 4H KS', 'QH QS TD', '7S 7D AH')], Rank.TWO, 3)
+        o.apply(3, interpret(Card.parse_many('7S 7D'), Rank.TWO)[0])
+        ranked = PlannerStrategy().rank(o.observation(0), o.legal_moves(0))
+        self.assertTrue(any('seat 3' in c.reason for c in ranked))
 
 
 class TestLog(TestCase):

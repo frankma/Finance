@@ -4,6 +4,7 @@ from unittest import TestCase
 
 from src.CardGames.Core.Card import Card, Rank
 from src.CardGames.GuanDan.Combo import ComboType, interpret
+from src.CardGames.Holdem.Equity import outs
 from src.CardGames.Holdem.HandEvaluator import HandCategory, describe, evaluate, evaluate_omaha
 from src.CardGames.Play.Registry import GAMES
 from src.CardGames.Play.Server import STATIC
@@ -78,6 +79,15 @@ class TestRulesText(TestCase):
         self.assertEqual(evaluate(hole + board).category, HandCategory.STRAIGHT_FLUSH, 'a royal flush in hold\'em.')
         self.assertEqual(describe(evaluate_omaha(hole, board)), 'Ace high')
         self.assertEqual(describe(evaluate_omaha(Card.parse_many('AH 9H 7C 2S'), board)), 'Flush, ace high')
+
+    def test_holdem_outs_example_counts_as_described(self):
+        body = re.search(r'<section id="outs">(.*?)</section>', read('rules-holdem.html'), re.S).group(1)
+        found = outs(Card.parse_many('AH 5H'), Card.parse_many('KH 9H 2C'))
+        self.assertEqual({r.value for r in {card.rank for card in found.by_category[HandCategory.PAIR]}}, {14, 5},
+                         'only your own ace or five pairs up; a card that pairs the board helps everyone.')
+        self.assertEqual((found.n_outs, len(found.by_category[HandCategory.FLUSH])), (15, 9))
+        self.assertIn('counts 15', body)
+        self.assertNotIn('pair the board, which help you', body)
 
     def test_holdem_showdown_example_splits(self):
         board = Card.parse_many('7D 8S 9H TD JS')
