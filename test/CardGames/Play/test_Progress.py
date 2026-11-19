@@ -3,8 +3,6 @@ import os
 import random
 import re
 import tempfile
-import threading
-import urllib.request
 from unittest import TestCase
 
 from src.CardGames.GuanDan.Round import deal
@@ -13,18 +11,12 @@ from src.CardGames.Play.BlackJackSession import BlackJackSession
 from src.CardGames.Play.GuanDanSession import GuanDanSession
 from src.CardGames.Play.HoldemSession import HoldemSession
 from src.CardGames.Play.Lesson import LessonSession
-from src.CardGames.Play.Server import MAX_SESSIONS, Sessions, make_server
+from src.CardGames.Play.Server import MAX_SESSIONS, Sessions
+from test.CardGames.Play.helpers import Served, play_hand, stack_blackjack
 
 __author__ = 'frank.ma'
 
 CARD = re.compile(r'"(?:[2-9TJQKA][SHDC]|BJ|RJ)"')
-
-
-def play_hand(session: HoldemSession) -> None:
-    session.act({'type': 'deal'})
-    while session.phase == 'play':
-        advice = session.advice()
-        session.act({'type': 'move', 'move': advice['move'], 'to': advice['to']})
 
 
 class TestRestore(TestCase):
@@ -40,14 +32,11 @@ class TestRestore(TestCase):
         self.assertEqual(back.view()['stats']['net'], session.view()['stats']['net'])
         self.assertIn('restarted', back.log[-1])
         self.assertEqual(back.view()['shoe']['cards_left'], back.view()['shoe']['n_cards'], 'a fresh shoe.')
-
-    def test_blackjack_round_in_play_does_not_count(self):
-        session = BlackJackSession({}, random.Random(2))
+        stack_blackjack(session, 'TS 6D 9H KC')  # 19 against a 6, so the round waits for your move
         session.act({'type': 'deal', 'bet': 20})
         self.assertEqual(session.phase, 'play')
-        back = BlackJackSession({}, random.Random(3))
         back.restore(session.progress())
-        self.assertEqual((back.phase, back.bankroll), ('bet', 1000.0))
+        self.assertEqual((back.phase, back.bankroll), ('bet', session.bankroll), 'a round in play does not count.')
 
     def test_holdem(self):
         session = HoldemSession({'seats': 4}, random.Random(4))
@@ -61,14 +50,11 @@ class TestRestore(TestCase):
         self.assertEqual(back.view()['stats'], session.view()['stats'])
         with self.assertRaises(ValueError):
             HoldemSession({'seats': 6}, random.Random(6)).restore(session.progress())
-
-    def test_holdem_hand_in_play_does_not_count(self):
-        session = HoldemSession({'seats': 2}, random.Random(20))
-        play_hand(session)
         settled = session.progress()
         session.act({'type': 'deal'})
         self.assertEqual(session.phase, 'play')
-        self.assertEqual(session.progress(), settled, 'the same hands, button and stacks as before the deal.')
+        self.assertEqual(session.progress(), settled, 'a hand in play does not count: the hands, button and stacks '
+                                                      'are as before the deal.')
 
     def test_guandan_match_carries_on(self):
         session = GuanDanSession({}, random.Random(7))
@@ -126,65 +112,45 @@ class TestNoCardsAreSaved(TestCase):
             json.loads(text)
 
 
-class Server(object):
-    # a play server on a free port, with its progress in this file
-    def __init__(self, path):
-        self.server = make_server(port=0, progress=path)
-        self.base = 'http://127.0.0.1:%i' % self.server.server_address[1]
-        threading.Thread(target=self.server.serve_forever, daemon=True).start()
-
-    def call(self, method, route, body=None):
-        data = json.dumps(body).encode('utf-8') if body is not None else None
-        request = urllib.request.Request(self.base + route, data=data, method=method,
-                                         headers={'Content-Type': 'application/json'})
-        with urllib.request.urlopen(request) as res:
-            return json.loads(res.read())
-
-    def stop(self):
-        self.server.shutdown()
-        self.server.server_close()
-
-
 class TestAcrossRestarts(TestCase):
     def setUp(self):
         self.folder = tempfile.TemporaryDirectory()
         self.addCleanup(self.folder.cleanup)
         self.path = os.path.join(self.folder.name, 'nested', 'progress.json')
 
-    def test_a_session_survives_a_restart(self):
-        first = Server(self.path)
-        sid = first.call('POST', '/api/blackjack/new', {'rules': 'h17'})['id']
-        view = first.call('POST', '/api/blackjack/%s/act' % sid, {'type': 'deal', 'bet': 25})
+    def test_sessions_survive_a_restart(self):
+        # a table and a set of lessons of each kind, picked up by a new server from what the old one saved
+        first = Served(progress=self.path)
+        table = first.call('POST', '/api/blackjack/new', {'rules': 'h17'})['id']
+        view = first.call('POST', '/api/blackjack/%s/act' % table, {'type': 'deal', 'bet': 25})
         while view['phase'] == 'play':
-            advice = first.call('GET', '/api/blackjack/%s/advice' % sid)
-            view = first.call('POST', '/api/blackjack/%s/act' % sid, {'type': 'move', 'move': advice['move']})
+            advice = first.call('GET', '/api/blackjack/%s/advice' % table)
+            view = first.call('POST', '/api/blackjack/%s/act' % table, {'type': 'move', 'move': advice['move']})
+        learn = first.call('POST', '/api/blackjack/new', {'mode': 'learn'})['id']
+        first.call('POST', '/api/blackjack/%s/act' % learn, {'type': 'move', 'move': 'stand'})
+        omaha = first.call('POST', '/api/holdem/new', {'variant': 'omaha', 'seats': '2'})['id']
+        omaha_learn = first.call('POST', '/api/holdem/new', {'mode': 'learn', 'variant': 'omaha'})['id']
+        first.call('POST', '/api/holdem/%s/act' % omaha_learn, {'type': 'lesson', 'index': 2})
         first.stop()
         with open(self.path, encoding='utf-8') as f:
-            text = f.read()
-        self.assertIsNone(CARD.search(text), 'the file holds no cards.')
-        second = Server(self.path)
+            self.assertIsNone(CARD.search(f.read()), 'the file holds no cards.')
+        second = Served(progress=self.path)
         try:
-            again = second.call('GET', '/api/blackjack/%s' % sid)
-            self.assertEqual(again['bankroll'], view['bankroll'])
-            self.assertEqual(again['stats']['rounds'], 1)
-            self.assertEqual(again['rules'], view['rules'], 'the same table rules.')
-            self.assertEqual(second.call('POST', '/api/blackjack/%s/act' % sid, {'type': 'deal', 'bet': 5})['last_bet'], 5)
-        finally:
-            second.stop()
-
-    def test_lessons_survive_a_restart(self):
-        first = Server(self.path)
-        sid = first.call('POST', '/api/blackjack/new', {'mode': 'learn'})['id']
-        first.call('POST', '/api/blackjack/%s/act' % sid, {'type': 'move', 'move': 'stand'})
-        first.stop()
-        second = Server(self.path)
-        try:
-            self.assertTrue(second.call('GET', '/api/blackjack/%s' % sid)['lesson']['lessons'][0]['done'])
+            again = second.call('GET', '/api/blackjack/%s' % table)
+            self.assertEqual((again['bankroll'], again['stats']['rounds'], again['rules']),
+                             (view['bankroll'], 1, view['rules']), 'the same bankroll and table rules.')
+            self.assertEqual(second.call('POST', '/api/blackjack/%s/act' % table, {'type': 'deal', 'bet': 5})['last_bet'],
+                             5)
+            self.assertTrue(second.call('GET', '/api/blackjack/%s' % learn)['lesson']['lessons'][0]['done'])
+            # the variant is an option of the table, so a restart rebuilds Omaha, not hold'em, for play and lessons
+            self.assertEqual(second.call('GET', '/api/holdem/%s' % omaha)['variant'], 'omaha')
+            lesson = second.call('GET', '/api/holdem/%s' % omaha_learn)
+            self.assertEqual((lesson['lesson']['title'], lesson['variant']), ('Four cards make a wrap', 'omaha'))
         finally:
             second.stop()
 
     def test_a_session_belongs_to_its_game(self):
-        first = Server(self.path)
+        first = Served(progress=self.path)
         sid = first.call('POST', '/api/blackjack/new', {})['id']
         first.stop()
         sessions = Sessions(path=self.path)
