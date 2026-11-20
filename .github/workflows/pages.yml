@@ -1,7 +1,7 @@
 name: pages
 
-# the card games as a static site on GitHub Pages: the same pages as the local server, with the game's Python run in
-# the browser (src/CardGames/Play/StaticSite.py). Needs Pages turned on with "GitHub Actions" as its source.
+# the GitHub Pages site (viz/build_site.py): a front page linking each project, each in a folder of its own, the card
+# games among them with their Python run in the browser. Needs Pages turned on with "GitHub Actions" as its source.
 on:
   push:
     branches: [master]
@@ -26,7 +26,7 @@ jobs:
           python-version: "3.12"
           cache: pip
       - run: pip install -r requirements.txt
-      - run: python -m src.CardGames.Play.StaticSite _site --base "/${{ github.event.repository.name }}/"
+      - run: python -m viz.build_site _site --base "/${{ github.event.repository.name }}/"
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site

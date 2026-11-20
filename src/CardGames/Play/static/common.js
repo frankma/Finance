@@ -112,6 +112,13 @@ function staticWording(root) {
   if (STATIC) root.querySelectorAll('[data-static]').forEach(el => { el.textContent = el.dataset.static; });
 }
 staticWording(document);
+// when the games are one part of a bigger site, every page's links lead back to that site's front page first
+(() => {
+  const home = document.querySelector('meta[name="site-home"]'), nav = document.querySelector('nav.links');
+  if (!home || !nav) return;
+  const a = document.createElement('a'); a.href = home.content; a.textContent = 'All projects';
+  nav.prepend(a);
+})();
 
 // examples in a rules text: <span data-cards="AS KD"></span> draws those cards, '_' a face-down one
 function drawExamples(root) {
