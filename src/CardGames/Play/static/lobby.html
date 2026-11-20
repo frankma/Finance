@@ -8,12 +8,18 @@
 <link rel="stylesheet" href="static/theme.css">
 <link rel="stylesheet" href="static/common.css">
 <style>
-.games { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 8px; }
+.games { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 16px; margin-top: 8px; }
 @media (max-width: 860px) { .games { grid-template-columns: minmax(0, 1fr); } }
-.game h2 { font-size: 24px; }
-.game p { font: 400 14.5px/1.5 var(--sans); color: var(--muted); flex: 1; }
+/* each card's parts sit on rows shared across the cards, so titles, choices and links line up however long a blurb */
+.game { display: grid; grid-row: span 5; grid-template-rows: subgrid; row-gap: 10px; align-content: start; margin-bottom: 24px; }
+.game .head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.game .enter { padding: 6px 14px; font-size: 13px; }
+.game h2 { font-size: 24px; margin: 0; }
+.game p { font: 400 14.5px/1.5 var(--sans); color: var(--muted); margin: 0; }
+.game .options { display: flex; flex-direction: column; gap: 6px; }
 .game select { width: 100%; font-family: var(--sans); font-size: 14px; }
 .game label { font: 700 12px/1.2 var(--sans); color: var(--muted); }
+.game .more { display: flex; flex-direction: column; gap: 10px; }
 .soon { opacity: 0.65; }
 </style>
 </head>
@@ -41,18 +47,18 @@
     const games = await api('GET', 'api/games');
     $('games').innerHTML = games.map(g => `
       <div class="box game ${g.available ? '' : 'soon'}">
-        <span class="kicker">${g.available ? 'Open' : 'Coming soon'}</span>
+        <div class="head"><span class="kicker">${g.available ? 'Open' : 'Coming soon'}</span>
+          <button class="primary enter" ${g.available ? '' : 'disabled'} data-game="${g.name}" aria-label="Enter ${g.title}">${g.available ? 'Enter' : 'Not yet'}</button></div>
         <h2>${g.title}</h2>
         <p>${g.blurb}</p>
-        ${g.options.map(o => `<label for="${g.name}-${o.key}">${o.label}</label>
-          <select id="${g.name}-${o.key}" data-key="${o.key}">${o.choices.map(c => `<option value="${c.value}">${c.label}</option>`).join('')}</select>`).join('')}
-        <button class="primary" ${g.available ? '' : 'disabled'} data-game="${g.name}">${g.available ? 'Sit down' : 'Not yet'}</button>
-        <a class="small" href="${g.name}/rules/">How to play ${g.title}</a>
-        ${g.practice.map(p => `<a class="small" href="${g.name}/?${p.query}">${p.label}: ${p.n} guided hands</a>`).join('')}
+        <div class="options">${g.options.map(o => `<label for="${g.name}-${o.key}">${o.label}</label>
+          <select id="${g.name}-${o.key}" data-key="${o.key}">${o.choices.map(c => `<option value="${c.value}">${c.label}</option>`).join('')}</select>`).join('')}</div>
+        <div class="more"><a class="small" href="${g.name}/rules/">How to play ${g.title}</a>
+        ${g.practice.map(p => `<a class="small" href="${g.name}/?${p.query}">${p.label}: ${p.n} guided hands</a>`).join('')}</div>
       </div>`).join('');
     document.querySelectorAll('[data-game]').forEach(b => b.onclick = () => {
       const q = new URLSearchParams();
-      b.parentElement.querySelectorAll('select').forEach(s => q.set(s.dataset.key, s.value));
+      b.closest('.game').querySelectorAll('select').forEach(s => q.set(s.dataset.key, s.value));
       location.href = new URL(b.dataset.game + '/?' + q.toString(), document.baseURI).href;
     });
   } catch (e) { $('err').hidden = false; $('err').textContent = 'Could not reach the play server: ' + e.message; }
