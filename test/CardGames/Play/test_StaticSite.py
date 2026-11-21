@@ -52,6 +52,8 @@ class TestPages(TestCase):
         self.assertIn('<html lang="en" data-mode="static">', html)
         with self.assertRaises(ValueError):
             page('<html lang="en"><head></head>', '/Finance/')
+        self.assertIn('<meta name="site-home" content="/Finance/">',
+                      page('<html lang="en">\n<base href="/">', '/Finance/card-games/', '/Finance/'))
 
 
 class TestBuild(TestCase):

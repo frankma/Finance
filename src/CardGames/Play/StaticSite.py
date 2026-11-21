@@ -26,15 +26,17 @@ LOCAL_BASE = '<base href="/">'
 HTML_TAG = '<html lang="en">'
 
 
-def page(html: str, base: str) -> str:
+def page(html: str, base: str, home: Optional[str] = None) -> str:
     """
     a page of the local server as the static site serves it: under the site's base, and marked so its scripts run the
-    game in the browser
+    game in the browser; home, when the games are one part of a bigger site, is that site's front page
     """
     if LOCAL_BASE not in html or HTML_TAG not in html:
         raise ValueError('expect a page with %s and %s.' % (LOCAL_BASE, HTML_TAG))
-    return html.replace(LOCAL_BASE, '<base href="%s">' % base, 1).replace(
-        HTML_TAG, '<html lang="en" data-mode="static">', 1)
+    head = '<base href="%s">' % base
+    if home is not None:
+        head += '\n<meta name="site-home" content="%s">' % home
+    return html.replace(LOCAL_BASE, head, 1).replace(HTML_TAG, '<html lang="en" data-mode="static">', 1)
 
 
 def code_zip(path: str) -> List[str]:
@@ -53,9 +55,10 @@ def code_zip(path: str) -> List[str]:
     return names
 
 
-def build(out: str, base: str = '/') -> None:
+def build(out: str, base: str = '/', home: Optional[str] = None) -> None:
     """
     write the site to out, replacing what was there
+    :param home: the front page of the site the games are part of, if any, which their pages link back to
     """
     if not (base.startswith('/') and base.endswith('/')):
         raise ValueError('base %r should start and end with /, e.g. /Finance/.' % base)
@@ -73,11 +76,11 @@ def build(out: str, base: str = '/') -> None:
             return f.read()
 
     # each address the local server answers, as a folder with an index page
-    write('index.html', page(read(os.path.join(STATIC, 'lobby.html')), base))
+    write('index.html', page(read(os.path.join(STATIC, 'lobby.html')), base, home))
     for game in GAMES:
         if game.start is not None:
-            write(os.path.join(game.name, 'index.html'), page(read(os.path.join(STATIC, game.page)), base))
-        write(os.path.join(game.name, 'rules', 'index.html'), page(read(os.path.join(STATIC, 'rules.html')), base))
+            write(os.path.join(game.name, 'index.html'), page(read(os.path.join(STATIC, game.page)), base, home))
+        write(os.path.join(game.name, 'rules', 'index.html'), page(read(os.path.join(STATIC, 'rules.html')), base, home))
     write(os.path.join('lab', 'index.html'), read(LAB))
     # the files under static/, the theme among them, and the game code for the browser
     os.makedirs(os.path.join(out, 'static'))
