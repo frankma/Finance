@@ -30,7 +30,7 @@ class TestBuildBettingGamesLab(TestCase):
         self.assertTrue(self.data['quick'])
         self.assertEqual(len(cf['kelly']['trials']['ranks']), self.data['sizes']['trials'])
         self.assertEqual(len(cf['curve']), 201)
-        self.assertEqual([s['key'] for s in cf['sensible']['schemes']], ['all_in', 'kelly', 'pooled'])
+        self.assertEqual([s['key'] for s in cf['sensible']['schemes']], ['all_in', 'kelly', 'pooled_kelly', 'pooled'])
 
     def test_reuse_keeps_the_numbers(self):
         kept = read_data(self.output)

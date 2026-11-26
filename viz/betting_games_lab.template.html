@@ -49,6 +49,7 @@ figure.ex .sub { font: 400 13.5px/1.5 var(--sans); color: var(--muted); max-widt
 .chart .allin { stroke: var(--ai); stroke-width: 2; }
 .chart .kelly { stroke: var(--beni); stroke-width: 2.25; }
 .chart .pooled { stroke: var(--koke); stroke-width: 2.25; }
+.chart .pooledk { stroke: var(--kuri); stroke-width: 2.25; }
 .chart .dot-hl { fill: var(--beni); }
 .chart .dot-ai { fill: var(--ai); }
 .chart .dot-ink { fill: var(--ink); }
@@ -60,7 +61,7 @@ figure.ex .sub { font: 400 13.5px/1.5 var(--sans); color: var(--muted); max-widt
 .legend { display: flex; flex-wrap: wrap; gap: 4px 18px; font: 400 12.5px/1.4 var(--sans); color: var(--muted); }
 .legend span { display: inline-flex; align-items: center; gap: 6px; }
 .legend i { display: inline-block; width: 18px; height: 0; border-top: 2px solid; }
-.legend i.allin { border-color: var(--ai); } .legend i.kelly { border-color: var(--beni); } .legend i.pooled { border-color: var(--koke); }
+.legend i.allin { border-color: var(--ai); } .legend i.kelly { border-color: var(--beni); } .legend i.pooled { border-color: var(--koke); } .legend i.pooledk { border-color: var(--kuri); }
 .legend i.ink { border-color: var(--ink); } .legend i.dash { border-top-style: dashed; } .legend i.ctx { border-color: var(--nezumi); border-top-width: 1px; }
 .legend i.sq { width: 12px; height: 10px; border: 0; }
 .legend i.sq.washi { background: var(--washi); } .legend i.sq.beni { background: var(--beni); }
@@ -162,16 +163,16 @@ footer p { max-width: 90ch; }
   </section>
 
   <section class="sec" id="sensible">
-    <div class="side"><span class="mark">3 · Everyone sensible</span><p>Every player stakes Kelly alone, or the table pools its luck and shares it.</p></div>
+    <div class="side"><span class="mark">3 · Everyone sensible</span><p>Every player stakes Kelly alone, or the table pools its luck and shares it, at the Kelly stake or all in.</p></div>
     <div class="main">
       <h2 id="h2-sensible"></h2>
       <p id="p3"></p>
       <figure class="ex">
-        <h3>The same coins, three ways to play them</h3>
+        <h3>The same coins, four ways to play them</h3>
         <p class="sub">All thousand players ranked under each scheme. Every scheme faces exactly the same flips as stage 1.</p>
-        <div class="legend"><span><i class="allin"></i>Everyone all in</span><span><i class="kelly"></i>Everyone Kelly, alone</span><span><i class="pooled"></i>Everyone pooled, all in</span></div>
+        <div class="legend"><span><i class="allin"></i>Everyone all in</span><span><i class="kelly"></i>Everyone Kelly, alone</span><span><i class="pooledk"></i>Everyone pooled, Kelly</span><span><i class="pooled"></i>Everyone pooled, all in</span></div>
         <div class="chart" id="c-rank3"></div>
-        <figcaption>Pooled: each player stakes everything on their own coin, then the thousand share the table's wealth equally before the next round.</figcaption>
+        <figcaption>Pooled: each player stakes on their own coin, a quarter (Kelly) or everything (all in), then the thousand share the table's wealth equally before the next round.</figcaption>
       </figure>
       <figure class="ex">
         <h3>What each scheme leaves the thousand</h3>
@@ -431,12 +432,12 @@ const DATA = /*__DATA__*/null;
 
   // ---- stage 3 ----
   $('h2-sensible').textContent = 'Kelly alone makes most players a little richer; pooling makes every player ' + fmt(sch.pooled.summary.median) + ' times richer';
-  $('p3').innerHTML = 'When every player stakes Kelly on their own, nobody is ruined and ' + pct(sch.kelly.summary.above_start, 0) + ' end ahead, but the typical player only reaches ' + fmt(sch.kelly.summary.median) + '×, and the ranking is still pure luck: whoever won the most flips is first. Kelly is the best a player can do alone. Together they can do better. If the thousand agree to share the table’s wealth after every round, each player’s own coin is averaged against 999 others, the swings almost cancel, and the pool grows at close to the 5% average the coin offers, ' + pct(S.ensemble_growth, 2) + ' a round in log terms against Kelly’s ' + pct(S.kelly_growth, 2) + '. With the swings gone, staking everything is the sensible choice again.';
+  $('p3').innerHTML = 'When every player stakes Kelly on their own, nobody is ruined and ' + pct(sch.kelly.summary.above_start, 0) + ' end ahead, but the typical player only reaches ' + fmt(sch.kelly.summary.median) + '×, and the ranking is still pure luck: whoever won the most flips is first. Kelly is the best a player can do alone. Together they can do better. If the thousand agree to share the table’s wealth after every round, each player’s own coin is averaged against 999 others and the swings almost cancel. Pooled at the same ' + pct(sch.pooled_kelly.stake, 0) + ' stake, every player ends with ' + fmt(sch.pooled_kelly.summary.median) + '×: what Kelly alone gave only on average (' + fmt(sch.kelly.summary.mean) + '×), now given to everyone. But ' + pct(sch.pooled_kelly.stake, 0) + ' is the Kelly stake for one volatile coin. The pool’s bet is a thousand coins averaged, about 30 times steadier, and Kelly for that bet is to stake everything. All in, the pool grows at close to the 5% average the coin offers, ' + pct(S.ensemble_growth, 2) + ' a round in log terms against Kelly alone’s ' + pct(S.kelly_growth, 2) + ', and every player ends with ' + fmt(sch.pooled.summary.median) + '×.';
   const yr3 = bounds(S.schemes.map(s => s.ranked));
-  const cls = {all_in: 'allin', kelly: 'kelly', pooled: 'pooled'}, short = {all_in: 'all in', kelly: 'Kelly', pooled: 'pooled'};
+  const cls = {all_in: 'allin', kelly: 'kelly', pooled_kelly: 'pooledk', pooled: 'pooled'}, short = {all_in: 'all in', kelly: 'Kelly', pooled_kelly: 'pooled, Kelly', pooled: 'pooled, all in'};
   chart($('c-rank3'), {
     height: 340, log: true, x: [1, G.players], y: yr3, xTicks: [1, 250, 500, 750, 1000], xLabel: 'rank', limits: [{y: 1, label: 'start'}],
-    series: S.schemes.map(s => ({xs: rankX, ys: s.ranked, cls: cls[s.key], end: short[s.key], hlEnd: s.key === 'kelly', endDy: s.key === 'pooled' ? -6 : 0})),
+    series: S.schemes.map(s => ({xs: rankX, ys: s.ranked, cls: cls[s.key], end: short[s.key], hlEnd: s.key === 'kelly', endDy: s.key === 'pooled' ? -6 : s.key === 'pooled_kelly' ? -4 : 0})),
     tip: x => { const r = Math.round(x); return {x: r, html: '<b>' + ord(r) + '</b><br>' + S.schemes.map(s => tipRow(short[s.key], fmt(s.ranked[r - 1]))).join('<br>')}; },
   });
   $('t-schemes').innerHTML = '<thead><tr><th>Scheme</th><th class="num">Stake</th><th class="num">Median</th><th class="num">Average</th><th class="num">Ahead</th><th class="num">Lost over 99%</th><th class="num">Top 1% hold</th></tr></thead><tbody>' +

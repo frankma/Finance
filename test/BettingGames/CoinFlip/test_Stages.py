@@ -50,6 +50,12 @@ class TestStages(TestCase):
         self.assertAlmostEqual(pooled['median'], pooled['mean'], delta=1e-6 * pooled['mean'], msg='and equal.')
         self.assertGreater(pooled['median'], 50 * kelly['median'])
         self.assertAlmostEqual(pooled['top1_share'], 0.01)
+        pk = by['pooled_kelly']['summary']
+        self.assertEqual(by['pooled_kelly']['stake'], 0.25)
+        self.assertEqual(pk['above_start'], 1.0, 'pooled at the Kelly stake, everyone ends ahead too.')
+        self.assertAlmostEqual(pk['median'], 1.0125 ** 100, delta=0.1, msg='close to the Kelly stake\'s average.')
+        self.assertAlmostEqual(pk['median'], kelly['mean'], delta=0.15 * kelly['mean'], msg='everyone gets the average.')
+        self.assertLess(pk['median'], pooled['median'] / 10, 'a pool that stakes a quarter leaves most growth unused.')
         pools = self.three['pools']
         self.assertEqual([p['size'] for p in pools], [1, 2, 5, 10, 50, 100, 1000])
         self.assertTrue(all(a['median'] < b['median'] for a, b in zip(pools, pools[1:])), 'bigger pools grow faster.')

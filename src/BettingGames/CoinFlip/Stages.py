@@ -160,17 +160,20 @@ def pooled_fraction(n: int) -> float:
 def everyone_sensible(seed: int = 101, pool_sizes: Sequence[int] = (1, 2, 5, 10, 50, 100, 1000)) -> Dict:
     """
     stage 3 on stage 1's table: everyone all in (for comparison), everyone Kelly on their own, and the whole table
-    pooling: each stakes on their own coin and the 1000 share the result every round. Then pools of other sizes,
+    pooling: each stakes on their own coin and the 1000 share the result every round, either at the lone player's
+    Kelly stake or all in, which is the Kelly stake of the pool's own, far steadier bet. Then pools of other sizes,
     each staking the growth-optimal fraction for its size
     """
     wins = table(seed)
     schemes = []
-    for key, label, strategy, pool in (('all_in', 'Everyone all in', AllIn(), None),
-                                       ('kelly', 'Everyone Kelly, alone', Kelly(), None),
-                                       ('pooled', 'Everyone pooled, all in', AllIn(), N_PLAYERS)):
-        result = play(BET, strategy, wins, pool_size=pool, keep_paths=True)
+    kelly = BET.kelly_fraction()
+    for key, label, stake, pool in (('all_in', 'Everyone all in', 1.0, None),
+                                    ('kelly', 'Everyone Kelly, alone', kelly, None),
+                                    ('pooled_kelly', 'Everyone pooled, Kelly', kelly, N_PLAYERS),
+                                    ('pooled', 'Everyone pooled, all in', 1.0, N_PLAYERS)):
+        result = play(BET, FixedFraction(stake), wins, pool_size=pool, keep_paths=True)
         schemes.append({
-            'key': key, 'label': label, 'stake': 1.0 if key != 'kelly' else BET.kelly_fraction(),
+            'key': key, 'label': label, 'stake': stake,
             'summary': rounded_summary(result.final),
             'ranked': sig(np.sort(result.final)[::-1], 4),
             'median_path': sig(np.median(result.paths, axis=1)),
