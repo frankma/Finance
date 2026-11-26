@@ -1,7 +1,8 @@
 # Finance
 
 Python code for finance and card-game experiments, with the pages and charts that present them. Card games live in
-`src/CardGames/` (engines, assistants, and a local play server in `src/CardGames/Play/`). Charts and labs live in `viz/`.
+`src/CardGames/` (engines, assistants, and a local play server in `src/CardGames/Play/`). Betting games live in
+`src/BettingGames/` (a bet core in `Core/`, one folder per game). Charts and labs live in `viz/`.
 
 ## Theme
 Pages, charts and reports use the Kinari theme from the user's `my-theme` skill. `viz/theme.css` is this project's
@@ -15,13 +16,16 @@ token name, a web font, italic, uppercase or a raw hex colour).
 `viz/card_games_lab.html` is built from `viz/card_games_lab.template.html` by `viz/build_card_games_lab.py` (about 10
 minutes, runs the simulations). Edit the template, never the generated page, then rebuild:
 `PYTHONPATH=. .venv/bin/python viz/build_card_games_lab.py`.
+`viz/betting_games_lab.html` is built the same way from `viz/betting_games_lab.template.html` by
+`viz/build_betting_games_lab.py` (a few seconds).
 
 ## Card games must play fair
 An assistant uses only what its seat can legitimately see. Every game is tested for this: two tables that differ only
-in hidden cards must give the same view and the same advice.
+in hidden cards must give the same view and the same advice. Betting games follow the same rule: a stake depends only on the public terms of the bet and
+the player's own past outcomes, checked by `src/BettingGames/Core/Fairness.py`.
 
 ## Working conventions
-- Python in `.venv`. Run tests with `.venv/bin/python -m pytest test/viz test/CardGames/Play`; tests sit under `test/`
+- Python in `.venv`. Run tests with `.venv/bin/python -m pytest test/viz test/CardGames/Play test/BettingGames`; tests sit under `test/`
   mirroring `src/`. Add tests with every code change.
 - Start the play server with the `card-games` entry in `.claude/launch.json`.
 - Ask when a request is unclear rather than guessing.
