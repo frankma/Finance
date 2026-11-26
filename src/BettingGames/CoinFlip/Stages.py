@@ -1,0 +1,193 @@
+"""
+the first betting game: 1000 players, 100 rounds of a bet that pays +50% or -40% on a fair coin
+
+    stage 1  everyone stakes all they have every round; rank the 1000 at the end
+    stage 2  one more player stakes the Kelly fraction instead; where would they rank?
+    stage 3  everyone is sensible: each stakes Kelly on their own, or the table pools and shares
+
+each stage returns plain numbers for the lab page; every table of outcomes is drawn once from a fixed seed, so
+strategies compared on one table face exactly the same luck
+"""
+import math
+from typing import Dict, List, Sequence
+
+import numpy as np
+from scipy.optimize import minimize_scalar
+
+from src.BettingGames.Core.Bet import Bet
+from src.BettingGames.Core.Ranking import rank_in, share_below, summary
+from src.BettingGames.Core.Strategy import AllIn, FixedFraction, Kelly
+from src.BettingGames.Core.Tournament import play
+
+__author__ = 'frank.ma'
+
+BET = Bet(up=0.5, down=0.4, p_up=0.5)
+N_PLAYERS = 1000
+N_ROUNDS = 100
+
+
+def sig(x, digits: int = 5):
+    # round to significant figures for the page; keeps 1e-9 and 1e4 alike
+    if isinstance(x, (list, tuple, np.ndarray)):
+        return [sig(v, digits) for v in x]
+    if isinstance(x, (int, np.integer)):
+        return int(x)
+    x = float(x)
+    if x == 0.0 or not math.isfinite(x):
+        return x
+    return float('%.*g' % (digits, x))
+
+
+def rounded_summary(wealth: np.ndarray) -> Dict:
+    return {k: ({q: sig(x) for q, x in v.items()} if isinstance(v, dict) else sig(v)) for k, v in summary(wealth).items()}
+
+
+def table(seed: int, n_players: int = N_PLAYERS, n_rounds: int = N_ROUNDS) -> np.ndarray:
+    return BET.draw(np.random.default_rng(seed), (n_rounds, n_players))
+
+
+def exact(fraction: float, n_rounds: int = N_ROUNDS) -> Dict:
+    # the closed form for one player staking a fixed fraction
+    q = BET.quantiles(fraction, n_rounds, [0.01, 0.1, 0.5, 0.9, 0.99])
+    return {'fraction': fraction, 'growth': BET.growth_rate(fraction), 'mean_return': BET.mean_return(fraction),
+            'mean': BET.mean_wealth(fraction, n_rounds), 'median': q[2], 'p01': q[0], 'p10': q[1], 'p90': q[3],
+            'p99': q[4], 'above_start': BET.prob_above(fraction, n_rounds)}
+
+
+def _picked(n_players: int, n_paths: int, seed: int) -> np.ndarray:
+    # the players whose paths are drawn: spread across the final ranking, so the lucky and unlucky both show
+    return np.sort(np.random.default_rng(seed).choice(n_players, size=min(n_paths, n_players), replace=False))
+
+
+def all_in(seed: int = 101, n_paths: int = 40) -> Dict:
+    """
+    stage 1: the table of 1000, everyone all in
+    """
+    wins = table(seed)
+    result = play(BET, AllIn(), wins, keep_paths=True)
+    final = result.final
+    picked = _picked(N_PLAYERS, n_paths, seed + 1)
+    k = wins.sum(axis=0)
+    return {
+        'seed': seed,
+        'summary': rounded_summary(final),
+        'ranked': sig(np.sort(final)[::-1], 4),
+        'wins_ranked': [int(x) for x in k[np.argsort(-final, kind='stable')]],
+        'paths': [sig(result.paths[:, i], 4) for i in picked],
+        'mean_path': sig(result.paths.mean(axis=1)),
+        'median_path': sig(np.median(result.paths, axis=1)),
+        'exact': {key: sig(v) for key, v in exact(1.0).items()},
+        'breakeven_wins': int(np.argmax(BET.wealth_after(1.0, N_ROUNDS) > 1.0)),
+    }
+
+
+def kelly_outsider(seed: int = 101, outsider_seed: int = 202, n_trials: int = 2000, trial_seed: int = 303,
+                   chunk: int = 100) -> Dict:
+    """
+    stage 2: one Kelly player with luck of their own, ranked against stage 1's table; then the same contest over
+    many fresh tables, to see how that rank is spread; and the Kelly stake on each table player's own luck
+    """
+    wins = table(seed)
+    field = play(BET, AllIn(), wins).final
+    own = BET.draw(np.random.default_rng(outsider_seed), (N_ROUNDS, 1))
+    outsider = play(BET, Kelly(), own, keep_paths=True)
+    final = float(outsider.final[0])
+    same_luck = play(BET, Kelly(), wins).final
+
+    ranks: List[int] = []
+    rng = np.random.default_rng(trial_seed)
+    for start in range(0, n_trials, chunk):
+        m = min(chunk, n_trials - start)
+        draws = BET.draw(rng, (N_ROUNDS, m * (N_PLAYERS + 1)))  # each trial: 1000 all in, then one Kelly player
+        tables = draws.reshape(N_ROUNDS, m, N_PLAYERS + 1)
+        allin = play(BET, AllIn(), tables[:, :, :N_PLAYERS].reshape(N_ROUNDS, -1)).final.reshape(m, N_PLAYERS)
+        kelly = play(BET, Kelly(), tables[:, :, N_PLAYERS]).final
+        ranks.extend(rank_in(kelly[j], allin[j]) for j in range(m))
+    ranks_arr = np.array(ranks)
+
+    f = BET.kelly_fraction()
+    kelly_exact = exact(f)
+    return {
+        'seed': seed, 'outsider_seed': outsider_seed,
+        'fraction': f,
+        'final': sig(final),
+        'wins': int(own.sum()),
+        'rank': rank_in(final, field),
+        'beats': sig(share_below(final, field)),
+        'path': sig(outsider.paths[:, 0], 4),
+        'same_luck': {
+            'kelly_beats_all_in': sig(np.mean(same_luck > field)),
+            'ranked': sig(np.sort(same_luck)[::-1], 4),
+            'summary': rounded_summary(same_luck),
+        },
+        'trials': {
+            'n': n_trials, 'seed': trial_seed,
+            'ranks': [int(r) for r in ranks_arr],
+            'median_rank': float(np.median(ranks_arr)),
+            'top10': sig(np.mean(ranks_arr <= N_PLAYERS // 10)),
+            'top1': sig(np.mean(ranks_arr <= N_PLAYERS // 100)),
+            'top_half': sig(np.mean(ranks_arr <= N_PLAYERS // 2)),
+        },
+        # where the typical Kelly result sits in the exact all-in distribution
+        'exact': {key: sig(v) for key, v in kelly_exact.items()},
+        'exact_beats': sig(1.0 - BET.prob_above(1.0, N_ROUNDS, kelly_exact['median'])),
+    }
+
+
+def fraction_curve(step: float = 0.01) -> List[Dict]:
+    """
+    the closed form at every stake from 0 to all in: the page's slider reads it
+    """
+    return [{key: sig(v) for key, v in exact(round(f, 6)).items()} for f in np.arange(0.0, 1.0 + step / 2, step)]
+
+
+def pooled_fraction(n: int) -> float:
+    """
+    the growth-optimal stake for a pool of n that shares every round: each member stakes f on their own coin, so the
+    pool's wealth grows by f times the average of n returns, whose win count is binomial; maximise the exact expected
+    log growth over f in [0, 1]. One player alone gets the Kelly fraction; a big pool stakes everything
+    """
+    j = np.arange(n + 1)
+    pmf = BET.wins_pmf(n)
+    avg = (j * BET.up - (n - j) * BET.down) / n  # the pool's return per unit staked
+
+    def growth(f: float) -> float:
+        return float(np.dot(pmf, np.log1p(f * avg)))
+    result = minimize_scalar(lambda f: -growth(f), bounds=(0.0, 1.0), method='bounded', options={'xatol': 1e-9})
+    return 1.0 if growth(1.0) >= -result.fun else float(result.x)
+
+
+def everyone_sensible(seed: int = 101, pool_sizes: Sequence[int] = (1, 2, 5, 10, 50, 100, 1000)) -> Dict:
+    """
+    stage 3 on stage 1's table: everyone all in (for comparison), everyone Kelly on their own, and the whole table
+    pooling: each stakes on their own coin and the 1000 share the result every round. Then pools of other sizes,
+    each staking the growth-optimal fraction for its size
+    """
+    wins = table(seed)
+    schemes = []
+    for key, label, strategy, pool in (('all_in', 'Everyone all in', AllIn(), None),
+                                       ('kelly', 'Everyone Kelly, alone', Kelly(), None),
+                                       ('pooled', 'Everyone pooled, all in', AllIn(), N_PLAYERS)):
+        result = play(BET, strategy, wins, pool_size=pool, keep_paths=True)
+        schemes.append({
+            'key': key, 'label': label, 'stake': 1.0 if key != 'kelly' else BET.kelly_fraction(),
+            'summary': rounded_summary(result.final),
+            'ranked': sig(np.sort(result.final)[::-1], 4),
+            'median_path': sig(np.median(result.paths, axis=1)),
+            'mean_path': sig(result.paths.mean(axis=1)),
+        })
+
+    pools = []
+    for n in pool_sizes:
+        f = pooled_fraction(n)
+        final = play(BET, FixedFraction(f), wins, pool_size=n).final
+        pools.append({'size': int(n), 'fraction': sig(f), 'median': sig(np.median(final)), 'mean': sig(final.mean()),
+                      'growth': sig(np.log(np.median(final)) / N_ROUNDS)})
+    return {
+        'seed': seed,
+        'schemes': schemes,
+        'pools': pools,
+        'ensemble_growth': sig(math.log1p(BET.mean_return(1.0))),
+        'kelly_growth': sig(BET.growth_rate(BET.kelly_fraction())),
+    }
+
