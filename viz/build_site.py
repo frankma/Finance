@@ -51,6 +51,10 @@ PROJECTS = [
             'Blackjack, Texas hold\'em, Omaha and GuanDan against the computer, with a coach that uses only what '
             'your seat can see. Guided lessons, the rules of each game, and a lab of the simulations behind the coach.',
             card_games, 'Play'),
+    Project('betting-games', 'Games', 'Betting games',
+            'A thousand players, a hundred flips of a coin that pays +50% or -40%. Betting everything makes the '
+            'average rich and almost everyone poor; a Kelly stake, or pooling the luck, turns the same coin into '
+            'growth.', single_page(os.path.join(HERE, 'betting_games_lab.html')), 'Open'),
     Project('sabr-smile', 'Volatility', 'SABR smile lab',
             'Move the SABR parameters and watch Hagan\'s smile, the implied density, the backbone and the vol surface '
             'respond.', single_page(os.path.join(HERE, 'sabr_smile_lab.html'))),

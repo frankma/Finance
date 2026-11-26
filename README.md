@@ -16,8 +16,9 @@ Quantitative finance and related topics in implementation.
 | [src/Utils](src/Utils) | Root finders and regression, interpolation and extrapolation, random sequences, FX quotes, payoffs |
 | [src/Assets](src/Assets) / [src/Quote](src/Quote) / [src/DataObject](src/DataObject) | Option, quote and market data objects |
 | [src/CardGames](src/CardGames) | A shared card, shoe, counter and game core, with blackjack (basic strategy, hi-lo, Kelly sizing, EV and bankroll simulation), no-limit hold'em and Omaha (side pots, equity, outs, pot odds) and GuanDan (combinations, tribute, levels, a planning bot); [Play](src/CardGames/Play) serves them in the browser with a coach |
+| [src/BettingGames](src/BettingGames) | Repeated bets played by many players at once: a bet core with exact distributions, Kelly and pooled staking, and fair-play checks; [CoinFlip](src/BettingGames/CoinFlip) is 1000 players on a +50% / -40% coin, all in, Kelly, and pooled |
 | [src/MiniProjects](src/MiniProjects) | Delta hedging, Greeks P&L, PCA, panel regression, zero curve, scenarios, heat equation, maze and sudoku solvers |
-| [viz](viz) | Interactive pages: the [SABR smile lab](viz/sabr_smile_lab.html) and the [Card Games Lab](viz/card_games_lab.html), which `python -m viz.build_card_games_lab` rebuilds from the CardGames engines |
+| [viz](viz) | Interactive pages: the [SABR smile lab](viz/sabr_smile_lab.html) the [Card Games Lab](viz/card_games_lab.html), which `python -m viz.build_card_games_lab` rebuilds from the CardGames engines, and the [Betting Games Lab](viz/betting_games_lab.html), rebuilt by `python -m viz.build_betting_games_lab` |
 | [doc](doc) | LaTeX notes on the models |
 
 ### Card games: play and fair play
@@ -35,6 +36,10 @@ Or double-click [`viz/Play Card Games.command`](viz) in Finder, next to the Card
 There is also a web version, at [frankma.github.io/Finance/card-games](https://frankma.github.io/Finance/card-games/): the same pages and the same Python, run in the browser by [Pyodide](https://pyodide.org) instead of on a server. It is one project on the repository's GitHub Pages site, whose front page at [frankma.github.io/Finance](https://frankma.github.io/Finance/) links each project in a folder of its own; `python -m viz.build_site _site --base /Finance/` builds the whole site (add a project to `PROJECTS` there), and the `pages` workflow publishes it from `master`. It plays as the local version does, a little slower (the Omaha coach takes about 0.6 s instead of 0.3 s) and after a few seconds' start on each page. The one difference is fair play at the page: the whole game runs in your browser, so the hidden cards sit in the page's memory, where a determined player could find them. The coach and the computer seats still use only what their seat can see, and the pages say so. A hand in play also does not survive reloading the page, as one does not survive restarting the local server.
 
 The card game strategies are there to assist a human player, not to cheat for one. Every assistant sees only what its seat could legitimately know at the table: its own cards, the cards shown, every public action, and what follows from those, such as which cards are still unseen. It never sees another player's hidden cards, a face-down card or the undealt order. Each game's observation is an immutable snapshot, and every game is tested with [`assert_fair_play`](src/CardGames/Core/Fairness.py): two tables that differ only in cards the seat cannot see must give the same view and the same advice.
+
+### Betting games: fair play
+
+The same rule holds for the betting games: a player's stake is set before the coin is flipped, from the public terms of the bet and what that player has seen so far. The outcomes are drawn in advance only so that different strategies face the same luck; a strategy is handed only the rounds already played. [`assert_fair_play`](src/BettingGames/Core/Fairness.py) checks that two tables which agree on everything a player has seen give that player the same stakes.
 
 ## Running the tests
 
