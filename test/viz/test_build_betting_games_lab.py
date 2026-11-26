@@ -30,8 +30,8 @@ class TestBuildBettingGamesLab(TestCase):
         self.assertTrue(self.data['quick'])
         self.assertEqual(len(cf['kelly']['trials']['ranks']), self.data['sizes']['trials'])
         self.assertEqual(len(cf['curve']), 201)
-        self.assertEqual([s['key'] for s in cf['sensible']['schemes']], ['all_in', 'kelly', 'pooled_kelly', 'pooled'])
-        self.assertEqual([g['key'] for g in cf['mixed']['groups']], ['pooled', 'pooled_kelly', 'all_in', 'kelly'])
+        self.assertEqual([s['key'] for s in cf['sensible']['schemes']], ['all_in', 'kelly', 'pooled_quarter', 'pooled'])
+        self.assertEqual([g['key'] for g in cf['mixed']['groups']], ['pooled', 'pooled_quarter', 'all_in', 'kelly'])
         self.assertEqual(len(cf['mixed']['ranked']), 1000)
         self.assertEqual(cf['levers']['pool_kelly_exact'], 1.0)
 
