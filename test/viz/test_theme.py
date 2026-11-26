@@ -7,7 +7,7 @@ ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')  # t
 SKILL_CSS = os.path.expanduser('~/.claude/skills/my-theme/theme.css')
 THEME = os.path.join(ROOT, 'viz', 'theme.css')
 STATIC = os.path.join(ROOT, 'src', 'CardGames', 'Play', 'static')
-PAGES = ['viz/sabr_smile_lab.html', 'viz/card_games_lab.template.html', 'viz/site_index.template.html'] + [
+PAGES = ['viz/sabr_smile_lab.html', 'viz/card_games_lab.template.html', 'viz/betting_games_lab.template.html', 'viz/site_index.template.html'] + [
     os.path.relpath(p, ROOT) for p in sorted(glob.glob(os.path.join(STATIC, '*.html')) + glob.glob(os.path.join(STATIC, '*.css')))]
 
 
