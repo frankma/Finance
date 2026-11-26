@@ -102,3 +102,16 @@ class TestMixedTable(TestCase):
         self.assertGreater(pooled['wealth_share'], 0.5, 'but the all-in pool holds most of the wealth.')
         self.assertEqual(allin['worst_rank'], 1000, 'and lone all-in players also fill the bottom.')
         self.assertGreater(self.by['kelly']['median_rank'], self.by['pooled_kelly']['median_rank'])
+
+
+class TestLevers(TestCase):
+    def test_the_two_levers(self):
+        lv = Stages.levers()
+        self.assertAlmostEqual(lv['mu'], 0.05)
+        self.assertAlmostEqual(lv['var'], 0.2025)
+        self.assertAlmostEqual(lv['kelly_approx'], 0.05 / 0.2025, places=4)
+        self.assertAlmostEqual(lv['kelly_exact'], 0.25, msg='the approximation is close to the exact stake.')
+        self.assertGreater(lv['pool_kelly_approx'], 100.0, 'a pool of 1000 would take far more than all in.')
+        self.assertEqual(lv['pool_kelly_exact'], 1.0, 'so its stake is capped at everything.')
+        self.assertLess(lv['growth_all_in'], 0.0)
+        self.assertLess(lv['growth_kelly'], lv['growth_ensemble'])

@@ -56,6 +56,7 @@ def build(quick: bool = False, output: str = OUTPUT) -> dict:
             'curve': Stages.fraction_curve(step=0.005),
             'sensible': Stages.everyone_sensible(),
             'mixed': Stages.mixed_table(),
+            'levers': Stages.levers(),
         },
     }
     data['seconds'] = round(time.time() - start, 1)

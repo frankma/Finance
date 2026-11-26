@@ -83,6 +83,34 @@ table td.lab { white-space: nowrap; }
 @media (max-width: 640px) { .readout { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .readout .fig .v { font-size: 26px; }
 .formula { font: 400 17px/1.6 var(--sans); padding: 10px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+/* the two-levers matrix: hairlines only, the row and column heads name the levers */
+.matrix { display: grid; grid-template-columns: minmax(84px, 150px) minmax(0, 1fr) minmax(0, 1fr); border-bottom: 1px solid var(--line); }
+.matrix > div { padding: 12px 14px 14px 0; border-top: 1px solid var(--line); min-width: 0; }
+.matrix > div + div:not(.mx-row) { padding-left: 14px; }
+.matrix .mx-axis { grid-column: 2 / 4; border-top: 0; font: 700 13px/1.5 var(--sans); padding-bottom: 6px; }
+.matrix .mx-axis-row { grid-column: 1 / 2; border-top: 0; font: 700 13px/1.5 var(--sans); padding-bottom: 6px; }
+.matrix .mx-col, .matrix .mx-row { font: 700 14px/1.4 var(--sans); }
+.matrix .mx-col { border-top: 1px solid var(--ink); }
+.matrix .mx-col.c1 { grid-column: 2; } .matrix .mx-col.c2 { grid-column: 3; }
+.matrix .mx-corner { border-top: 1px solid var(--ink); }
+.matrix small { display: block; font: 400 12.5px/1.45 var(--sans); color: var(--muted); margin-top: 2px; }
+.matrix .v { font: 400 30px/1.15 var(--sans); font-variant-numeric: tabular-nums; }
+.matrix .v small { display: inline; font-size: 14px; margin-left: 2px; }
+.matrix .v.em { color: var(--beni); }
+.matrix .line { font: 400 13px/1.5 var(--sans); color: var(--muted); }
+.matrix .tag { display: inline-block; margin-bottom: 6px; padding: 2px 6px; border: 1px solid var(--line); font: 400 12px/1.4 var(--sans); color: var(--ink); }
+@media (max-width: 560px) {
+  .matrix { grid-template-columns: 0 minmax(0, 1fr) minmax(0, 1fr); }
+  .matrix .mx-corner, .matrix .mx-axis-row { display: none; }
+  .matrix .mx-row { grid-column: 1 / -1; padding-bottom: 0; }
+  .matrix .mx-row small { display: inline; margin-left: 6px; }
+  .matrix .mx-c1 { grid-column: 2; border-top: 0; } .matrix .mx-c2 { grid-column: 3; border-top: 0; }
+  .matrix .v { font-size: 24px; }
+  .matrix > div { padding-right: 8px; } .matrix > div + div:not(.mx-row) { padding-left: 8px; }
+  .matrix .mx-col.c1, .matrix .mx-c1 { padding-left: 0; }
+}
+.matrix .tag.off { visibility: hidden; }
+.lever h3 { margin-bottom: 6px; }
 .warn { border: 1px solid var(--line); background: var(--surface); padding: 8px 12px; font: 700 13px/1.4 var(--sans); margin-top: 18px; }
 [hidden] { display: none !important; }
 footer { margin-top: 64px; }
@@ -208,6 +236,25 @@ footer p { max-width: 90ch; }
         <h3>Where each quarter lands, and what it holds</h3>
         <div class="scroll"><table id="t-mixed"></table></div>
       </figure>
+    </div>
+  </section>
+
+  <section class="sec" id="levers">
+    <div class="side"><span class="mark">Two levers</span><p>What Kelly does, what pooling does, and why they are not the same thing.</p></div>
+    <div class="main">
+      <h2>Two different levers on the same drag: size the stake, or pool the luck</h2>
+      <p id="lv-intro"></p>
+      <p class="formula" id="lv-formula"></p>
+      <figure class="ex">
+        <h3>Each lever on its own, and both together</h3>
+        <p class="sub">The four schemes of stage 3, on the same coins, each cell the median player after 100 rounds. Across: how much each player stakes. Down: whether the thousand keep their own luck or share it every round. The tag marks the Kelly stake for that row's bet.</p>
+        <div class="matrix" id="matrix"></div>
+        <figcaption id="cap-matrix"></figcaption>
+      </figure>
+      <div class="lever"><h3>Lever 1 · Size the stake: Kelly</h3><p id="lv-kelly"></p></div>
+      <div class="lever"><h3>Lever 2 · Pool the luck</h3><p id="lv-pool"></p></div>
+      <div class="lever"><h3>What Kelly does not promise</h3><p id="lv-caveats"></p></div>
+      <p class="fact" id="lv-end"></p>
     </div>
   </section>
 
@@ -483,6 +530,31 @@ const DATA = /*__DATA__*/null;
   });
   $('t-mixed').innerHTML = '<thead><tr><th>Quarter</th><th class="num">Stake</th><th class="num">Median</th><th class="num">Best rank</th><th class="num">Median rank</th><th class="num">Worst rank</th><th class="num">In the top 100</th><th class="num">Share of the wealth</th></tr></thead><tbody>' +
     M.groups.map(g => '<tr><td class="lab">' + g.label + '</td><td class="num">' + pct(g.stake, 0) + '</td><td class="num">' + fmt(g.summary.median) + '</td><td class="num">' + g.best_rank + '</td><td class="num">' + Math.round(g.median_rank) + '</td><td class="num">' + g.worst_rank + '</td><td class="num">' + g.top100 + '</td><td class="num">' + pct(g.wealth_share, 1) + '</td></tr>').join('') + '</tbody>';
+
+  // ---- two levers ----
+  const L = CF.levers;
+  $('lv-intro').innerHTML = 'Over many rounds a player’s wealth grows at roughly the average return minus half the variance. For this coin the average is μ = ' + pct(L.mu, 0) + ' a round and the variance σ² = ' + L.var + '. All in, the drag σ² / 2 ≈ ' + pct(L.drag_all_in, 1) + ' swamps the ' + pct(L.mu, 0) + ' average, which is why the typical player shrinks. There are two ways to cut the drag, and they work on different parts of it:';
+  $('lv-formula').innerHTML = 'growth a round ≈ f·μ − f²·σ² / 2, where f is the share of wealth staked';
+  const cell = (key, kellyHere, em, col) => {
+    const s = sch[key], g = Math.log(s.summary.median) / G.rounds;
+    return '<div class="mx-c' + col + '">' + '<span class="tag' + (kellyHere ? '' : ' off') + '">Kelly for this bet</span>' +
+      '<div class="v' + (em ? ' em' : '') + '">' + fmt(s.summary.median) + '<small>×</small></div>' +
+      '<div class="line">median player</div>' +
+      '<div class="line">growth ' + pct(g, 2) + ' a round</div>' +
+      '<div class="line">' + pct(s.summary.above_start, 0) + ' end ahead</div></div>';
+  };
+  $('matrix').innerHTML =
+    '<div class="mx-axis-row">Lever 2 ↓</div><div class="mx-axis">Lever 1: size the stake →</div>' +
+    '<div class="mx-corner"></div>' +
+    '<div class="mx-col c1">Stake everything<small>100% of wealth each round</small></div>' +
+    '<div class="mx-col c2">Stake a quarter<small>' + pct(L.kelly_exact, 0) + ', Kelly for one coin</small></div>' +
+    '<div class="mx-row">Alone<small>each keeps their own luck</small></div>' + cell('all_in', false, false, 1) + cell('kelly', true, false, 2) +
+    '<div class="mx-row">Pooled<small>the ' + L.n_pool + ' share every round</small></div>' + cell('pooled', true, true, 1) + cell('pooled_kelly', false, false, 2);
+  $('cap-matrix').textContent = 'Growth a round is the median player’s, ln(median) / ' + G.rounds + '. The coin’s own average, ln(1 + μ), is ' + pct(L.growth_ensemble, 2) + ' a round: only the pooled row can get near it.';
+  $('lv-kelly').innerHTML = 'Kelly turns the stake down. Choosing f to maximise the growth above gives f* ≈ μ / σ² = ' + pct(L.kelly_approx, 1) + ' (exactly ' + pct(L.kelly_exact, 0) + ' for this coin). Maximising growth a round is the same as maximising the expected log of wealth: the rate one player’s own wealth grows along their own path, round after round. That is what makes Kelly sound over time. It gives up most of the average to remove most of the drag, and takes the typical player from ' + pct(L.growth_all_in, 2) + ' to ' + pct(L.growth_kelly, 2) + ' a round.';
+  $('lv-pool').innerHTML = 'Pooling does not choose a stake: it changes the bet. A pool of N players bets on the average of N independent coins, which keeps the same average μ but divides the variance by N. The spread across players replaces the spread over time. Kelly still applies, now to the pool’s bet: f* ≈ μ / (σ² / N) ≈ ' + Math.round(L.pool_kelly_approx) + ' for ' + L.n_pool + ' players, far more than everything, so the stake is capped at ' + pct(L.pool_kelly_exact, 0) + '. That is why the pooled row puts its tag on all in: pooled at the lone player’s 25%, each member ends with ' + fmt(sch.pooled_kelly.summary.median) + '×, under-betting a bet that is now about 30 times steadier; pooled all in, each ends with ' + fmt(sch.pooled.summary.median) + '×.';
+  $('lv-caveats').innerHTML = 'Kelly does not maximise average wealth: all in has the higher average (' + fmt(A.exact.mean) + '× against ' + fmt(K.exact.mean) + '× after ' + G.rounds + ' rounds), but almost nobody gets it. Its guarantee is a long-run one: over many rounds a Kelly bettor ends ahead of any other fixed stake almost surely and never goes broke, but over ' + G.rounds + ' rounds it beat all in on the same coins for ' + pct(K.same_luck.kelly_beats_all_in, 0) + ' of players, not all of them. And it assumes the odds are known; when they are only estimated, people bet half Kelly or less to be safe.';
+  $('lv-end').innerHTML = '<b>Kelly</b> is how one player makes the long run work. <b>Pooling</b> is how a group collects the average itself. Kelly still sets the pool’s stake, and for a big pool that stake is everything.';
 
   $('foot').innerHTML = 'Built ' + DATA.built + ' by <code>viz/build_betting_games_lab.py</code> in ' + DATA.seconds + ' s from <code>src/BettingGames</code>: ' + G.players + ' players, ' + G.rounds + ' rounds, +' + pct(G.up, 0) + ' or −' + pct(G.down, 0) + ' with probability ' + G.p_up + ', fixed seeds. Exact figures come from the binomial count of wins. The coin is a classic illustration of the gap between the average over players and the growth of one player over time; the code and page are original.';
 })();

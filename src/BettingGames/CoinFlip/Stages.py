@@ -236,3 +236,21 @@ def mixed_table(seed: int = 101) -> Dict:
         'ranked': sig(final[order], 4),
         'kind_ranked': [int(k) for k in kind[order]],
     }
+
+
+def levers(n_pool: int = N_PLAYERS) -> Dict:
+    """
+    the two levers on the drag that volatility puts on growth, g(f) ~ f mu - f^2 sigma^2 / 2: Kelly scales the stake
+    down (best f ~ mu / sigma^2), pooling divides the variance by the pool's size (best f ~ mu / (sigma^2 / n), capped
+    at all in). The approximations beside the exact answers, for the page's explanation
+    """
+    mu = BET.mean_return(1.0)
+    var = BET.p_up * BET.up ** 2 + BET.p_down * BET.down ** 2 - mu ** 2
+    return {
+        'mu': sig(mu), 'var': sig(var), 'n_pool': int(n_pool),
+        'drag_all_in': sig(var / 2),  # what the approximation takes off the average when all in
+        'kelly_approx': sig(mu / var), 'kelly_exact': sig(BET.kelly_fraction()),
+        'pool_kelly_approx': sig(mu / (var / n_pool)), 'pool_kelly_exact': sig(pooled_fraction(n_pool)),
+        'growth_all_in': sig(BET.growth_rate(1.0)), 'growth_kelly': sig(BET.growth_rate(BET.kelly_fraction())),
+        'growth_ensemble': sig(math.log1p(mu)),
+    }
