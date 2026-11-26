@@ -50,8 +50,8 @@ class TestStages(TestCase):
         self.assertAlmostEqual(pooled['median'], pooled['mean'], delta=1e-6 * pooled['mean'], msg='and equal.')
         self.assertGreater(pooled['median'], 50 * kelly['median'])
         self.assertAlmostEqual(pooled['top1_share'], 0.01)
-        pk = by['pooled_kelly']['summary']
-        self.assertEqual(by['pooled_kelly']['stake'], 0.25)
+        pk = by['pooled_quarter']['summary']
+        self.assertEqual(by['pooled_quarter']['stake'], 0.25)
         self.assertEqual(pk['above_start'], 1.0, 'pooled at the Kelly stake, everyone ends ahead too.')
         self.assertAlmostEqual(pk['median'], 1.0125 ** 100, delta=0.1, msg='close to the Kelly stake\'s average.')
         self.assertAlmostEqual(pk['median'], kelly['mean'], delta=0.15 * kelly['mean'], msg='everyone gets the average.')
@@ -91,14 +91,43 @@ class TestMixedTable(TestCase):
         self.assertEqual(sum(g['top100'] for g in self.mix['groups']), 100)
 
     def test_pools_share_only_among_their_own(self):
-        for key in ('pooled', 'pooled_kelly'):
+        for key in ('pooled', 'pooled_quarter'):
             s = self.by[key]['summary']
             self.assertEqual(s['min'], s['max'], '%s: every member holds the same.' % key)
-        self.assertGreater(self.by['pooled']['summary']['median'], self.by['pooled_kelly']['summary']['median'])
+        self.assertGreater(self.by['pooled']['summary']['median'], self.by['pooled_quarter']['summary']['median'])
 
     def test_who_lands_where(self):
         allin, pooled = self.by['all_in'], self.by['pooled']
         self.assertEqual(allin['best_rank'], 1, 'the luckiest lone all-in player tops the table.')
         self.assertGreater(pooled['wealth_share'], 0.5, 'but the all-in pool holds most of the wealth.')
         self.assertEqual(allin['worst_rank'], 1000, 'and lone all-in players also fill the bottom.')
-        self.assertGreater(self.by['kelly']['median_rank'], self.by['pooled_kelly']['median_rank'])
+        self.assertGreater(self.by['kelly']['median_rank'], self.by['pooled_quarter']['median_rank'])
+
+
+class TestLevers(TestCase):
+    def test_the_two_levers(self):
+        lv = Stages.levers()
+        self.assertAlmostEqual(lv['mu'], 0.05)
+        self.assertAlmostEqual(lv['var'], 0.2025)
+        self.assertAlmostEqual(lv['kelly_approx'], 0.05 / 0.2025, places=4)
+        self.assertAlmostEqual(lv['kelly_exact'], 0.25, msg='the approximation is close to the exact stake.')
+        self.assertGreater(lv['pool_kelly_approx'], 100.0, 'a pool of 1000 would take far more than all in.')
+        self.assertEqual(lv['pool_kelly_exact'], 1.0, 'so its stake is capped at everything.')
+        self.assertLess(lv['growth_all_in'], 0.0)
+        self.assertLess(lv['growth_kelly'], lv['growth_ensemble'])
+
+
+class TestGrowthCurves(TestCase):
+    def test_pooling_lifts_the_curve_and_moves_the_peak(self):
+        curves = Stages.growth_curves()
+        self.assertEqual([c['size'] for c in curves], [1, 2, 5, 1000])
+        for c in curves:
+            self.assertEqual(len(c['growth']), 101)
+            self.assertEqual(c['growth'][0], 0.0, 'staking nothing grows nothing.')
+            self.assertAlmostEqual(max(c['growth']), c['kelly_growth'], delta=2e-4, msg='Kelly is the peak.')
+        self.assertEqual(curves[0]['kelly'], 0.25)
+        self.assertEqual(curves[-1]['kelly'], 1.0)
+        kellys = [c['kelly'] for c in curves]
+        self.assertEqual(kellys, sorted(kellys), 'the peak moves right as the pool grows.')
+        self.assertAlmostEqual(curves[0]['growth'][100], Stages.BET.growth_rate(1.0), places=4)
+        self.assertAlmostEqual(curves[-1]['growth'][100], 0.0487, delta=0.0005, msg='a big pool all in grows near ln(1.05).')

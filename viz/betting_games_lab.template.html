@@ -50,6 +50,7 @@ figure.ex .sub { font: 400 13.5px/1.5 var(--sans); color: var(--muted); max-widt
 .chart .kelly { stroke: var(--beni); stroke-width: 2.25; }
 .chart .pooled { stroke: var(--koke); stroke-width: 2.25; }
 .chart .pooledk { stroke: var(--kuri); stroke-width: 2.25; }
+.chart .ctxs { stroke: var(--nezumi); stroke-width: 1.75; }
 .chart .dot-hl { fill: var(--beni); }
 .chart .dot-ai { fill: var(--ai); }
 .chart .dot-ink { fill: var(--ink); }
@@ -83,6 +84,34 @@ table td.lab { white-space: nowrap; }
 @media (max-width: 640px) { .readout { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .readout .fig .v { font-size: 26px; }
 .formula { font: 400 17px/1.6 var(--sans); padding: 10px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+/* the two-levers matrix: hairlines only, the row and column heads name the levers */
+.matrix { display: grid; grid-template-columns: minmax(84px, 150px) minmax(0, 1fr) minmax(0, 1fr); border-bottom: 1px solid var(--line); }
+.matrix > div { padding: 12px 14px 14px 0; border-top: 1px solid var(--line); min-width: 0; }
+.matrix > div + div:not(.mx-row) { padding-left: 14px; }
+.matrix .mx-axis { grid-column: 2 / 4; border-top: 0; font: 700 13px/1.5 var(--sans); padding-bottom: 6px; }
+.matrix .mx-axis-row { grid-column: 1 / 2; border-top: 0; font: 700 13px/1.5 var(--sans); padding-bottom: 6px; }
+.matrix .mx-col, .matrix .mx-row { font: 700 14px/1.4 var(--sans); }
+.matrix .mx-col { border-top: 1px solid var(--ink); }
+.matrix .mx-col.c1 { grid-column: 2; } .matrix .mx-col.c2 { grid-column: 3; }
+.matrix .mx-corner { border-top: 1px solid var(--ink); }
+.matrix small { display: block; font: 400 12.5px/1.45 var(--sans); color: var(--muted); margin-top: 2px; }
+.matrix .v { font: 400 30px/1.15 var(--sans); font-variant-numeric: tabular-nums; }
+.matrix .v small { display: inline; font-size: 14px; margin-left: 2px; }
+.matrix .v.em { color: var(--beni); }
+.matrix .line { font: 400 13px/1.5 var(--sans); color: var(--muted); }
+.matrix .tag { display: inline-block; margin-bottom: 6px; padding: 2px 6px; border: 1px solid var(--line); font: 400 12px/1.4 var(--sans); color: var(--ink); }
+@media (max-width: 560px) {
+  .matrix { grid-template-columns: 0 minmax(0, 1fr) minmax(0, 1fr); }
+  .matrix .mx-corner, .matrix .mx-axis-row { display: none; }
+  .matrix .mx-row { grid-column: 1 / -1; padding-bottom: 0; }
+  .matrix .mx-row small { display: inline; margin-left: 6px; }
+  .matrix .mx-c1 { grid-column: 2; border-top: 0; } .matrix .mx-c2 { grid-column: 3; border-top: 0; }
+  .matrix .v { font-size: 24px; }
+  .matrix > div { padding-right: 8px; } .matrix > div + div:not(.mx-row) { padding-left: 8px; }
+  .matrix .mx-col.c1, .matrix .mx-c1 { padding-left: 0; }
+}
+.matrix .tag.off { visibility: hidden; }
+.lever h3 { margin-bottom: 6px; }
 .warn { border: 1px solid var(--line); background: var(--surface); padding: 8px 12px; font: 700 13px/1.4 var(--sans); margin-top: 18px; }
 [hidden] { display: none !important; }
 footer { margin-top: 64px; }
@@ -95,7 +124,7 @@ footer p { max-width: 90ch; }
     <a class="back" id="home" href="../">Finance</a>
     <span class="mark">Betting games · the coin flip</span>
     <h1>Betting everything makes the average rich and almost every player poor</h1>
-    <p class="lede" id="lede">A thousand players take the same bet a hundred times: a fair coin, +50% on heads, −40% on tails. On average each round adds 5%, yet staking it all leaves the typical player with half a penny on the pound. A smaller stake, or sharing the luck, turns the same coin into growth for nearly everyone.</p>
+    <p class="lede" id="lede">A thousand players bet a hundred times on a fair coin: +50% on heads, −40% on tails. The average round adds 5%, yet staking everything leaves the typical player with half a penny on the pound. A smaller stake, or shared luck, turns the same coin into growth.</p>
     <div id="quick" class="warn" hidden>Quick build: fewer trials, so the ranks in stage 2 are noisy. Rebuild without <code>--quick</code> for the real figures.</div>
   </header>
 
@@ -108,50 +137,50 @@ footer p { max-width: 90ch; }
       <p id="p1"></p>
       <figure class="ex">
         <h3>Wealth through 100 rounds, all in</h3>
-        <p class="sub">Forty of the thousand players in grey; the average of all thousand, and the median player at each round. Log scale: each gridline is ten times the one below.</p>
+        <p class="sub">Forty players in grey, with the average and the median of all thousand. Log scale.</p>
         <div class="legend"><span><i class="ink dash"></i>Average of 1000</span><span><i class="allin"></i>Median player</span><span><i class="ctx"></i>Single players</span></div>
         <div class="chart" id="c-paths"></div>
         <figcaption id="cap-paths"></figcaption>
       </figure>
       <figure class="ex">
         <h3>Where the thousand finish</h3>
-        <p class="sub">Final wealth from a start of 1, counted by decade. Only the beni bars end ahead of where they started.</p>
+        <p class="sub">Final wealth from a start of 1, by decade. The beni bars ended ahead.</p>
         <div class="legend"><span><i class="sq beni"></i>Ahead of the start</span><span><i class="sq washi"></i>Behind it</span></div>
         <div class="chart" id="c-hist"></div>
-        <figcaption>Each player's wealth depends only on how many of the 100 flips they won: 1.5<sup>wins</sup> × 0.6<sup>losses</sup>.</figcaption>
+        <figcaption>Wealth depends only on the number of wins: 1.5<sup>wins</sup> × 0.6<sup>losses</sup>.</figcaption>
       </figure>
       <figure class="ex">
         <h3>The ranking, richest first</h3>
-        <p class="sub">All thousand players ordered by final wealth. Hover for a player's rank, wealth and wins.</p>
+        <p class="sub">Richest first. Hover for rank, wealth and wins.</p>
         <div class="chart" id="c-rank1"></div>
-        <figcaption>Same table as above.</figcaption>
+        <figcaption>Stage 1's table.</figcaption>
       </figure>
       <figure class="ex">
         <h3>The distribution, simulated and exact</h3>
-        <p class="sub">The thousand players beside the exact binomial answer for one player. The percentiles agree. The average does not settle: it rests on the luckiest handful, and a thousand players are too few to pin it down.</p>
+        <p class="sub">Percentiles match the exact binomial answer. The average does not: it rests on the luckiest few, too rare to pin down with a thousand players.</p>
         <div class="scroll"><table id="t-dist"></table></div>
       </figure>
     </div>
   </section>
 
   <section class="sec" id="kelly">
-    <div class="side"><span class="mark">2 · One Kelly player</span><p>A 1001st player stakes a quarter of their wealth each round, with coins of their own.</p></div>
+    <div class="side"><span class="mark">2 · One Kelly player</span><p>A 1001st player stakes a quarter each round, on coins of their own.</p></div>
     <div class="main">
       <h2 id="h2-kelly"></h2>
-      <p>Kelly's rule picks the stake that makes wealth grow fastest over many rounds: maximise the expected log of wealth, not wealth itself. For a bet that gains <code>b</code> with probability <code>p</code> and loses <code>a</code> otherwise, that stake is</p>
+      <p>Kelly's rule picks the stake that grows wealth fastest over many rounds, by maximising the expected log of wealth. For a bet that gains <code>b</code> with probability <code>p</code> and loses <code>a</code> otherwise:</p>
       <p class="formula" id="formula"></p>
       <figure class="ex">
         <h3>Growth per round against the stake</h3>
-        <p class="sub">The typical player's growth per round (the expected log return), from staking nothing to staking everything. Move the stake to see what 100 rounds bring.</p>
+        <p class="sub">The typical player's growth a round (the expected log return) at each stake. Move the stake to see 100 rounds.</p>
         <div class="ctl"><label for="f-slider">Stake</label><input type="range" id="f-slider" min="0" max="200" step="1" value="50"><output id="f-out" for="f-slider">25%</output>
           <span class="presets" role="group" aria-label="Stake presets"><button type="button" data-k="50" aria-pressed="true">Kelly</button><button type="button" data-k="25" aria-pressed="false">Half Kelly</button><button type="button" data-k="200" aria-pressed="false">All in</button></span></div>
         <div class="readout" id="readout"></div>
         <div class="chart" id="c-growth"></div>
-        <figcaption>Exact, from the binomial count of wins. The stake where growth turns negative is the edge of ruin by slow erosion.</figcaption>
+        <figcaption>Exact, from the binomial count of wins. Above 50%, growth turns negative.</figcaption>
       </figure>
       <figure class="ex">
         <h3 id="h3-outsider"></h3>
-        <p class="sub">The all-in ranking from stage 1, with the Kelly player placed among them.</p>
+        <p class="sub">Stage 1's all-in ranking, with the Kelly player placed in it.</p>
         <div class="legend"><span><i class="allin"></i>All-in players</span><span><i class="sq beni"></i>The Kelly player</span></div>
         <div class="chart" id="c-rank2"></div>
         <figcaption id="cap-rank2"></figcaption>
@@ -167,42 +196,35 @@ footer p { max-width: 90ch; }
   </section>
 
   <section class="sec" id="sensible">
-    <div class="side"><span class="mark">3 · Everyone sensible</span><p>Every player stakes Kelly alone, or the table pools its luck and shares it, at the Kelly stake or all in.</p></div>
+    <div class="side"><span class="mark">3 · Everyone sensible</span><p>Everyone stakes Kelly alone, or the table pools its luck at 25% or all in.</p></div>
     <div class="main">
       <h2 id="h2-sensible"></h2>
       <p id="p3"></p>
       <figure class="ex">
         <h3>The same coins, four ways to play them</h3>
-        <p class="sub">All thousand players ranked under each scheme. Every scheme faces exactly the same flips as stage 1.</p>
-        <div class="legend"><span><i class="allin"></i>Everyone all in</span><span><i class="kelly"></i>Everyone Kelly, alone</span><span><i class="pooledk"></i>Everyone pooled, Kelly</span><span><i class="pooled"></i>Everyone pooled, all in</span></div>
+        <p class="sub">All thousand players ranked under each scheme, on stage 1's flips.</p>
+        <div class="legend"><span><i class="allin"></i>Everyone all in</span><span><i class="kelly"></i>Everyone Kelly, alone</span><span><i class="pooledk"></i>Everyone pooled, at 25%</span><span><i class="pooled"></i>Everyone pooled, all in</span></div>
         <div class="chart" id="c-rank3"></div>
-        <figcaption>Pooled: each player stakes on their own coin, a quarter (Kelly) or everything (all in), then the thousand share the table's wealth equally before the next round.</figcaption>
+        <figcaption>Pooled: each player stakes on their own coin, then the thousand share the table's wealth equally before the next round.</figcaption>
       </figure>
       <figure class="ex">
         <h3>What each scheme leaves the thousand</h3>
         <div class="scroll"><table id="t-schemes"></table></div>
       </figure>
-      <figure class="ex">
-        <h3>How big a pool is enough</h3>
-        <p class="sub">Players pooled in groups of each size, every group staking its own growth-optimal fraction. The meter is the group's growth per round as a share of the 4.9% a perfect pool would earn.</p>
-        <div class="scroll"><table id="t-pools"></table></div>
-        <figcaption>Growth-optimal stake for a pool: maximise the exact expected log of the pool's averaged return. Alone it is Kelly's 25%; from five players up it is everything.</figcaption>
-      </figure>
-      <p class="fact" id="fact-end"></p>
     </div>
   </section>
 
   <section class="sec" id="mixed">
-    <div class="side"><span class="mark">4 · A mixed table</span><p>A quarter of each: a pool of 250 all in, a pool of 250 at Kelly, 250 all in alone, 250 Kelly alone.</p></div>
+    <div class="side"><span class="mark">4 · A mixed table</span><p>A quarter of each: a pool of 250 all in, a pool of 250 at 25%, 250 all in alone, 250 Kelly alone.</p></div>
     <div class="main">
       <h2 id="h2-mixed"></h2>
       <p id="p4"></p>
       <figure class="ex">
         <h3>One ranking, four kinds of player</h3>
-        <p class="sub">All thousand players on stage 1's coins, richest first, each dot a player. Each pool shares only among its own 250 members.</p>
+        <p class="sub">Stage 1's coins, richest first, one dot per player. Each pool shares only among its own 250.</p>
         <div class="legend" id="leg-mixed"></div>
         <div class="chart" id="c-mixed"></div>
-        <figcaption>The pooled players sit on flat runs because every member of a pool holds the same.</figcaption>
+        <figcaption>Pools sit on flat runs: every member holds the same.</figcaption>
       </figure>
       <figure class="ex">
         <h3>Where each quarter lands, and what it holds</h3>
@@ -211,10 +233,37 @@ footer p { max-width: 90ch; }
     </div>
   </section>
 
+  <section class="sec" id="levers">
+    <div class="side"><span class="mark">Two levers</span><p>Pooling changes the bet; Kelly sizes the stake on it.</p></div>
+    <div class="main">
+      <h2>Two levers: the bet you hold, and how much you stake</h2>
+      <p id="lv-intro"></p>
+      <p class="formula" id="lv-formula"></p>
+      <p id="lv-drag"></p>
+      <figure class="ex">
+        <h3>The bet against the stake</h3>
+        <p class="sub">Stage 3's four schemes on the same coins; each cell is the median player after 100 rounds. The tag marks the Kelly stake for that row's bet, and it moves when the bet changes.</p>
+        <div class="matrix" id="matrix"></div>
+        <figcaption id="cap-matrix"></figcaption>
+      </figure>
+      <figure class="ex">
+        <h3>Pooling lifts the curve and moves Kelly's peak to all in</h3>
+        <p class="sub">Exact growth a round against the stake, alone and in pools of 2, 5 and 1000. Dots mark each curve's Kelly stake.</p>
+        <div class="legend" id="leg-curves"></div>
+        <div class="chart" id="c-curves"></div>
+        <figcaption id="cap-curves"></figcaption>
+      </figure>
+      <div class="lever"><h3>The bet: one coin, or the pool's average</h3><p id="lv-pool"></p></div>
+      <div class="lever"><h3>The stake: set by Kelly</h3><p id="lv-kelly"></p></div>
+      <div class="lever"><h3>What Kelly does not promise</h3><p id="lv-caveats"></p></div>
+      <p class="fact" id="lv-end"></p>
+    </div>
+  </section>
+
   <section class="sec" id="fair">
     <div class="side"><span class="mark">Fair play</span></div>
     <div class="main">
-      <p>Every stake is chosen before the coin is flipped, from the public terms of the bet and what that player has seen so far. The outcomes are drawn in advance only so that every scheme faces the same luck; no strategy can see them. This is tested: two tables that agree on everything a player has seen must give that player the same stakes, whatever the other players' coins or the flips still to come.</p>
+      <p>Every stake is set before the flip, from the bet's public terms and what that player has seen. Outcomes are drawn in advance only so that every scheme faces the same luck. Tested: two tables that agree on everything a player has seen give that player the same stakes.</p>
     </div>
   </section>
 
@@ -310,7 +359,7 @@ const DATA = /*__DATA__*/null;
         el('path', {d: d, class: s.cls}, svg);
         if (s.end && !narrow) {
           const i = s.ys.length - 1, x = s.xs ? s.xs[i] : i + (s.x0 || 0);
-          const t = el('text', {x: tx(x) + 6, y: ty(s.ys[i]) + 4 + (s.endDy || 0), class: 'end' + (s.hlEnd ? ' hl' : '')}, svg);
+          const t = el('text', {x: tx(x) + 10, y: ty(s.ys[i]) + 4 + (s.endDy || 0), class: 'end' + (s.hlEnd ? ' hl' : '')}, svg);
           t.textContent = s.end;
         }
       });
@@ -365,7 +414,7 @@ const DATA = /*__DATA__*/null;
     fig('Every player, pooled', fmt(sch.pooled.summary.median) + '<small>×</small>', 'the 1000 share the luck each round');
 
   // ---- stage 1 ----
-  $('p1').innerHTML = 'Each round the coin adds 5% on average: half of +50% and half of −40%. But a player who wins one and loses one ends with 1.5 × 0.6 = 0.9 of what they had, so over many rounds the typical player loses about ' + pct(-A.exact.growth, 1) + ' a round. Of the ' + G.players + ' players, ' + Math.round(A.summary.above_start * G.players) + ' end ahead of where they started (they needed ' + A.breakeven_wins + ' or more wins out of ' + G.rounds + '), ' + Math.round(A.summary.ruined * G.players) + ' have lost more than 99%, and the richest 1% hold ' + pct(A.summary.top1_share, 0) + ' of all the wealth.';
+  $('p1').innerHTML = 'The average round adds 5%, but a win then a loss leaves 1.5 × 0.6 = 0.9, so the typical player loses about ' + pct(-A.exact.growth, 1) + ' a round. Of ' + G.players + ' players, ' + Math.round(A.summary.above_start * G.players) + ' end ahead (it took ' + A.breakeven_wins + ' wins of ' + G.rounds + '), ' + Math.round(A.summary.ruined * G.players) + ' lose over 99%, and the richest 1% hold ' + pct(A.summary.top1_share, 0) + ' of the wealth.';
   const rounds = range(0, G.rounds);
   const yb1 = bounds(A.paths.concat([A.mean_path, A.median_path]));
   chart($('c-paths'), {
@@ -376,7 +425,7 @@ const DATA = /*__DATA__*/null;
       {ys: A.median_path, cls: 'allin', end: 'median ' + fmt(A.median_path[G.rounds])}]),
     tip: x => { const t = Math.round(x); return {x: t, html: '<b>Round ' + t + '</b><br>' + tipRow('average', fmt(A.mean_path[t])) + '<br>' + tipRow('median', fmt(A.median_path[t]))}; },
   });
-  $('cap-paths').textContent = 'Simulated by src/BettingGames, seed ' + A.seed + '. The average ends near ' + fmt(A.summary.mean) + ' (exact expectation ' + fmt(A.exact.mean) + '); the median near ' + fmt(A.summary.median) + '.';
+  $('cap-paths').textContent = 'Seed ' + A.seed + '. Average ' + fmt(A.summary.mean) + ' (exact ' + fmt(A.exact.mean) + '); median ' + fmt(A.summary.median) + '.';
 
   // histogram by decade
   const dec = A.ranked.map(v => Math.floor(Math.log10(v)));
@@ -438,7 +487,7 @@ const DATA = /*__DATA__*/null;
     dots: [{x: K.rank, y: K.final, cls: 'dot-hl', r: 6, text: 'Kelly player: ' + fmt(K.final) + '×, ' + ord(K.rank), hl: true}],
     tip: x => { const r = Math.round(x); return {x: r, html: '<b>' + ord(r) + ' all-in player</b><br>' + tipRow('wealth', fmt(A.ranked[r - 1]))}; },
   });
-  $('cap-rank2').textContent = 'The Kelly player won ' + K.wins + ' of ' + G.rounds + ' flips with coins of their own (seed ' + K.outsider_seed + ') and beat ' + pct(K.beats, 1) + ' of the all-in table. A typical Kelly result, ' + fmt(K.exact.median) + '×, beats ' + pct(K.exact_beats, 0) + ' of all-in players exactly.';
+  $('cap-rank2').textContent = 'The Kelly player won ' + K.wins + ' of ' + G.rounds + ' flips (seed ' + K.outsider_seed + ') and beat ' + pct(K.beats, 1) + ' of the table. A typical Kelly result, ' + fmt(K.exact.median) + '×, beats ' + pct(K.exact_beats, 0) + ' of all-in players.';
 
   const T = K.trials, binw = 10, rmax = Math.max(200, Math.ceil(Math.max.apply(null, T.ranks) / binw) * binw);
   const rc = range(0, rmax / binw - 1).map(i => T.ranks.filter(r => r > i * binw && r <= (i + 1) * binw).length);
@@ -450,30 +499,27 @@ const DATA = /*__DATA__*/null;
     bars: rc.map((c, i) => ({x0: i * binw, x1: (i + 1) * binw, y: c})), mark: T.median_rank,
     tip: x => { const i = Math.min(rc.length - 1, Math.floor(x / binw)); return {x: (i + 0.5) * binw, html: '<b>Ranks ' + (i * binw + 1) + '–' + (i + 1) * binw + '</b><br>' + tipRow('contests', rc[i] + ' (' + pct(rc[i] / T.n) + ')')}; },
   });
-  $('cap-trials').textContent = 'Median rank ' + T.median_rank + ' (dotted). Top 10% in ' + pct(T.top10, 0) + ' of contests, top half in ' + pct(T.top_half, 0) + ', top 1% in ' + pct(T.top1, 0) + ': Kelly never wins the lottery, and almost never loses it.';
-  $('fact-same').innerHTML = 'Given the very same coins, a Kelly stake ends richer than all in for <b>' + pct(K.same_luck.kelly_beats_all_in, 0) + '</b> of the thousand players. All in wins only for the luckiest few, who needed a long run of heads.';
+  $('cap-trials').textContent = 'Median rank ' + T.median_rank + ' (dotted). Top 10% in ' + pct(T.top10, 0) + ' of contests, top half in ' + pct(T.top_half, 0) + ', top 1% in ' + pct(T.top1, 0) + ': Kelly never wins the lottery and almost never loses it.';
+  $('fact-same').innerHTML = 'On the very same coins, Kelly ends richer than all in for <b>' + pct(K.same_luck.kelly_beats_all_in, 0) + '</b> of the thousand. All in wins only for the luckiest few.';
 
   // ---- stage 3 ----
-  $('h2-sensible').textContent = 'Kelly alone makes most players a little richer; pooling makes every player ' + fmt(sch.pooled.summary.median) + ' times richer';
-  $('p3').innerHTML = 'When every player stakes Kelly on their own, nobody is ruined and ' + pct(sch.kelly.summary.above_start, 0) + ' end ahead, but the typical player only reaches ' + fmt(sch.kelly.summary.median) + '×, and the ranking is still pure luck: whoever won the most flips is first. Kelly is the best a player can do alone. Together they can do better. If the thousand agree to share the table’s wealth after every round, each player’s own coin is averaged against 999 others and the swings almost cancel. Pooled at the same ' + pct(sch.pooled_kelly.stake, 0) + ' stake, every player ends with ' + fmt(sch.pooled_kelly.summary.median) + '×: what Kelly alone gave only on average (' + fmt(sch.kelly.summary.mean) + '×), now given to everyone. But ' + pct(sch.pooled_kelly.stake, 0) + ' is the Kelly stake for one volatile coin. The pool’s bet is a thousand coins averaged, about 30 times steadier, and Kelly for that bet is to stake everything. All in, the pool grows at close to the 5% average the coin offers, ' + pct(S.ensemble_growth, 2) + ' a round in log terms against Kelly alone’s ' + pct(S.kelly_growth, 2) + ', and every player ends with ' + fmt(sch.pooled.summary.median) + '×.';
+  $('h2-sensible').textContent = 'Kelly alone makes most players a little richer; pooling all in makes every player ' + fmt(sch.pooled.summary.median) + ' times richer';
+  $('p3').innerHTML = 'Everyone on Kelly alone: nobody is ruined and ' + pct(sch.kelly.summary.above_start, 0) + ' end ahead, but the median is only ' + fmt(sch.kelly.summary.median) + '×, and the ranking is still luck. Pooled, each player still bets on their own coin but the table shares its wealth after every round, so the swings almost cancel. At 25% every player ends with ' + fmt(sch.pooled_quarter.summary.median) + '×, about what Kelly alone gave on average (' + fmt(sch.kelly.summary.mean) + '×). All in, every player ends with ' + fmt(sch.pooled.summary.median) + '×: the pool grows at ' + pct(S.ensemble_growth, 2) + ' a round, close to the coin\u2019s 5% average. The two levers section below explains why all in is right for the pool.';
   const yr3 = bounds(S.schemes.map(s => s.ranked));
-  const cls = {all_in: 'allin', kelly: 'kelly', pooled_kelly: 'pooledk', pooled: 'pooled'}, short = {all_in: 'all in', kelly: 'Kelly', pooled_kelly: 'pooled, Kelly', pooled: 'pooled, all in'};
+  const cls = {all_in: 'allin', kelly: 'kelly', pooled_quarter: 'pooledk', pooled: 'pooled'}, short = {all_in: 'all in', kelly: 'Kelly', pooled_quarter: 'pooled, 25%', pooled: 'pooled, all in'};
   chart($('c-rank3'), {
     height: 340, log: true, x: [1, G.players], y: yr3, xTicks: [1, 250, 500, 750, 1000], xLabel: 'rank', limits: [{y: 1, label: 'start'}],
-    series: S.schemes.map(s => ({xs: rankX, ys: s.ranked, cls: cls[s.key], end: short[s.key], hlEnd: s.key === 'kelly', endDy: s.key === 'pooled' ? -6 : s.key === 'pooled_kelly' ? -4 : 0})),
+    series: S.schemes.map(s => ({xs: rankX, ys: s.ranked, cls: cls[s.key], end: short[s.key], hlEnd: s.key === 'kelly', endDy: s.key === 'pooled' ? -6 : s.key === 'pooled_quarter' ? -4 : 0})),
     tip: x => { const r = Math.round(x); return {x: r, html: '<b>' + ord(r) + '</b><br>' + S.schemes.map(s => tipRow(short[s.key], fmt(s.ranked[r - 1]))).join('<br>')}; },
   });
   $('t-schemes').innerHTML = '<thead><tr><th>Scheme</th><th class="num">Stake</th><th class="num">Median</th><th class="num">Average</th><th class="num">Ahead</th><th class="num">Lost over 99%</th><th class="num">Top 1% hold</th></tr></thead><tbody>' +
     S.schemes.map(s => { const u = s.summary; return '<tr><td class="lab">' + s.label + '</td><td class="num">' + pct(s.stake, 0) + '</td><td class="num">' + fmt(u.median) + '</td><td class="num">' + fmt(u.mean) + '</td><td class="num">' + pct(u.above_start, 1) + '</td><td class="num">' + pct(u.ruined, 1) + '</td><td class="num">' + pct(u.top1_share, 0) + '</td></tr>'; }).join('') + '</tbody>';
-  $('t-pools').innerHTML = '<thead><tr><th class="num">Pool size</th><th class="num">Stake</th><th class="num">Median after 100</th><th class="num">Growth a round</th><th>Of a perfect pool</th></tr></thead><tbody>' +
-    S.pools.map(p => '<tr><td class="num">' + (p.size === 1 ? '1, alone' : p.size) + '</td><td class="num">' + pct(p.fraction, 0) + '</td><td class="num">' + fmt(p.median) + '</td><td class="num">' + pct(p.growth, 2) + '</td><td><div class="meter" role="img" aria-label="' + pct(p.growth / S.ensemble_growth, 0) + '"><i style="width:' + Math.max(0, Math.min(100, 100 * p.growth / S.ensemble_growth)).toFixed(1) + '%"></i></div></td></tr>').join('') + '</tbody>';
-  $('fact-end').innerHTML = 'The coin was never the problem. Its average is good; a single player simply cannot live on an average. <b>Kelly</b> is how one person stops the swings from eating the growth. <b>Sharing</b> is how a group collects the average itself: insurance, diversification and pooled funds are the same idea at work.';
 
   // ---- stage 4 ----
   const M = CF.mixed, mg = {}; M.groups.forEach(g => { mg[g.key] = g; });
   const mcls = ['dot-koke', 'dot-kuri', 'dot-ai', 'dot-hl'], mleg = ['koke', 'kuri', 'ai', 'beni'];
   $('h2-mixed').textContent = 'One lucky loner tops the table, but the all-in pool holds ' + pct(mg.pooled.wealth_share, 0) + ' of the wealth';
-  $('p4').innerHTML = 'Put all four kinds of player at one table and the ranking sorts them almost by kind. The single luckiest lone all-in player finishes first, on ' + fmt(M.ranked[0]) + '×. Right behind, the all-in pool fills ranks ' + mg.pooled.best_rank + ' to ' + mg.pooled.worst_rank + ': each of its 250 members ends with ' + fmt(mg.pooled.summary.median) + '×, and together they hold ' + pct(mg.pooled.wealth_share, 0) + ' of everything. The lone Kelly players spread across ranks ' + mg.kelly.best_rank + ' to ' + mg.kelly.worst_rank + ', around the Kelly pool, whose members all end with ' + fmt(mg.pooled_kelly.summary.median) + '× at ranks ' + mg.pooled_kelly.best_rank + ' to ' + mg.pooled_kelly.worst_rank + '. The other lone all-in players fill the bottom: their median rank is ' + ord(Math.round(mg.all_in.median_rank)) + '.';
+  $('p4').innerHTML = 'At one table the ranking sorts the four kinds almost by kind. The luckiest lone all-in player is first, on ' + fmt(M.ranked[0]) + '×. The all-in pool fills ranks ' + mg.pooled.best_rank + ' to ' + mg.pooled.worst_rank + ' at ' + fmt(mg.pooled.summary.median) + '× each and holds ' + pct(mg.pooled.wealth_share, 0) + ' of everything. The pool at 25% (' + fmt(mg.pooled_quarter.summary.median) + '×, ranks ' + mg.pooled_quarter.best_rank + ' to ' + mg.pooled_quarter.worst_rank + ') sits among the lone Kelly players (ranks ' + mg.kelly.best_rank + ' to ' + mg.kelly.worst_rank + '). The other lone all-in players fill the bottom, median rank ' + ord(Math.round(mg.all_in.median_rank)) + '.';
   $('leg-mixed').innerHTML = M.groups.map((g, i) => '<span><i class="pt ' + mleg[i] + '"></i>' + g.label + '</span>').join('');
   const yrm = bounds([M.ranked]);
   chart($('c-mixed'), {
@@ -484,7 +530,46 @@ const DATA = /*__DATA__*/null;
   $('t-mixed').innerHTML = '<thead><tr><th>Quarter</th><th class="num">Stake</th><th class="num">Median</th><th class="num">Best rank</th><th class="num">Median rank</th><th class="num">Worst rank</th><th class="num">In the top 100</th><th class="num">Share of the wealth</th></tr></thead><tbody>' +
     M.groups.map(g => '<tr><td class="lab">' + g.label + '</td><td class="num">' + pct(g.stake, 0) + '</td><td class="num">' + fmt(g.summary.median) + '</td><td class="num">' + g.best_rank + '</td><td class="num">' + Math.round(g.median_rank) + '</td><td class="num">' + g.worst_rank + '</td><td class="num">' + g.top100 + '</td><td class="num">' + pct(g.wealth_share, 1) + '</td></tr>').join('') + '</tbody>';
 
-  $('foot').innerHTML = 'Built ' + DATA.built + ' by <code>viz/build_betting_games_lab.py</code> in ' + DATA.seconds + ' s from <code>src/BettingGames</code>: ' + G.players + ' players, ' + G.rounds + ' rounds, +' + pct(G.up, 0) + ' or −' + pct(G.down, 0) + ' with probability ' + G.p_up + ', fixed seeds. Exact figures come from the binomial count of wins. The coin is a classic illustration of the gap between the average over players and the growth of one player over time; the code and page are original.';
+  // ---- two levers ----
+  const L = CF.levers;
+  $('lv-intro').innerHTML = 'Over many rounds, wealth grows at about the average return minus half the variance:';
+  $('lv-formula').innerHTML = 'growth a round ≈ f·μ − f²·σ² / 2, with f the share of wealth staked';
+  $('lv-drag').innerHTML = 'For this coin μ = ' + pct(L.mu, 0) + ' and σ² = ' + L.var + '. All in, the drag σ² / 2 ≈ ' + pct(L.drag_all_in, 1) + ' swamps the average. Two levers cut it: the bet (pooling shrinks σ²) and the stake (f). Kelly is not a third lever. It is the rule that picks f for whichever bet you hold.';
+  const cell = (key, kellyHere, em, col) => {
+    const s = sch[key], g = Math.log(s.summary.median) / G.rounds;
+    return '<div class="mx-c' + col + '">' + '<span class="tag' + (kellyHere ? '' : ' off') + '">Kelly for this bet</span>' +
+      '<div class="v' + (em ? ' em' : '') + '">' + fmt(s.summary.median) + '<small>×</small></div>' +
+      '<div class="line">median player</div>' +
+      '<div class="line">growth ' + pct(g, 2) + ' a round</div>' +
+      '<div class="line">' + pct(s.summary.above_start, 0) + ' end ahead</div></div>';
+  };
+  $('matrix').innerHTML =
+    '<div class="mx-axis-row">The bet ↓</div><div class="mx-axis">The stake →</div>' +
+    '<div class="mx-corner"></div>' +
+    '<div class="mx-col c1">Stake 100%<small>all in</small></div>' +
+    '<div class="mx-col c2">Stake ' + pct(L.kelly_exact, 0) + '<small>a quarter</small></div>' +
+    '<div class="mx-row">One coin alone<small>each keeps their own luck</small></div>' + cell('all_in', false, false, 1) + cell('kelly', true, false, 2) +
+    '<div class="mx-row">Pooled with ' + L.n_pool + '<small>wealth shared every round</small></div>' + cell('pooled', true, true, 1) + cell('pooled_quarter', false, false, 2);
+  $('cap-matrix').textContent = 'Growth a round = ln(median) / ' + G.rounds + '. The coin\u2019s own average, ln(1 + μ), is ' + pct(L.growth_ensemble, 2) + ': only the pooled row gets near it.';
+  $('lv-kelly').innerHTML = 'Kelly picks the f that maximises the growth above: f* ≈ μ / σ², the expected log of wealth, which is the growth of one player\u2019s own path over time. For one coin that is ' + pct(L.kelly_approx, 1) + ' (exactly ' + pct(L.kelly_exact, 0) + '), lifting the typical player from ' + pct(L.growth_all_in, 2) + ' to ' + pct(L.growth_kelly, 2) + ' a round. For the pool\u2019s steadier bet it is μ / (σ² / N) ≈ ' + Math.round(L.pool_kelly_approx) + ' for N = ' + L.n_pool + ', capped at ' + pct(L.pool_kelly_exact, 0) + ' because the game allows no borrowing. So the pool at 25% under-bets (' + fmt(sch.pooled_quarter.summary.median) + '×), and the pool all in is the pool\u2019s Kelly (' + fmt(sch.pooled.summary.median) + '×).';
+  $('lv-pool').innerHTML = 'A pool of N bets on the average of N independent coins: the same μ, with σ² divided by N. The spread across players replaces the spread over time. Pooling chooses no stake; it changes the bet the stake is placed on.';
+  $('lv-caveats').innerHTML = 'It does not maximise average wealth: all in averages ' + fmt(A.exact.mean) + '× against Kelly\u2019s ' + fmt(K.exact.mean) + '×, but almost nobody gets it. Its guarantee is long-run: over ' + G.rounds + ' rounds it beat all in for ' + pct(K.same_luck.kelly_beats_all_in, 0) + ' of players, not all. It assumes known odds, hence half Kelly in practice. And real assets are correlated, so pooling cannot push the variance below ρ·σ²; a real pool\u2019s Kelly stake stays far below \u201ceverything, borrowed\u201d.';
+  const C = CF.curves, ccls = ['kelly', 'pooledk', 'ctxs', 'pooled'], cleg = ['kelly', 'pooledk', 'ctx', 'pooled'];
+  const cname = c => c.size === 1 ? 'alone' : 'pool of ' + c.size;
+  $('leg-curves').innerHTML = C.map((c, i) => '<span><i class="' + cleg[i] + '"></i>' + (c.size === 1 ? 'One coin alone' : 'Pool of ' + c.size) + '</span>').join('');
+  const fx = range(0, C[0].growth.length - 1).map(i => i / (C[0].growth.length - 1));
+  const cmin = -0.06, cmaxg = 0.05;
+  chart($('c-curves'), {
+    height: 300, x: [0, 1], y: [cmin, cmaxg], yTicks: [-0.06, -0.04, -0.02, 0, 0.02, 0.04], yFmt: v => (100 * v).toFixed(0) + '%',
+    xTicks: [0, 0.25, 0.5, 0.75, 1], xFmt: v => pct(v, 0), xLabel: 'stake', limits: [{y: 0, label: ''}],
+    series: C.map((c, i) => ({xs: fx, ys: c.growth.map(g => Math.max(g, cmin)), cls: ccls[i], end: cname(c), hlEnd: c.size === 1})),
+    dots: C.map(c => ({x: c.kelly, y: c.kelly_growth, cls: 'dot-ink', r: 4.5})),
+    tip: x => { const i = Math.round(x * (fx.length - 1)); return {x: fx[i], html: '<b>Stake ' + pct(fx[i], 0) + '</b><br>' + C.map(c => tipRow(cname(c), pct(c.growth[i], 2))).join('<br>')}; },
+  });
+  $('cap-curves').textContent = 'Kelly stake: ' + C.map(c => cname(c) + ' ' + pct(c.kelly, 0)).join(', ') + '. Exact expected log growth of the pool’s averaged return; no borrowing, so stakes stop at 100%.';
+  $('lv-end').innerHTML = '<b>Pool</b> to change the bet, then let <b>Kelly</b> size it. Here, that means all in, together.';
+
+  $('foot').innerHTML = 'Built ' + DATA.built + ' by <code>viz/build_betting_games_lab.py</code> in ' + DATA.seconds + ' s from <code>src/BettingGames</code>: ' + G.players + ' players, ' + G.rounds + ' rounds, +' + pct(G.up, 0) + ' or −' + pct(G.down, 0) + ' with probability ' + G.p_up + ', fixed seeds; exact figures from the binomial count of wins. The coin is a classic illustration of the average over players against the growth of one player over time; the code and page are original.';
 })();
 </script>
 </body>

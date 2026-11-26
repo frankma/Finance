@@ -141,20 +141,39 @@ def fraction_curve(step: float = 0.01) -> List[Dict]:
     return [{key: sig(v) for key, v in exact(round(f, 6)).items()} for f in np.arange(0.0, 1.0 + step / 2, step)]
 
 
-def pooled_fraction(n: int) -> float:
+def pool_growth(n: int, fraction: float) -> float:
     """
-    the growth-optimal stake for a pool of n that shares every round: each member stakes f on their own coin, so the
-    pool's wealth grows by f times the average of n returns, whose win count is binomial; maximise the exact expected
-    log growth over f in [0, 1]. One player alone gets the Kelly fraction; a big pool stakes everything
+    the exact growth a round, the expected log return, of a pool of n that shares every round: each member stakes
+    the fraction on their own coin, so the pool's wealth grows by the fraction times the average of n returns, whose
+    win count is binomial. n = 1 is a player alone
     """
     j = np.arange(n + 1)
-    pmf = BET.wins_pmf(n)
     avg = (j * BET.up - (n - j) * BET.down) / n  # the pool's return per unit staked
+    return float(np.dot(BET.wins_pmf(n), np.log1p(fraction * avg)))
 
-    def growth(f: float) -> float:
-        return float(np.dot(pmf, np.log1p(f * avg)))
-    result = minimize_scalar(lambda f: -growth(f), bounds=(0.0, 1.0), method='bounded', options={'xatol': 1e-9})
-    return 1.0 if growth(1.0) >= -result.fun else float(result.x)
+
+def pooled_fraction(n: int) -> float:
+    """
+    the growth-optimal (Kelly) stake for a pool of n, at most all in. One player alone gets 25%; a big pool, being a
+    far steadier bet, stakes everything
+    """
+    result = minimize_scalar(lambda f: -pool_growth(n, f), bounds=(0.0, 1.0), method='bounded',
+                             options={'xatol': 1e-9})
+    return 1.0 if pool_growth(n, 1.0) >= -result.fun else float(result.x)
+
+
+def growth_curves(pool_sizes: Sequence[int] = (1, 2, 5, 1000), step: float = 0.01) -> List[Dict]:
+    """
+    growth a round against the stake, one curve per pool size, with each curve's Kelly stake: pooling lifts the
+    curve and moves its peak towards all in
+    """
+    fractions = np.arange(0.0, 1.0 + step / 2, step)
+    curves = []
+    for n in pool_sizes:
+        k = pooled_fraction(n)
+        curves.append({'size': int(n), 'kelly': sig(k), 'kelly_growth': sig(pool_growth(n, k)),
+                       'growth': sig([pool_growth(n, f) for f in fractions])})
+    return curves
 
 
 def everyone_sensible(seed: int = 101, pool_sizes: Sequence[int] = (1, 2, 5, 10, 50, 100, 1000)) -> Dict:
@@ -169,7 +188,7 @@ def everyone_sensible(seed: int = 101, pool_sizes: Sequence[int] = (1, 2, 5, 10,
     kelly = BET.kelly_fraction()
     for key, label, stake, pool in (('all_in', 'Everyone all in', 1.0, None),
                                     ('kelly', 'Everyone Kelly, alone', kelly, None),
-                                    ('pooled_kelly', 'Everyone pooled, Kelly', kelly, N_PLAYERS),
+                                    ('pooled_quarter', 'Everyone pooled, at 25%', kelly, N_PLAYERS),
                                     ('pooled', 'Everyone pooled, all in', 1.0, N_PLAYERS)):
         result = play(BET, FixedFraction(stake), wins, pool_size=pool, keep_paths=True)
         schemes.append({
@@ -197,7 +216,7 @@ def everyone_sensible(seed: int = 101, pool_sizes: Sequence[int] = (1, 2, 5, 10,
 
 
 MIX = (('pooled', 'Pooled, all in', 1.0, True),
-       ('pooled_kelly', 'Pooled, Kelly', BET.kelly_fraction(), True),
+       ('pooled_quarter', 'Pooled, at 25%', BET.kelly_fraction(), True),
        ('all_in', 'All in, alone', 1.0, False),
        ('kelly', 'Kelly, alone', BET.kelly_fraction(), False))
 
@@ -235,4 +254,22 @@ def mixed_table(seed: int = 101) -> Dict:
         'groups': groups,
         'ranked': sig(final[order], 4),
         'kind_ranked': [int(k) for k in kind[order]],
+    }
+
+
+def levers(n_pool: int = N_PLAYERS) -> Dict:
+    """
+    the two levers on the drag that volatility puts on growth, g(f) ~ f mu - f^2 sigma^2 / 2: Kelly scales the stake
+    down (best f ~ mu / sigma^2), pooling divides the variance by the pool's size (best f ~ mu / (sigma^2 / n), capped
+    at all in). The approximations beside the exact answers, for the page's explanation
+    """
+    mu = BET.mean_return(1.0)
+    var = BET.p_up * BET.up ** 2 + BET.p_down * BET.down ** 2 - mu ** 2
+    return {
+        'mu': sig(mu), 'var': sig(var), 'n_pool': int(n_pool),
+        'drag_all_in': sig(var / 2),  # what the approximation takes off the average when all in
+        'kelly_approx': sig(mu / var), 'kelly_exact': sig(BET.kelly_fraction()),
+        'pool_kelly_approx': sig(mu / (var / n_pool)), 'pool_kelly_exact': sig(pooled_fraction(n_pool)),
+        'growth_all_in': sig(BET.growth_rate(1.0)), 'growth_kelly': sig(BET.growth_rate(BET.kelly_fraction())),
+        'growth_ensemble': sig(math.log1p(mu)),
     }
