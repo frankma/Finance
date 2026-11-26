@@ -53,6 +53,8 @@ figure.ex .sub { font: 400 13.5px/1.5 var(--sans); color: var(--muted); max-widt
 .chart .dot-hl { fill: var(--beni); }
 .chart .dot-ai { fill: var(--ai); }
 .chart .dot-ink { fill: var(--ink); }
+.chart .dot-koke { fill: var(--koke); }
+.chart .dot-kuri { fill: var(--kuri); }
 .chart rect.bar { fill: var(--washi); }
 .chart rect.bar.hl { fill: var(--beni); }
 .chart rect.hit { fill: transparent; }
@@ -65,6 +67,8 @@ figure.ex .sub { font: 400 13.5px/1.5 var(--sans); color: var(--muted); max-widt
 .legend i.ink { border-color: var(--ink); } .legend i.dash { border-top-style: dashed; } .legend i.ctx { border-color: var(--nezumi); border-top-width: 1px; }
 .legend i.sq { width: 12px; height: 10px; border: 0; }
 .legend i.sq.washi { background: var(--washi); } .legend i.sq.beni { background: var(--beni); }
+.legend i.pt { width: 8px; height: 8px; border: 0; border-radius: 50%; }
+.legend i.pt.ai { background: var(--ai); } .legend i.pt.beni { background: var(--beni); } .legend i.pt.koke { background: var(--koke); } .legend i.pt.kuri { background: var(--kuri); }
 .scroll { overflow-x: auto; }
 table td.num, table th.num { text-align: right; }
 table td.lab { white-space: nowrap; }
@@ -185,6 +189,25 @@ footer p { max-width: 90ch; }
         <figcaption>Growth-optimal stake for a pool: maximise the exact expected log of the pool's averaged return. Alone it is Kelly's 25%; from five players up it is everything.</figcaption>
       </figure>
       <p class="fact" id="fact-end"></p>
+    </div>
+  </section>
+
+  <section class="sec" id="mixed">
+    <div class="side"><span class="mark">4 · A mixed table</span><p>A quarter of each: a pool of 250 all in, a pool of 250 at Kelly, 250 all in alone, 250 Kelly alone.</p></div>
+    <div class="main">
+      <h2 id="h2-mixed"></h2>
+      <p id="p4"></p>
+      <figure class="ex">
+        <h3>One ranking, four kinds of player</h3>
+        <p class="sub">All thousand players on stage 1's coins, richest first, each dot a player. Each pool shares only among its own 250 members.</p>
+        <div class="legend" id="leg-mixed"></div>
+        <div class="chart" id="c-mixed"></div>
+        <figcaption>The pooled players sit on flat runs because every member of a pool holds the same.</figcaption>
+      </figure>
+      <figure class="ex">
+        <h3>Where each quarter lands, and what it holds</h3>
+        <div class="scroll"><table id="t-mixed"></table></div>
+      </figure>
     </div>
   </section>
 
@@ -445,6 +468,21 @@ const DATA = /*__DATA__*/null;
   $('t-pools').innerHTML = '<thead><tr><th class="num">Pool size</th><th class="num">Stake</th><th class="num">Median after 100</th><th class="num">Growth a round</th><th>Of a perfect pool</th></tr></thead><tbody>' +
     S.pools.map(p => '<tr><td class="num">' + (p.size === 1 ? '1, alone' : p.size) + '</td><td class="num">' + pct(p.fraction, 0) + '</td><td class="num">' + fmt(p.median) + '</td><td class="num">' + pct(p.growth, 2) + '</td><td><div class="meter" role="img" aria-label="' + pct(p.growth / S.ensemble_growth, 0) + '"><i style="width:' + Math.max(0, Math.min(100, 100 * p.growth / S.ensemble_growth)).toFixed(1) + '%"></i></div></td></tr>').join('') + '</tbody>';
   $('fact-end').innerHTML = 'The coin was never the problem. Its average is good; a single player simply cannot live on an average. <b>Kelly</b> is how one person stops the swings from eating the growth. <b>Sharing</b> is how a group collects the average itself: insurance, diversification and pooled funds are the same idea at work.';
+
+  // ---- stage 4 ----
+  const M = CF.mixed, mg = {}; M.groups.forEach(g => { mg[g.key] = g; });
+  const mcls = ['dot-koke', 'dot-kuri', 'dot-ai', 'dot-hl'], mleg = ['koke', 'kuri', 'ai', 'beni'];
+  $('h2-mixed').textContent = 'One lucky loner tops the table, but the all-in pool holds ' + pct(mg.pooled.wealth_share, 0) + ' of the wealth';
+  $('p4').innerHTML = 'Put all four kinds of player at one table and the ranking sorts them almost by kind. The single luckiest lone all-in player finishes first, on ' + fmt(M.ranked[0]) + '×. Right behind, the all-in pool fills ranks ' + mg.pooled.best_rank + ' to ' + mg.pooled.worst_rank + ': each of its 250 members ends with ' + fmt(mg.pooled.summary.median) + '×, and together they hold ' + pct(mg.pooled.wealth_share, 0) + ' of everything. The lone Kelly players spread across ranks ' + mg.kelly.best_rank + ' to ' + mg.kelly.worst_rank + ', around the Kelly pool, whose members all end with ' + fmt(mg.pooled_kelly.summary.median) + '× at ranks ' + mg.pooled_kelly.best_rank + ' to ' + mg.pooled_kelly.worst_rank + '. The other lone all-in players fill the bottom: their median rank is ' + ord(Math.round(mg.all_in.median_rank)) + '.';
+  $('leg-mixed').innerHTML = M.groups.map((g, i) => '<span><i class="pt ' + mleg[i] + '"></i>' + g.label + '</span>').join('');
+  const yrm = bounds([M.ranked]);
+  chart($('c-mixed'), {
+    height: 340, log: true, x: [1, G.players], y: yrm, xTicks: [1, 250, 500, 750, 1000], xLabel: 'rank', limits: [{y: 1, label: 'start'}],
+    dots: M.ranked.map((v, i) => ({x: i + 1, y: v, r: 2.2, cls: mcls[M.kind_ranked[i]]})),
+    tip: x => { const r = Math.round(x); return {x: r, html: '<b>' + ord(r) + '</b><br>' + tipRow(M.groups[M.kind_ranked[r - 1]].label, fmt(M.ranked[r - 1]) + '×')}; },
+  });
+  $('t-mixed').innerHTML = '<thead><tr><th>Quarter</th><th class="num">Stake</th><th class="num">Median</th><th class="num">Best rank</th><th class="num">Median rank</th><th class="num">Worst rank</th><th class="num">In the top 100</th><th class="num">Share of the wealth</th></tr></thead><tbody>' +
+    M.groups.map(g => '<tr><td class="lab">' + g.label + '</td><td class="num">' + pct(g.stake, 0) + '</td><td class="num">' + fmt(g.summary.median) + '</td><td class="num">' + g.best_rank + '</td><td class="num">' + Math.round(g.median_rank) + '</td><td class="num">' + g.worst_rank + '</td><td class="num">' + g.top100 + '</td><td class="num">' + pct(g.wealth_share, 1) + '</td></tr>').join('') + '</tbody>';
 
   $('foot').innerHTML = 'Built ' + DATA.built + ' by <code>viz/build_betting_games_lab.py</code> in ' + DATA.seconds + ' s from <code>src/BettingGames</code>: ' + G.players + ' players, ' + G.rounds + ' rounds, +' + pct(G.up, 0) + ' or −' + pct(G.down, 0) + ' with probability ' + G.p_up + ', fixed seeds. Exact figures come from the binomial count of wins. The coin is a classic illustration of the gap between the average over players and the growth of one player over time; the code and page are original.';
 })();

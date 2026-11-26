@@ -194,3 +194,45 @@ def everyone_sensible(seed: int = 101, pool_sizes: Sequence[int] = (1, 2, 5, 10,
         'kelly_growth': sig(BET.growth_rate(BET.kelly_fraction())),
     }
 
+
+
+MIX = (('pooled', 'Pooled, all in', 1.0, True),
+       ('pooled_kelly', 'Pooled, Kelly', BET.kelly_fraction(), True),
+       ('all_in', 'All in, alone', 1.0, False),
+       ('kelly', 'Kelly, alone', BET.kelly_fraction(), False))
+
+
+def mixed_table(seed: int = 101) -> Dict:
+    """
+    stage 4: one table of 1000 on stage 1's coins, a quarter of each kind of player: a pool of 250 all in, a pool of
+    250 at the Kelly stake (each pool shares only among its own members), 250 all in alone and 250 Kelly alone.
+    Who ends up where in the one ranking, and who holds the wealth?
+    """
+    wins = table(seed)
+    n = N_PLAYERS // len(MIX)
+    finals, kinds = [], []
+    for g, (key, label, stake, pooled) in enumerate(MIX):
+        cols = wins[:, g * n:(g + 1) * n]
+        finals.append(play(BET, FixedFraction(stake), cols, pool_size=n if pooled else None).final)
+        kinds.append(np.full(n, g))
+    final, kind = np.concatenate(finals), np.concatenate(kinds)
+    order = np.argsort(-final, kind='stable')
+    rank = np.empty(N_PLAYERS, dtype=int)
+    rank[order] = np.arange(1, N_PLAYERS + 1)
+    total = final.sum()
+    groups = []
+    for g, (key, label, stake, pooled) in enumerate(MIX):
+        w, r = final[kind == g], rank[kind == g]
+        groups.append({
+            'key': key, 'label': label, 'stake': stake, 'pooled': pooled, 'n': int(n),
+            'summary': rounded_summary(w),
+            'best_rank': int(r.min()), 'worst_rank': int(r.max()), 'median_rank': float(np.median(r)),
+            'top10': int(np.sum(r <= 10)), 'top100': int(np.sum(r <= 100)), 'top250': int(np.sum(r <= 250)),
+            'wealth_share': sig(w.sum() / total),
+        })
+    return {
+        'seed': seed,
+        'groups': groups,
+        'ranked': sig(final[order], 4),
+        'kind_ranked': [int(k) for k in kind[order]],
+    }

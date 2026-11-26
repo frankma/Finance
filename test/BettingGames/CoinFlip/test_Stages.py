@@ -75,3 +75,30 @@ class TestStages(TestCase):
 
     def test_fixed_seeds_repeat(self):
         self.assertEqual(Stages.all_in(), self.one)
+
+
+class TestMixedTable(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.mix = Stages.mixed_table()
+        cls.by = {g['key']: g for g in cls.mix['groups']}
+
+    def test_a_quarter_of_each(self):
+        self.assertEqual([g['n'] for g in self.mix['groups']], [250] * 4)
+        self.assertEqual(sorted(self.mix['kind_ranked']), sorted([0, 1, 2, 3] * 250))
+        self.assertEqual(self.mix['ranked'], sorted(self.mix['ranked'], reverse=True))
+        self.assertAlmostEqual(sum(g['wealth_share'] for g in self.mix['groups']), 1.0, places=3)
+        self.assertEqual(sum(g['top100'] for g in self.mix['groups']), 100)
+
+    def test_pools_share_only_among_their_own(self):
+        for key in ('pooled', 'pooled_kelly'):
+            s = self.by[key]['summary']
+            self.assertEqual(s['min'], s['max'], '%s: every member holds the same.' % key)
+        self.assertGreater(self.by['pooled']['summary']['median'], self.by['pooled_kelly']['summary']['median'])
+
+    def test_who_lands_where(self):
+        allin, pooled = self.by['all_in'], self.by['pooled']
+        self.assertEqual(allin['best_rank'], 1, 'the luckiest lone all-in player tops the table.')
+        self.assertGreater(pooled['wealth_share'], 0.5, 'but the all-in pool holds most of the wealth.')
+        self.assertEqual(allin['worst_rank'], 1000, 'and lone all-in players also fill the bottom.')
+        self.assertGreater(self.by['kelly']['median_rank'], self.by['pooled_kelly']['median_rank'])
