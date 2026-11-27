@@ -87,6 +87,7 @@ mjx-container[display="true"] { overflow-x: auto; overflow-y: hidden; max-width:
 /* compatibility: older pages were written against the salmon-paper tokens. These aliases map every old name onto
    Kinari so those pages need no renaming. New CSS uses the Kinari tokens above directly. */
 :root {
+  --page-width: 1200px;  /* every page's column, one width across the site */
   --axis: var(--faint); --code: var(--surface);
   --display: var(--sans); --body: var(--sans);
   --claret: var(--beni); --claret-soft: color-mix(in srgb, var(--beni) 12%, var(--bg));
@@ -116,7 +117,7 @@ mjx-container[display="true"] { overflow-x: auto; overflow-y: hidden; max-width:
 }
 * { box-sizing: border-box; }
 body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 14px; line-height: 1.45; }
-.wrap { max-width: 1320px; margin: 0 auto; padding-inline: 20px; padding-block: 24px 40px; }
+.wrap { max-width: var(--page-width); margin: 0 auto; padding-inline: 20px; padding-block: 24px 40px; }
 header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 24px; margin-bottom: 20px; }
 h1 { font-family: var(--font-display); font-weight: 400; font-size: clamp(30px, 4vw, 40px); line-height: 1.08; margin: 0; text-wrap: balance; }
 header .eyebrow { flex-basis: 100%; }

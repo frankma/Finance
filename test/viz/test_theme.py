@@ -85,3 +85,17 @@ class TestTheme(TestCase):
         for page in ('viz/sabr_smile_lab.html',):
             self.assertIn(core, read(page), '%s carries a stale copy of the theme' % page)
         pass
+
+    def test_one_page_width(self):
+        # every page's column is var(--page-width), set once in the theme's own section
+        self.assertIn('--page-width: 1200px;', self.theme)
+        sources = PAGES + ['src/CardGames/Play/static/common.css']
+        rules = {}
+        for page in sources:
+            for width in re.findall(r'\.wrap \{ max-width: ([^;]+);', read(page)):
+                rules[page] = width
+        self.assertEqual(set(rules), {'viz/sabr_smile_lab.html', 'viz/card_games_lab.template.html',
+                                      'viz/betting_games_lab.template.html', 'viz/site_index.template.html',
+                                      'src/CardGames/Play/static/common.css'})
+        self.assertEqual(set(rules.values()), {'var(--page-width)'})
+        self.assertIn('--page-width: 1200px;', read('viz/sabr_smile_lab.html'), 'the SABR page carries its own copy.')

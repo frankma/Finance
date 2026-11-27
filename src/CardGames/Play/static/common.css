@@ -1,7 +1,7 @@
 /* shared by the lobby and every table page; loaded after /static/theme.css and uses only its tokens */
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
-.wrap { max-width: 1120px; margin: 0 auto; padding: 24px 20px 48px; }
+.wrap { max-width: var(--page-width); margin: 0 auto; padding: 24px 20px 48px; }
 @media (max-width: 600px) { .wrap { padding-inline: 16px; } }
 .top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 10px 20px; margin-bottom: 18px; }
 .top > div { display: flex; flex-direction: column; gap: 6px; }
@@ -13,7 +13,7 @@ nav.links a:hover { text-decoration: underline; }
 .box { background: transparent; border: 0; border-top: 1px solid var(--line); padding: 14px 0 0; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 .rail { display: flex; flex-direction: column; gap: 14px; }
 .fair-note { border-left: 1px solid var(--line); }
-.fair-note p { font: 400 13.5px/1.5 var(--sans); color: var(--muted); }
+.fair-note p { font: 400 13.5px/1.5 var(--sans); color: var(--muted); max-width: none; }  /* the note runs the full width of the page */
 .tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background: var(--line); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
 .tile { background: var(--bg); padding: 8px 12px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .tile .v { font: 400 20px/1.15 var(--sans); font-variant-numeric: tabular-nums; }

@@ -89,6 +89,7 @@ mjx-container[display="true"] { overflow-x: auto; overflow-y: hidden; max-width:
 /* compatibility: older pages were written against the salmon-paper tokens. These aliases map every old name onto
    Kinari so those pages need no renaming. New CSS uses the Kinari tokens above directly. */
 :root {
+  --page-width: 1200px;  /* every page's column, one width across the site */
   --axis: var(--faint); --code: var(--surface);
   --display: var(--sans); --body: var(--sans);
   --claret: var(--beni); --claret-soft: color-mix(in srgb, var(--beni) 12%, var(--bg));
@@ -111,14 +112,14 @@ mjx-container[display="true"] { overflow-x: auto; overflow-y: hidden; max-width:
 /* page: one reading column of boxed exhibits; sequential ramp for the starting-hand grid */
 :root { --seq1: color-mix(in srgb, var(--ai) 12%, var(--bg)); --seq2: color-mix(in srgb, var(--ai) 28%, var(--bg)); --seq3: color-mix(in srgb, var(--ai) 45%, var(--bg)); --seq4: color-mix(in srgb, var(--ai) 62%, var(--bg)); --seq5: color-mix(in srgb, var(--ai) 80%, var(--bg)); --seq6: var(--ai); }
 * { box-sizing: border-box; }
-.wrap { max-width: 1040px; margin: 0 auto; padding: 28px 20px 48px; }
+.wrap { max-width: var(--page-width); margin: 0 auto; padding: 28px 20px 48px; }
 @media (max-width: 600px) { .wrap { padding-inline: 16px; } }
 header { display: flex; flex-direction: column; gap: 10px; margin-bottom: 22px; }
 section.part { margin-top: 52px; display: flex; flex-direction: column; gap: 18px; }
 section.part > h2 { border-top: 1px solid var(--line); padding-top: 10px; }
 .prose { max-width: 66ch; }
 .fair { background: var(--surface); border: 1px solid var(--line); border-left: 1px solid var(--line); padding: 16px 18px; display: flex; flex-direction: column; gap: 6px; }
-.fair p { max-width: 70ch; font-size: 16px; }
+.fair p { max-width: none; font-size: 16px; }  /* the note runs the full width of the page */
 .knows { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); }
 @media (max-width: 700px) { .knows { grid-template-columns: minmax(0, 1fr); } }
 .knows > div { background: var(--surface); padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; }
