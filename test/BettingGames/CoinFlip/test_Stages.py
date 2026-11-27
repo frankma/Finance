@@ -43,15 +43,15 @@ class TestStages(TestCase):
     def test_everyone_sensible(self):
         by = {s['key']: s for s in self.three['schemes']}
         self.assertEqual(by['all_in']['ranked'], self.one['ranked'], 'the same table as stage 1.')
-        kelly, pooled = by['kelly']['summary'], by['pooled']['summary']
+        kelly, pooled = by['kelly']['summary'], by['all_in_pooled']['summary']
         self.assertAlmostEqual(math.log(kelly['median']) / 100, self.three['kelly_growth'], delta=0.002)
         self.assertEqual(kelly['ruined'], 0.0)
         self.assertEqual(pooled['above_start'], 1.0, 'pooled, everyone ends up ahead.')
         self.assertAlmostEqual(pooled['median'], pooled['mean'], delta=1e-6 * pooled['mean'], msg='and equal.')
         self.assertGreater(pooled['median'], 50 * kelly['median'])
         self.assertAlmostEqual(pooled['top1_share'], 0.01)
-        pk = by['pooled_quarter']['summary']
-        self.assertEqual(by['pooled_quarter']['stake'], 0.25)
+        pk = by['kelly_pooled']['summary']
+        self.assertEqual(by['kelly_pooled']['stake'], 0.25)
         self.assertEqual(pk['above_start'], 1.0, 'pooled at the Kelly stake, everyone ends ahead too.')
         self.assertAlmostEqual(pk['median'], 1.0125 ** 100, delta=0.1, msg='close to the Kelly stake\'s average.')
         self.assertAlmostEqual(pk['median'], kelly['mean'], delta=0.15 * kelly['mean'], msg='everyone gets the average.')
@@ -91,17 +91,17 @@ class TestMixedTable(TestCase):
         self.assertEqual(sum(g['top100'] for g in self.mix['groups']), 100)
 
     def test_pools_share_only_among_their_own(self):
-        for key in ('pooled', 'pooled_quarter'):
+        for key in ('all_in_pooled', 'kelly_pooled'):
             s = self.by[key]['summary']
             self.assertEqual(s['min'], s['max'], '%s: every member holds the same.' % key)
-        self.assertGreater(self.by['pooled']['summary']['median'], self.by['pooled_quarter']['summary']['median'])
+        self.assertGreater(self.by['all_in_pooled']['summary']['median'], self.by['kelly_pooled']['summary']['median'])
 
     def test_who_lands_where(self):
-        allin, pooled = self.by['all_in'], self.by['pooled']
+        allin, pooled = self.by['all_in'], self.by['all_in_pooled']
         self.assertEqual(allin['best_rank'], 1, 'the luckiest lone all-in player tops the table.')
         self.assertGreater(pooled['wealth_share'], 0.5, 'but the all-in pool holds most of the wealth.')
         self.assertEqual(allin['worst_rank'], 1000, 'and lone all-in players also fill the bottom.')
-        self.assertGreater(self.by['kelly']['median_rank'], self.by['pooled_quarter']['median_rank'])
+        self.assertGreater(self.by['kelly']['median_rank'], self.by['kelly_pooled']['median_rank'])
 
 
 class TestLevers(TestCase):
