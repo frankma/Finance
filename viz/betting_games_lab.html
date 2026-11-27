@@ -81,6 +81,7 @@ button:disabled { opacity: 0.4; cursor: default; }
 :focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 input, select { font: 400 15px/1.2 var(--sans); color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 0; padding: 7px 8px; }
 footer { font: 400 12.5px/1.5 var(--sans); color: var(--faint); border-top: 1px solid var(--line); padding-top: 16px; }
+footer p { max-width: none; }   /* footers are short reference text: they may use the whole column */
 /* charts and diagrams stretch to their figure; never style bare `svg`, or MathJax formulas blow up in Safari */
 figure > svg, .fig-scroll > svg { display: block; width: 100%; height: auto; }
 mjx-container svg { display: inline; max-width: none; }
@@ -113,7 +114,7 @@ mjx-container[display="true"] { overflow-x: auto; overflow-y: hidden; max-width:
 * { box-sizing: border-box; }
 .wrap { max-width: var(--page-width); margin: 0 auto; padding: 32px 20px 56px; }
 @media (max-width: 600px) { .wrap { padding-inline: 16px; } }
-header { max-width: 760px; display: flex; flex-direction: column; gap: 12px; }
+header { display: flex; flex-direction: column; gap: 12px; }
 .figs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px 28px; margin-top: 34px; padding-top: 18px; border-top: 1px solid var(--line); }
 @media (max-width: 820px) { .figs { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .fig { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
@@ -228,7 +229,6 @@ table td.lab { white-space: nowrap; }
 .warn { border: 1px solid var(--line); background: var(--surface); padding: 8px 12px; font: 700 13px/1.4 var(--sans); margin-top: 18px; }
 [hidden] { display: none !important; }
 footer { margin-top: 64px; }
-footer p { max-width: 90ch; }
 </style>
 </head>
 <body>

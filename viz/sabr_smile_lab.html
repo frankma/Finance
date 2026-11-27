@@ -79,6 +79,7 @@ button:disabled { opacity: 0.4; cursor: default; }
 :focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 input, select { font: 400 15px/1.2 var(--sans); color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 0; padding: 7px 8px; }
 footer { font: 400 12.5px/1.5 var(--sans); color: var(--faint); border-top: 1px solid var(--line); padding-top: 16px; }
+footer p { max-width: none; }   /* footers are short reference text: they may use the whole column */
 /* charts and diagrams stretch to their figure; never style bare `svg`, or MathJax formulas blow up in Safari */
 figure > svg, .fig-scroll > svg { display: block; width: 100%; height: auto; }
 mjx-container svg { display: inline; max-width: none; }
@@ -180,7 +181,7 @@ main { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 .surface:active { cursor: grabbing; }
 .surface:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .surface canvas { display: block; width: 100%; height: 100%; }
-footer { margin-top: 28px; max-width: 90ch; }
+footer { margin-top: 28px; }
 footer code { font-family: var(--font-mono); font-size: 11.5px; }
 </style>
 
