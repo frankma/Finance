@@ -1,6 +1,7 @@
 """
 build viz/betting_games_lab.html: play the BettingGames once with fixed seeds, then write the numbers into the page
-template together with the Kinari theme, so the page itself carries no game logic
+template together with the Kinari theme. The page's only arithmetic is the closed-form growth of a two-outcome bet,
+for the stage 2 chart where the reader sets the odds; it checks itself against the Python curve embedded here
 
     python -m viz.build_betting_games_lab            # full run, a few seconds
     python -m viz.build_betting_games_lab --quick    # fewer trials, for checking the page

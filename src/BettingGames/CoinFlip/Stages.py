@@ -186,10 +186,10 @@ def everyone_sensible(seed: int = 101, pool_sizes: Sequence[int] = (1, 2, 5, 10,
     wins = table(seed)
     schemes = []
     kelly = BET.kelly_fraction()
-    for key, label, stake, pool in (('all_in', 'Everyone all in', 1.0, None),
-                                    ('kelly', 'Everyone Kelly, alone', kelly, None),
-                                    ('pooled_quarter', 'Everyone pooled, at 25%', kelly, N_PLAYERS),
-                                    ('pooled', 'Everyone pooled, all in', 1.0, N_PLAYERS)):
+    for key, label, stake, pool in (('all_in', 'All in, alone', 1.0, None),
+                                    ('kelly', 'Kelly, alone', kelly, None),
+                                    ('kelly_pooled', 'Kelly, pooled', kelly, N_PLAYERS),
+                                    ('all_in_pooled', 'All in, pooled', 1.0, N_PLAYERS)):
         result = play(BET, FixedFraction(stake), wins, pool_size=pool, keep_paths=True)
         schemes.append({
             'key': key, 'label': label, 'stake': stake,
@@ -215,8 +215,8 @@ def everyone_sensible(seed: int = 101, pool_sizes: Sequence[int] = (1, 2, 5, 10,
 
 
 
-MIX = (('pooled', 'Pooled, all in', 1.0, True),
-       ('pooled_quarter', 'Pooled, at 25%', BET.kelly_fraction(), True),
+MIX = (('all_in_pooled', 'All in, pooled', 1.0, True),
+       ('kelly_pooled', 'Kelly, pooled', BET.kelly_fraction(), True),
        ('all_in', 'All in, alone', 1.0, False),
        ('kelly', 'Kelly, alone', BET.kelly_fraction(), False))
 
