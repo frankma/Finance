@@ -12,8 +12,9 @@ nav.links a:hover { text-decoration: underline; }
 @media (max-width: 900px) { .layout { grid-template-columns: minmax(0, 1fr); } }
 .box { background: transparent; border: 0; border-top: 1px solid var(--line); padding: 14px 0 0; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 .rail { display: flex; flex-direction: column; gap: 14px; }
-.fair-note { border-left: 1px solid var(--line); }
-.fair-note p { font: 400 13.5px/1.5 var(--sans); color: var(--muted); max-width: none; }  /* the note runs the full width of the page */
+.fair-note { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 8px 32px; align-items: baseline; background: transparent; border: 0; border-top: 1px solid var(--line); padding: 16px 0 0; }
+.fair-note p { font: 400 15.5px/1.6 var(--sans); color: var(--muted); max-width: 64ch; }  /* label in the margin, text at the reading width */
+@media (max-width: 760px) { .fair-note { grid-template-columns: minmax(0, 1fr); } }
 .tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background: var(--line); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
 .tile { background: var(--bg); padding: 8px 12px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .tile .v { font: 400 20px/1.15 var(--sans); font-variant-numeric: tabular-nums; }
