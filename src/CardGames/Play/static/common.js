@@ -113,6 +113,45 @@ function staticWording(root) {
 }
 staticWording(document);
 
+// ---- fair play: one note for every card games page, behind a chip in the page's link row ----
+
+function fairChip(host, paragraphs) {
+  // a square 'Fair play ⓘ' chip whose note opens on hover (where there is hover), and on click or tap, which pins it
+  // open until a second click, a click elsewhere or Escape
+  const wrap = document.createElement('span'), btn = document.createElement('button'), panel = document.createElement('div');
+  wrap.className = 'fair-wrap';
+  btn.type = 'button'; btn.className = 'fair-chip'; btn.setAttribute('aria-expanded', 'false'); btn.setAttribute('aria-controls', 'fair-panel');
+  btn.innerHTML = 'Fair play <span aria-hidden="true">ⓘ</span>';
+  panel.id = 'fair-panel'; panel.className = 'fair-panel'; panel.setAttribute('role', 'note'); panel.hidden = true;
+  paragraphs.forEach(t => { const p = document.createElement('p'); p.textContent = t; panel.appendChild(p); });
+  wrap.append(btn, panel); host.appendChild(wrap);
+  let pinned = false;
+  const show = on => {
+    panel.hidden = !on; btn.setAttribute('aria-expanded', String(on));
+    if (!on) return;
+    // start under the chip, then shift left as far as needed to stay 16px inside the window on either side
+    panel.style.left = '0';
+    const vw = document.documentElement.clientWidth, chipLeft = wrap.getBoundingClientRect().left, width = panel.getBoundingClientRect().width;
+    const left = Math.max(16, Math.min(chipLeft, vw - 16 - width));
+    panel.style.left = (left - chipLeft) + 'px';
+  };
+  btn.addEventListener('click', () => { pinned = !pinned; show(pinned); });
+  if (matchMedia('(hover: hover)').matches) {
+    wrap.addEventListener('mouseenter', () => show(true));
+    wrap.addEventListener('mouseleave', () => { if (!pinned) show(false); });
+  }
+  document.addEventListener('click', e => { if (!wrap.contains(e.target)) { pinned = false; show(false); } });
+  // capture, so Escape closes the note before a page's own Escape shortcut sees it
+  window.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && !panel.hidden) { e.stopPropagation(); pinned = false; show(false); btn.focus(); }
+  }, true);
+}
+const FAIR_PROMISE = "The assistants help you play better, they never cheat for you. Each one sees only what your seat could know: your own cards, the cards shown, every public action, and what follows from those. They never see another player's hidden cards, a face-down card or the order of the cards still to come. Every game is tested for this: two tables that differ only in cards you cannot see must give you the same view and the same advice.";
+const FAIR_HERE = STATIC
+  ? "This web version runs the whole game in your browser, with the same Python code as the version you run on your own computer. So the hidden cards sit in the page's memory, where a determined player could find them. The coach and the computer seats still use only what their seat can see. The version you run yourself, with python -m src.CardGames.Play, keeps hidden cards on its server and away from the page."
+  : "The game runs on this computer's Python server, and your browser is only ever sent your seat's view: your own cards, the cards shown and the public moves. Hidden cards never leave the server, so neither the page nor the coach can peek.";
+(() => { const nav = document.querySelector('nav.links'); if (nav) fairChip(nav, [FAIR_PROMISE, FAIR_HERE]); })();
+
 // examples in a rules text: <span data-cards="AS KD"></span> draws those cards, '_' a face-down one
 function drawExamples(root) {
   root.querySelectorAll('[data-cards]').forEach(el => {

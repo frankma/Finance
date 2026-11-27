@@ -17,9 +17,13 @@ header { display: flex; flex-direction: column; gap: 10px; margin-bottom: 22px; 
 section.part { margin-top: 52px; display: flex; flex-direction: column; gap: 18px; }
 section.part > h2 { border-top: 1px solid var(--line); padding-top: 10px; }
 .prose { max-width: 66ch; }
-.fair { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 8px 32px; align-items: baseline; background: transparent; border: 0; border-top: 1px solid var(--line); padding: 16px 0 0; }
-.fair p { font: 400 15.5px/1.6 var(--sans); color: var(--muted); max-width: 64ch; }  /* label in the margin, text at the reading width */
-@media (max-width: 760px) { .fair { grid-template-columns: minmax(0, 1fr); } }
+/* the Fair play chip: a small square label that opens the fair-play note on hover, click or tap */
+.fair-wrap { position: relative; display: inline-flex; }
+.fair-chip { font: 400 12.5px/1 var(--sans); padding: 5px 8px; border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; }
+.fair-chip:hover, .fair-chip[aria-expanded="true"] { border-color: var(--ink); }
+.fair-panel { position: absolute; top: calc(100% + 6px); left: 0; z-index: 30; width: min(64ch, calc(100vw - 32px)); background: var(--surface); border: 1px solid var(--line); padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; text-align: left; }
+.fair-panel p { font: 400 14.5px/1.55 var(--sans); color: var(--ink); max-width: none; margin: 0; }
+.fair-row { margin-top: 2px; }
 .knows { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); }
 @media (max-width: 700px) { .knows { grid-template-columns: minmax(0, 1fr); } }
 .knows > div { background: var(--surface); padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; }
@@ -109,6 +113,7 @@ table.hands td span { display: block; font: 700 11.5px/1.1 var(--sans); }
     <span class="eyebrow">Card games · computer-assisted play</span>
     <h1>Card Games Lab</h1>
     <p class="lede">What the assistants in <code>src/CardGames</code> know at the table, and what that knowledge is worth. Every number here comes from simulations run by the Python engines, with fixed seeds.</p>
+    <div class="fair-row" id="fair-row"></div>
   </header>
   <div class="playbar" id="playbar">
     <span class="kicker">Play</span>
@@ -117,10 +122,6 @@ table.hands td span { display: block; font: 700 11.5px/1.1 var(--sans); }
   </div>
   <div id="quick" class="warn" hidden>Quick build: small samples, so the numbers are noisy. Rebuild without <code>--quick</code> for the real figures.</div>
 
-  <div class="fair">
-    <span class="mark">Fair play</span>
-    <p>The assistants help you play better, they never cheat for you. Each one sees only what your seat could know: your own cards, the cards shown, every public action, and what follows from those. They never see another player's hidden cards, a face-down card or the order of the cards still to come. Every game is tested for this: two tables that differ only in cards you cannot see must give you the same view and the same advice.</p>
-  </div>
 
   <div class="stats" id="stats" style="margin-top:22px"></div>
 
@@ -246,6 +247,38 @@ table.hands td span { display: block; font: 700 11.5px/1.1 var(--sans); }
 // chart series in Kinari order: ai, beni, koke, kuri, nezumi
 const SERIES = ['--ai', '--beni', '--koke', '--kuri', '--nezumi'];
 const DATA = /*__DATA__*/null;
+function fairChip(host, paragraphs) {
+  // a square 'Fair play ⓘ' chip whose note opens on hover (where there is hover), and on click or tap, which pins it
+  // open until a second click, a click elsewhere or Escape
+  const wrap = document.createElement('span'), btn = document.createElement('button'), panel = document.createElement('div');
+  wrap.className = 'fair-wrap';
+  btn.type = 'button'; btn.className = 'fair-chip'; btn.setAttribute('aria-expanded', 'false'); btn.setAttribute('aria-controls', 'fair-panel');
+  btn.innerHTML = 'Fair play <span aria-hidden="true">ⓘ</span>';
+  panel.id = 'fair-panel'; panel.className = 'fair-panel'; panel.setAttribute('role', 'note'); panel.hidden = true;
+  paragraphs.forEach(t => { const p = document.createElement('p'); p.textContent = t; panel.appendChild(p); });
+  wrap.append(btn, panel); host.appendChild(wrap);
+  let pinned = false;
+  const show = on => {
+    panel.hidden = !on; btn.setAttribute('aria-expanded', String(on));
+    if (!on) return;
+    // start under the chip, then shift left as far as needed to stay 16px inside the window on either side
+    panel.style.left = '0';
+    const vw = document.documentElement.clientWidth, chipLeft = wrap.getBoundingClientRect().left, width = panel.getBoundingClientRect().width;
+    const left = Math.max(16, Math.min(chipLeft, vw - 16 - width));
+    panel.style.left = (left - chipLeft) + 'px';
+  };
+  btn.addEventListener('click', () => { pinned = !pinned; show(pinned); });
+  if (matchMedia('(hover: hover)').matches) {
+    wrap.addEventListener('mouseenter', () => show(true));
+    wrap.addEventListener('mouseleave', () => { if (!pinned) show(false); });
+  }
+  document.addEventListener('click', e => { if (!wrap.contains(e.target)) { pinned = false; show(false); } });
+  // capture, so Escape closes the note before a page's own Escape shortcut sees it
+  window.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && !panel.hidden) { e.stopPropagation(); pinned = false; show(false); btn.focus(); }
+  }, true);
+}
+fairChip(document.getElementById('fair-row'), ["The assistants help you play better, they never cheat for you. Each one sees only what your seat could know: your own cards, the cards shown, every public action, and what follows from those. They never see another player's hidden cards, a face-down card or the order of the cards still to come. Every game is tested for this: two tables that differ only in cards you cannot see must give you the same view and the same advice."]);
 
 /* ---------- helpers ---------- */
 const NS = 'http://www.w3.org/2000/svg';
