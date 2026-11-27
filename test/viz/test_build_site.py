@@ -3,7 +3,7 @@ import re
 from tempfile import TemporaryDirectory
 from unittest import TestCase
 
-from viz.build_site import PROJECTS, Project, build, single_page
+from viz.build_site import PROJECTS, Project, add_home_link, build, single_page
 
 __author__ = 'frank.ma'
 
@@ -29,7 +29,15 @@ class TestBuildSite(TestCase):
             self.assertEqual(re.findall(r'href="/[^"]*"', front), [], 'no link leaves the site base.')
             lobby = read(os.path.join(out, 'card-games', 'index.html'))
             self.assertIn('<base href="/Finance/card-games/">', lobby)
-            self.assertIn('<meta name="site-home" content="/Finance/">', lobby, 'the games link back to the front page.')
+            self.assertNotIn('All projects</a><a', lobby, 'the link home is no longer in the nav row of the games.')
+            # every page of every project: one link home, at the top of its column
+            pages = [os.path.join(dp, f) for dp, _, fs in os.walk(out) for f in fs if f == 'index.html' and dp != out]
+            self.assertGreater(len(pages), 8)
+            for path in pages:
+                text = read(path)
+                self.assertEqual(text.count('class="site-home"'), 1, path)
+                self.assertIn('<div class="wrap">\n  <nav class="site-home"', text, path)
+                self.assertIn('<a href="/Finance/" style="color: var(--muted);">All projects</a>', text, path)
             self.assertTrue(os.path.exists(os.path.join(out, 'card-games', 'static', 'cardgames.zip')))
             self.assertTrue(os.path.exists(os.path.join(out, '.nojekyll')))
 
@@ -41,3 +49,9 @@ class TestBuildSite(TestCase):
                     build(folder, '/', [Project(s, '', '', '', page) for s in slugs])
             with self.assertRaises(ValueError):
                 build(folder, 'Finance')
+
+    def test_the_link_home_needs_one_column(self):
+        self.assertIn('All projects', add_home_link('<body><div class="wrap"></div></body>', '/'))
+        for page in ('<body></body>', '<div class="wrap"></div><div class="wrap"></div>'):
+            with self.assertRaises(ValueError):
+                add_home_link(page, '/')
