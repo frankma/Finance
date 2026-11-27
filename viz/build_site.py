@@ -74,6 +74,42 @@ def front_page(projects: List[Project]) -> str:
     return page.replace('/*__THEME__*/', theme).replace('<!--__PROJECTS__-->', items)
 
 
+# every page of every project carries the same way home: a small "All projects" at the top right of its column
+WRAP = '<div class="wrap">'
+HOME_LINK = ('<nav class="site-home" aria-label="Site" style="display: flex; justify-content: flex-end; '
+             'margin: -10px 0 4px; font: 400 13px/1.5 var(--sans);">'
+             '<a href="%s" style="color: var(--muted);">All projects</a></nav>')
+
+
+def add_home_link(page: str, home: str) -> str:
+    """
+    the page with the site's link home as the first thing in its column; every page of the site has one column,
+    <div class="wrap">, so the link sits at the column's top right however wide the page is
+    """
+    if page.count(WRAP) != 1:
+        raise ValueError('expect exactly one %s to place the link home in.' % WRAP)
+    return page.replace(WRAP, WRAP + '\n  ' + HOME_LINK % html.escape(home, quote=True), 1)
+
+
+def link_home(folder: str, home: str) -> List[str]:
+    """
+    add the link home to every page a project wrote: each index.html under its folder (other .html files are
+    fragments and copies that are never opened as pages)
+    :return: the pages changed, relative to the folder
+    """
+    changed = []
+    for root, dirs, files in os.walk(folder):
+        dirs.sort()
+        if 'index.html' in files:
+            path = os.path.join(root, 'index.html')
+            with open(path, encoding='utf-8') as f:
+                text = f.read()
+            with open(path, 'w', encoding='utf-8') as f:
+                f.write(add_home_link(text, home))
+            changed.append(os.path.relpath(path, folder))
+    return changed
+
+
 def build(out: str, base: str = '/', projects: Optional[List[Project]] = None) -> None:
     """
     write the whole site to out, replacing what was there
@@ -90,6 +126,7 @@ def build(out: str, base: str = '/', projects: Optional[List[Project]] = None) -
     os.makedirs(out)
     for p in projects:
         p.build(os.path.join(out, p.slug), base + p.slug + '/', base)
+        link_home(os.path.join(out, p.slug), base)
     with open(os.path.join(out, 'index.html'), 'w', encoding='utf-8') as f:
         f.write(front_page(projects))
     open(os.path.join(out, '.nojekyll'), 'w').close()  # serve the files as they are
