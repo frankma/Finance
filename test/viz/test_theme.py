@@ -99,3 +99,12 @@ class TestTheme(TestCase):
                                       'src/CardGames/Play/static/common.css'})
         self.assertEqual(set(rules.values()), {'var(--page-width)'})
         self.assertIn('--page-width: 1200px;', read('viz/sabr_smile_lab.html'), 'the SABR page carries its own copy.')
+
+    def test_line_lengths(self):
+        # the skill's rule: headings and footers may use the whole column; standfirst and body keep 64 characters
+        self.assertIn('footer p { max-width: none; }', self.theme)
+        self.assertIn('p { margin: 0; max-width: 64ch; }', self.theme)
+        for page in PAGES:
+            text = read(page)
+            self.assertIsNone(re.search(r'(^|\n)header \{[^}]*max-width: (?!none)', text), '%s caps its header' % page)
+            self.assertIsNone(re.search(r'(^|\n)footer( p)? \{[^}]*max-width: (?!none)', text), '%s caps its footer' % page)
