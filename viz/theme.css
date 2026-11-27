@@ -81,6 +81,7 @@ mjx-container[display="true"] { overflow-x: auto; overflow-y: hidden; max-width:
 /* compatibility: older pages were written against the salmon-paper tokens. These aliases map every old name onto
    Kinari so those pages need no renaming. New CSS uses the Kinari tokens above directly. */
 :root {
+  --page-width: 1200px;  /* every page's column, one width across the site */
   --axis: var(--faint); --code: var(--surface);
   --display: var(--sans); --body: var(--sans);
   --claret: var(--beni); --claret-soft: color-mix(in srgb, var(--beni) 12%, var(--bg));

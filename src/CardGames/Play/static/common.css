@@ -1,7 +1,7 @@
 /* shared by the lobby and every table page; loaded after /static/theme.css and uses only its tokens */
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
-.wrap { max-width: 1120px; margin: 0 auto; padding: 24px 20px 48px; }
+.wrap { max-width: var(--page-width); margin: 0 auto; padding: 24px 20px 48px; }
 @media (max-width: 600px) { .wrap { padding-inline: 16px; } }
 .top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 10px 20px; margin-bottom: 18px; }
 .top > div { display: flex; flex-direction: column; gap: 6px; }

@@ -89,6 +89,7 @@ mjx-container[display="true"] { overflow-x: auto; overflow-y: hidden; max-width:
 /* compatibility: older pages were written against the salmon-paper tokens. These aliases map every old name onto
    Kinari so those pages need no renaming. New CSS uses the Kinari tokens above directly. */
 :root {
+  --page-width: 1200px;  /* every page's column, one width across the site */
   --axis: var(--faint); --code: var(--surface);
   --display: var(--sans); --body: var(--sans);
   --claret: var(--beni); --claret-soft: color-mix(in srgb, var(--beni) 12%, var(--bg));
@@ -111,7 +112,7 @@ mjx-container[display="true"] { overflow-x: auto; overflow-y: hidden; max-width:
 /* page: one reading column of boxed exhibits; sequential ramp for the starting-hand grid */
 :root { --seq1: color-mix(in srgb, var(--ai) 12%, var(--bg)); --seq2: color-mix(in srgb, var(--ai) 28%, var(--bg)); --seq3: color-mix(in srgb, var(--ai) 45%, var(--bg)); --seq4: color-mix(in srgb, var(--ai) 62%, var(--bg)); --seq5: color-mix(in srgb, var(--ai) 80%, var(--bg)); --seq6: var(--ai); }
 * { box-sizing: border-box; }
-.wrap { max-width: 1040px; margin: 0 auto; padding: 28px 20px 48px; }
+.wrap { max-width: var(--page-width); margin: 0 auto; padding: 28px 20px 48px; }
 @media (max-width: 600px) { .wrap { padding-inline: 16px; } }
 header { display: flex; flex-direction: column; gap: 10px; margin-bottom: 22px; }
 section.part { margin-top: 52px; display: flex; flex-direction: column; gap: 18px; }

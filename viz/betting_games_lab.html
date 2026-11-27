@@ -89,6 +89,7 @@ mjx-container[display="true"] { overflow-x: auto; overflow-y: hidden; max-width:
 /* compatibility: older pages were written against the salmon-paper tokens. These aliases map every old name onto
    Kinari so those pages need no renaming. New CSS uses the Kinari tokens above directly. */
 :root {
+  --page-width: 1200px;  /* every page's column, one width across the site */
   --axis: var(--faint); --code: var(--surface);
   --display: var(--sans); --body: var(--sans);
   --claret: var(--beni); --claret-soft: color-mix(in srgb, var(--beni) 12%, var(--bg));
@@ -110,7 +111,7 @@ mjx-container[display="true"] { overflow-x: auto; overflow-y: hidden; max-width:
 
 /* page: a headline, then sections with a margin column for their labels; hairlines, no boxes */
 * { box-sizing: border-box; }
-.wrap { max-width: 1040px; margin: 0 auto; padding: 32px 20px 56px; }
+.wrap { max-width: var(--page-width); margin: 0 auto; padding: 32px 20px 56px; }
 @media (max-width: 600px) { .wrap { padding-inline: 16px; } }
 header { max-width: 760px; display: flex; flex-direction: column; gap: 12px; }
 .figs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px 28px; margin-top: 34px; padding-top: 18px; border-top: 1px solid var(--line); }
@@ -125,7 +126,7 @@ section.sec { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 1
 @media (max-width: 760px) { section.sec { grid-template-columns: minmax(0, 1fr); } }
 .side { display: flex; flex-direction: column; gap: 6px; }
 .side p { font: 400 13.5px/1.5 var(--sans); color: var(--muted); }
-.main { display: flex; flex-direction: column; gap: 22px; min-width: 0; max-width: 780px; }
+.main { display: flex; flex-direction: column; gap: 22px; min-width: 0; }  /* charts fill the column; paragraphs keep the 64-character limit */
 .main > p { font-size: 17px; }
 .fact { font: 400 19px/1.55 var(--sans); max-width: 60ch; }
 .fact b { color: var(--beni); font-weight: 400; }
